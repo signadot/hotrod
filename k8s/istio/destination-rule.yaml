@@ -1,0 +1,44 @@
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: customer
+spec:
+  host: customer
+  subsets:
+  - name: v1
+    labels:
+      component: customer
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: driver
+spec:
+  host: driver
+  subsets:
+  - name: v1
+    labels:
+      component: driver
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: frontend
+spec:
+  host: frontend
+  subsets:
+  - name: v1
+    labels:
+      component: frontend
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: DestinationRule
+metadata:
+  name: route
+spec:
+  host: route
+  subsets:
+  - name: v1
+    labels:
+      component: route
+---

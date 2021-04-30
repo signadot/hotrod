@@ -1,0 +1,21 @@
+apiVersion: networking.istio.io/v1beta1
+kind: ServiceEntry
+metadata:
+  name: proxy-svc
+  namespace: signadot
+spec:
+  hosts:
+  - proxy.signadot.com
+  location: MESH_EXTERNAL
+  ports:
+  - number: 80
+    name: http
+    protocol: HTTP
+  resolution: STATIC
+  workloadSelector:
+    labels:
+      sd-component: proxy
+
+
+
+# curl -I -HHost:proxy.signadot.com http://cluster_A_proxy:31380

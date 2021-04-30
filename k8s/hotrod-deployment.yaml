@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f ./docker-compose.yml
+    kompose.version: 1.21.0 (992df58d8)
+  labels:
+    io.kompose.service: hotrod
+  name: hotrod
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: hotrod
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f ./docker-compose.yml
+        kompose.version: 1.21.0 (992df58d8)
+      labels:
+        io.kompose.network/jaeger-example: "true"
+        io.kompose.service: hotrod
+    spec:
+      containers:
+      - args:
+        - all
+        env:
+        - name: JAEGER_AGENT_HOST
+          value: jaeger
+        - name: JAEGER_AGENT_PORT
+          value: "6831"
+        image: jaegertracing/example-hotrod:latest
+        imagePullPolicy: ""
+        name: hotrod
+        ports:
+        - containerPort: 8080
+        resources: {}
+      restartPolicy: Always
+      serviceAccountName: ""

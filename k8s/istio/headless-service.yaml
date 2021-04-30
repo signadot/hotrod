@@ -1,0 +1,36 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: proxy
+  namespace: signadot
+spec:
+  clusterIP: None
+  selector:
+    sd-component: proxy
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: ServiceEntry
+metadata:
+  name: proxy
+  namespace: signadot
+spec:
+  hosts:
+  - proxy.signadot.svc.cluster.local
+  location: MESH_EXTERNAL
+  resolution: DNS
+---
+# apiVersion: networking.istio.io/v1alpha3
+# kind: ServiceEntry
+# metadata:
+#   name: proxy
+#   namespace: signadot
+# spec:
+#   hosts:
+#   - proxy.signadot.svc
+#   location: MESH_INTERNAL
+#   ports:
+#   - name: dummy
+#     number: 53107
+#   resolution: STATIC
+#   endpoints:
+#   - address: 172.17.0.8

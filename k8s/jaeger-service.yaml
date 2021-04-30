@@ -1,0 +1,23 @@
+apiVersion: v1
+kind: Service
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f ./docker-compose.yml
+    kompose.version: 1.21.0 (992df58d8)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: jaeger
+  name: jaeger
+spec:
+  ports:
+  - name: "6831"
+    port: 6831
+    protocol: UDP
+    targetPort: 6831
+  - name: "16686"
+    port: 16686
+    targetPort: 16686
+  selector:
+    io.kompose.service: jaeger
+status:
+  loadBalancer: {}

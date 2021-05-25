@@ -1,0 +1,101 @@
+name: Go
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.15
+
+    - name: Build
+      run: go build -o hotrod
+
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v1
+
+    - name: Docker Login
+      uses: docker/login-action@v1.9.0
+      with:
+        username: ${{ secrets.DOCKERHUB_USER }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        
+    - name: Build and push
+      id: docker_build
+      uses: docker/build-push-action@v2
+      with:
+        context: .
+        push: true
+        tags: signadot/hotrod:${{ github.sha }}
+
+  # run change detection
+  changes:
+    runs-on: ubuntu-latest
+    # Set job outputs to values from filter step
+    outputs:
+      customer: ${{ steps.filter.outputs.customer }}
+      driver: ${{ steps.filter.outputs.driver }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      route: ${{ steps.filter.outputs.route }}
+    steps:
+    - uses: dorny/paths-filter@v2
+      id: filter
+      with:
+        filters: |
+          customer:
+            - 'services/customer/**'
+          driver:
+            - 'services/driver/**'
+          frontend:
+            - 'services/frontend/**'
+          route:
+            - 'services/route/**'
+
+  update_signadot_customer:
+    needs: [build, changes]
+    if: ${{ needs.changes.outputs.customer == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: call signadot API
+      run: |
+         echo "TODO: calling API for (customer, signadot/hotrod:${{ github.sha }})"
+      shell: bash
+
+  update_signadot_driver:
+    needs: [build, changes]
+    if: ${{ needs.changes.outputs.driver == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: call signadot API
+      run: |
+         echo "TODO: calling API for (driver, signadot/hotrod:${{ github.sha }})"
+      shell: bash
+
+  update_signadot_frontend:
+    needs: [build, changes]
+    if: ${{ needs.changes.outputs.frontend == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: call signadot API
+      run: |
+         echo "TODO: calling API for (frontend, signadot/hotrod:${{ github.sha }})"
+      shell: bash
+
+  update_signadot_route:
+    needs: [build, changes]
+    if: ${{ needs.changes.outputs.route == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+    - name: call signadot API
+      run: |
+         echo "TODO: calling API for (route, signadot/hotrod:${{ github.sha }})"
+      shell: bash

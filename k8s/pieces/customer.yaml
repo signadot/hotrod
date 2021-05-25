@@ -28,7 +28,7 @@ spec:
               value: jaeger
             - name: JAEGER_AGENT_PORT
               value: "6831"
-          image: foxish/example-hotrod:latest
+          image: signadot/hotrod-customer:latest
           imagePullPolicy: Always
           name: hotrod
           ports:

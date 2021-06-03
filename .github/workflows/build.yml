@@ -103,9 +103,9 @@ jobs:
       uses: wei/curl@master
       with:
         args >- 
-          -H 'Content-Type: application/json'
-          -H 'Authorization: Bearer ${{ secrets.SIGNADOT_TOKEN }}' \
-          -d '{\"org\": \"enisoc\",\"cluster\":\"minikube\",\"namespace\":\"hotrod\",\"defaultService\":\"frontend\",\"defaultServicePort\":8080,\"images\":[{\"name\":\"hotrod\/driver\",\"newName\":\"enisoc\/hotrod-driver\"}]}' \
+          -H 'Content-Type:application/json'
+          -H 'Authorization:Bearer ${{ secrets.SIGNADOT_TOKEN }}' \
+          -d '{\"org\":\"enisoc\",\"cluster\":\"minikube\",\"namespace\":\"hotrod\",\"defaultService\":\"frontend\",\"defaultServicePort\":8080,\"images\":[{\"name\":\"hotrod\/driver\",\"newName\":\"enisoc\/hotrod-driver\"}]}' \
            api.signadot.com/api/v1/repos/enisoc/test/pulls/123/workspaces"
 
   update_signadot_driver:

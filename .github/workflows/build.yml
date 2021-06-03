@@ -94,58 +94,77 @@ jobs:
         push: true
         tags: signadot/hotrod-route:${{ github.sha }}
 
-  update_signadot_customer:
+  update_signadot:
     needs: [build, changes]
-    if: ${{ needs.changes.outputs.customer == 'true' }}
     runs-on: ubuntu-latest
     steps:
-    - name: curl
-      uses: wei/curl@v1.1.1
+    - name: call signadot API
+      id: upsert_workspace
+      run: |      
+         imageReplacements=()
+         if [[ ${{ needs.changes.outputs.customer }} == 'true' ]]
+         then
+           imageReplacements+=('{"name": "signadot/hotrod-customer", "newTag": "${{ github.sha }}"}')
+         fi
+         
+         if [[ ${{ needs.changes.outputs.driver }} == 'true' ]]
+         then
+           imageReplacements+=('{"name": "signadot/hotrod-driver", "newTag": "${{ github.sha }}"}')
+         fi
+         
+         if [[ ${{ needs.changes.outputs.frontend }} == 'true' ]]
+         then
+           imageReplacements+=('{"name": "signadot/hotrod-frontend", "newTag": "${{ github.sha }}"}')
+         fi
+         
+         if [[ ${{ needs.changes.outputs.route }} == 'true' ]]
+         then
+           imageReplacements+=('{"name": "signadot/hotrod-route", "newTag": "${{ github.sha }}"}')
+         fi
+         
+         printf -v joined '%s,' "${imageReplacements[@]}"
+         if [ ${#imageReplacements[@]} -eq 0 ]; then
+              echo "no update required"
+              exit 1
+          else
+              echo "${#imageReplacements[@]} image updates found"
+          fi
+         
+         echo ${joined%,}
+         RESULT=$(curl -H 'Content-Type: application/json' \
+              -H 'Authorization: Bearer ${{ secrets.SIGNADOT_TOKEN }}' \
+              -d  "{\"org\": \"signadot\",
+                  \"cluster\": \"demo\",
+                  \"namespace\": \"hotrod\",
+                  \"defaultService\": \"frontend\",
+                  \"defaultServicePort\": 8080,
+                  \"images\": [ ${joined%,} ] }" \
+         https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces)
+         echo $RESULT
+         URL=$(jq -r '.previewURLs[0]' <<< $RESULT)
+         WORKSPACE=$(jq -r '.workspaceIDs[0]' <<< $RESULT)
+         echo "::set-output name=preview::$URL"
+         echo "::set-output name=workspace::$WORKSPACE"
+      shell: bash
+    - name: Update PR with Signadot Preview
+      uses: niteoweb/pull_request_status_action@v1.0.0
       with:
-        args: >- 
-          -H 'Content-Type: application/json'
-          -H 'Authorization: Bearer ${{ secrets.SIGNADOT_TOKEN }}'
-          -d '{\"org\":\"signadot\",\"cluster\":\"demo\",\"namespace\":\"hotrod\",\"defaultService\":\"frontend\",\"defaultServicePort\":8080,\"images\":[{\"name\":\"signadot\/hotrod-customer\",\"newTag\":\"${{ github.sha }}\"}]}'
-          https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces
-
-  update_signadot_driver:
-    needs: [build, changes]
-    if: ${{ needs.changes.outputs.driver == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-    - name: curl
-      uses: wei/curl@v1.1.1
+        pr_number: ${{ github.event.number }}
+        state: success
+        repository: signadot/hotrod
+        context: "Signadot Workspace Deployed"
+        target_url: ${{ steps.upsert_workspace.outputs.preview }}
+        description: "Preview URL for your change"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    - name: Update PR with Signadot Dashboard URL
+      uses: niteoweb/pull_request_status_action@v1.0.0
       with:
-        args: >- 
-          -H 'Content-Type: application/json'
-          -H 'Authorization: Bearer ${{ secrets.SIGNADOT_TOKEN }}'
-          -d '{\"org\":\"signadot\",\"cluster\":\"demo\",\"namespace\":\"hotrod\",\"defaultService\":\"frontend\",\"defaultServicePort\":8080,\"images\":[{\"name\":\"signadot\/hotrod-driver\",\"newTag\":\"${{ github.sha }}\"}]}'
-          https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces
-
-  update_signadot_frontend:
-    needs: [build, changes]
-    if: ${{ needs.changes.outputs.frontend == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-    - name: curl
-      uses: wei/curl@v1.1.1
-      with:
-        args: >- 
-          -H 'Content-Type: application/json'
-          -H 'Authorization: Bearer ${{ secrets.SIGNADOT_TOKEN }}'
-          -d '{\"org\":\"signadot\",\"cluster\":\"demo\",\"namespace\":\"hotrod\",\"defaultService\":\"frontend\",\"defaultServicePort\":8080,\"images\":[{\"name\":\"signadot\/hotrod-frontend\",\"newTag\":\"${{ github.sha }}\"}]}'
-          https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces
-
-  update_signadot_route:
-    needs: [build, changes]
-    if: ${{ needs.changes.outputs.route == 'true' }}
-    runs-on: ubuntu-latest
-    steps:
-    - name: curl
-      uses: wei/curl@v1.1.1
-      with:
-        args: >- 
-          -H 'Content-Type: application/json'
-          -H 'Authorization: Bearer ${{ secrets.SIGNADOT_TOKEN }}'
-          -d '{\"org\":\"signadot\",\"cluster\":\"demo\",\"namespace\":\"hotrod\",\"defaultService\":\"frontend\",\"defaultServicePort\":8080,\"images\":[{\"name\":\"signadot\/hotrod-route\",\"newTag\":\"${{ github.sha }}\"}]}'
-          https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces
+        pr_number: ${{ github.event.number }}
+        state: success
+        repository: signadot/hotrod
+        context: "Signadot Dashboard URL"
+        target_url: "https://app.signadot.com/workspace/${{ steps.upsert_workspace.outputs.workspace }}"
+        description: "Signadot Dashboard"
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

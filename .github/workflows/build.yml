@@ -40,8 +40,19 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
+    outputs:
+      prNumber: ${{ steps.findPr.outputs.number }}
     steps:
     - uses: actions/checkout@v2
+    # Find the PR associated with this push, if there is one.
+    - uses: jwalton/gh-find-current-pr@v1
+      id: findPr
+    # This will echo "Your PR is 7", or be skipped if there is no current PR.
+    - run: echo "Your PR is ${PR}"
+      if: success() && steps.findPr.outputs.number
+      env:
+        PR: ${{ steps.findPr.outputs.pr }}
+
 
     - name: Set up Go
       uses: actions/setup-go@v2
@@ -105,8 +116,8 @@ jobs:
         args: >- 
           -H 'Content-Type:application/json'
           -H 'Authorization:Bearer ${{ secrets.SIGNADOT_TOKEN }}'
-          -d '{\"org\":\"enisoc\",\"cluster\":\"minikube\",\"namespace\":\"hotrod\",\"defaultService\":\"frontend\",\"defaultServicePort\":8080,\"images\":[{\"name\":\"hotrod\/driver\",\"newName\":\"enisoc\/hotrod-driver\"}]}'
-          https://api.signadot.com/api/v1/repos/enisoc/test/pulls/123/workspaces
+          -d '{\"org\":\"signadot\",\"cluster\":\"demo\",\"namespace\":\"hotrod\",\"defaultService\":\"frontend\",\"defaultServicePort\":8080,\"images\":[{\"name\":\"signadot\/hotrod-frontend\",\"newTag\":\"${{ github.sha }}\"}]}'
+          https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ build.outputs.prNumber }}/workspaces
 
   update_signadot_driver:
     needs: [build, changes]

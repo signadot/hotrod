@@ -24,7 +24,6 @@ import (
 
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
-	"google.golang.org/grpc/metadata"
 
 	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
 	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/pool"
@@ -80,19 +79,12 @@ func (eta *bestETA) Get(ctx context.Context, customerID string) (*Response, erro
 	if span := opentracing.SpanFromContext(ctx); span != nil {
 		span.SetBaggageItem("customer", customer.Name)
 	}
-	
-	md := metadata.New(map[string]string{})
-	s := ctx.Value(config.WorkspaceHeaderName)
-	if s != nil {
-		md.Set(config.WorkspaceHeaderName, s.(string))
-	}
 
-	outCtx := metadata.NewOutgoingContext(ctx, md)
-	drivers, err := eta.driver.FindNearest(outCtx, customer.Location)
+	drivers, err := eta.driver.FindNearest(ctx, customer.Location)
 	if err != nil {
 		return nil, err
 	}
-	eta.logger.For(outCtx).Info("Found drivers", zap.Any("drivers", drivers))
+	eta.logger.For(ctx).Info("Found drivers", zap.Any("drivers", drivers))
 
 	results := eta.getRoutes(ctx, customer, drivers)
 	eta.logger.For(ctx).Info("Found routes", zap.Any("routes", results))
@@ -126,7 +118,7 @@ func (eta *bestETA) getRoutes(ctx context.Context, customer *customer.Customer, 
 	results := make([]routeResult, 0, len(drivers))
 	wg := sync.WaitGroup{}
 	routesLock := sync.Mutex{}
-	
+
 	for _, dd := range drivers {
 		wg.Add(1)
 		driver := dd // capture loop var

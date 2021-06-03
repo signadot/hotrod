@@ -23,13 +23,6 @@
         <h1>Hot R.O.D.</h1>
         <h4><em>Rides On Demand</em></h4>
 
-        <br />
-        <div>
-          Signadot Workspace: <input type="text" id="workspace" />
-        </div>
-        <br />
-
-
         <div class="row">
             <div class="col-md-3 col-sm-6">
                 <span
@@ -73,13 +66,11 @@ $(".uuid").html("Your web client's id: <strong>" + clientUUID + "</strong>");
 
 $(".hotrod-button").click(function(evt) {
   lastRequestID++;
-  var workspace = $("#workspace").val();
   var requestID = clientUUID + "-" + lastRequestID;
   var freshCar = $($("#hotrod-log").prepend('<div class="fresh-car"><em>Dispatching a car...[req: '+requestID+']</em></div>').children()[0]);
   var customer = evt.target.dataset.customer;
   var headers = {
-      'jaeger-baggage': 'session=' + clientUUID + ', request=' + requestID,
-      'sd-workspace': workspace,
+      'jaeger-baggage': 'session=' + clientUUID + ', request=' + requestID
   };
   console.log(headers);
   var before = Date.now();

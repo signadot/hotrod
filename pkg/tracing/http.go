@@ -24,8 +24,6 @@ import (
 
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
-	
-	"github.com/jaegertracing/jaeger/examples/hotrod/services/config"
 )
 
 // HTTPClient wraps an http.Client with tracing instrumentation.
@@ -41,13 +39,6 @@ func (c *HTTPClient) GetJSON(ctx context.Context, endpoint string, url string, o
 	if err != nil {
 		return err
 	}
-	
-	// set up the workspace header if present in chain.
-	val := ctx.Value(config.WorkspaceHeaderName)
-	if val != nil {
-		req.Header.Set(config.WorkspaceHeaderName, val.(string))
-	}
-	
 	req = req.WithContext(ctx)
 	req, ht := nethttp.TraceRequest(c.Tracer, req, nethttp.OperationName("HTTP GET: "+endpoint))
 	defer ht.Finish()

@@ -96,7 +96,7 @@ jobs:
 
   update_signadot_customer:
     needs: [build, changes]
-    if: ${{ needs.changes.outputs.customer == 'true' }}
+    if: ${{ needs.changes.outputs.customer == 'false' }}
     runs-on: ubuntu-latest
     steps:
     - name: curl

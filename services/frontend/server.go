@@ -16,7 +16,6 @@
 package frontend
 
 import (
-	"context"
 	"encoding/json"
 	"net/http"
 	"path"
@@ -27,7 +26,6 @@ import (
 	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/httperr"
 	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
 	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/tracing"
-	"github.com/jaegertracing/jaeger/examples/hotrod/services/config"
 )
 
 // Server implements jaeger-demo-frontend service
@@ -91,13 +89,6 @@ func (s *Server) dispatch(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "Missing required 'customer' parameter", http.StatusBadRequest)
 		return
 	}
-	
-	// get incoming context and propagate.
-	wsp := r.Header.Get(config.WorkspaceHeaderName)
-	if len(wsp) > 0 {
-		ctx = context.WithValue(ctx, config.WorkspaceHeaderName, wsp)
-	}
-	
 	// TODO distinguish between user errors (such as invalid customer ID) and server failures
 	response, err := s.bestETA.Get(ctx, customerID)
 	if httperr.HandleError(w, err, http.StatusInternalServerError) {

@@ -60,7 +60,4 @@ var (
 
 	// RouteCalcDelayStdDev is standard deviation
 	RouteCalcDelayStdDev = RouteCalcDelay / 4
-	
-	// This is propagated via context through the app.
-	WorkspaceHeaderName = "sd-workspace"
 )

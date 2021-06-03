@@ -18,15 +18,13 @@ package driver
 import (
 	"context"
 	"net"
-	
+
 	otgrpc "github.com/opentracing-contrib/go-grpc"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-lib/metrics"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-	
-	"google.golang.org/grpc/metadata"
-	
+
 	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
 )
 
@@ -74,14 +72,6 @@ func (s *Server) Run() error {
 func (s *Server) FindNearest(ctx context.Context, location *DriverLocationRequest) (*DriverLocationResponse, error) {
 	s.logger.For(ctx).Info("Searching for nearby drivers", zap.String("location", location.Location))
 	driverIDs := s.redis.FindDriverIDs(ctx, location.Location)
-	
-	// printing the metadata attached here.
-	headers, ok := metadata.FromIncomingContext(ctx)
-	if !ok {
-		s.logger.For(ctx).Error("no user header?")
-	}
-	user := headers["sd-workspace"]
-	s.logger.For(ctx).Info("found sd-workspace", zap.Strings("user", user))
 
 	retMe := make([]*DriverLocation, len(driverIDs))
 	for i, driverID := range driverIDs {

@@ -114,8 +114,8 @@ jobs:
       uses: wei/curl@v1.1.1
       with:
         args: >- 
-          -H 'Content-Type:application/json'
-          -H 'Authorization:Bearer ${{ secrets.SIGNADOT_TOKEN }}'
+          -H 'Content-Type: application/json'
+          -H 'Authorization: Bearer ${{ secrets.SIGNADOT_TOKEN }}'
           -d '{\"org\":\"signadot\",\"cluster\":\"demo\",\"namespace\":\"hotrod\",\"defaultService\":\"frontend\",\"defaultServicePort\":8080,\"images\":[{\"name\":\"signadot\/hotrod-frontend\",\"newTag\":\"${{ github.sha }}\"}]}'
           https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ needs.build.outputs.prNumber }}/workspaces
 

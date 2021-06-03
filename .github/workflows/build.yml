@@ -99,37 +99,53 @@ jobs:
     if: ${{ needs.changes.outputs.customer == 'true' }}
     runs-on: ubuntu-latest
     steps:
-    - name: call signadot API
-      run: |
-         echo "TODO: calling API for (customer, signadot/hotrod:${{ github.sha }})"
-      shell: bash
+    - name: curl
+      uses: wei/curl@v1.1.1
+      with:
+        args: >- 
+          -H 'Content-Type: application/json'
+          -H 'Authorization: Bearer ${{ secrets.SIGNADOT_TOKEN }}'
+          -d '{\"org\":\"signadot\",\"cluster\":\"demo\",\"namespace\":\"hotrod\",\"defaultService\":\"frontend\",\"defaultServicePort\":8080,\"images\":[{\"name\":\"signadot\/hotrod-customer\",\"newTag\":\"${{ github.sha }}\"}]}'
+          https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces
 
   update_signadot_driver:
     needs: [build, changes]
     if: ${{ needs.changes.outputs.driver == 'true' }}
     runs-on: ubuntu-latest
     steps:
-    - name: call signadot API
-      run: |
-         echo "TODO: calling API for (driver, signadot/hotrod:${{ github.sha }})"
-      shell: bash
+    - name: curl
+      uses: wei/curl@v1.1.1
+      with:
+        args: >- 
+          -H 'Content-Type: application/json'
+          -H 'Authorization: Bearer ${{ secrets.SIGNADOT_TOKEN }}'
+          -d '{\"org\":\"signadot\",\"cluster\":\"demo\",\"namespace\":\"hotrod\",\"defaultService\":\"frontend\",\"defaultServicePort\":8080,\"images\":[{\"name\":\"signadot\/hotrod-driver\",\"newTag\":\"${{ github.sha }}\"}]}'
+          https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces
 
   update_signadot_frontend:
     needs: [build, changes]
     if: ${{ needs.changes.outputs.frontend == 'true' }}
     runs-on: ubuntu-latest
     steps:
-    - name: call signadot API
-      run: |
-         echo "TODO: calling API for (frontend, signadot/hotrod:${{ github.sha }})"
-      shell: bash
+    - name: curl
+      uses: wei/curl@v1.1.1
+      with:
+        args: >- 
+          -H 'Content-Type: application/json'
+          -H 'Authorization: Bearer ${{ secrets.SIGNADOT_TOKEN }}'
+          -d '{\"org\":\"signadot\",\"cluster\":\"demo\",\"namespace\":\"hotrod\",\"defaultService\":\"frontend\",\"defaultServicePort\":8080,\"images\":[{\"name\":\"signadot\/hotrod-frontend\",\"newTag\":\"${{ github.sha }}\"}]}'
+          https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces
 
   update_signadot_route:
     needs: [build, changes]
     if: ${{ needs.changes.outputs.route == 'true' }}
     runs-on: ubuntu-latest
     steps:
-    - name: call signadot API
-      run: |
-         echo "TODO: calling API for (route, signadot/hotrod:${{ github.sha }})"
-      shell: bash
+    - name: curl
+      uses: wei/curl@v1.1.1
+      with:
+        args: >- 
+          -H 'Content-Type: application/json'
+          -H 'Authorization: Bearer ${{ secrets.SIGNADOT_TOKEN }}'
+          -d '{\"org\":\"signadot\",\"cluster\":\"demo\",\"namespace\":\"hotrod\",\"defaultService\":\"frontend\",\"defaultServicePort\":8080,\"images\":[{\"name\":\"signadot\/hotrod-route\",\"newTag\":\"${{ github.sha }}\"}]}'
+          https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces

@@ -104,8 +104,6 @@ func computeRoute(ctx context.Context, pickup, dropoff string) *Route {
 		updateCalcStats(ctx, time.Since(start))
 	}()
 
-	// Simulate expensive calculation
-	time.Sleep(500 * time.Millisecond)
 	delay.Sleep(config.RouteCalcDelay, config.RouteCalcDelayStdDev)
 
 	eta := math.Max(2, rand.NormFloat64()*3+5)

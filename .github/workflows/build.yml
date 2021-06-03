@@ -125,7 +125,7 @@ jobs:
          printf -v joined '%s,' "${imageReplacements[@]}"
          if [ ${#imageReplacements[@]} -eq 0 ]; then
               echo "no update required"
-              exit 1
+              exit 0
           else
               echo "${#imageReplacements[@]} image updates found"
           fi

@@ -102,7 +102,7 @@ jobs:
     - name: curl
       uses: wei/curl@master
       with:
-        args >- 
+        args: >- 
           -H 'Content-Type:application/json'
           -H 'Authorization:Bearer ${{ secrets.SIGNADOT_TOKEN }}' \
           -d '{\"org\":\"enisoc\",\"cluster\":\"minikube\",\"namespace\":\"hotrod\",\"defaultService\":\"frontend\",\"defaultServicePort\":8080,\"images\":[{\"name\":\"hotrod\/driver\",\"newName\":\"enisoc\/hotrod-driver\"}]}' \

@@ -20,6 +20,10 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
       route: ${{ steps.filter.outputs.route }}
     steps:
+    # The paths-filter action requires a checkout step for push events.
+    - if: ${{ github.event_name == 'push' }}
+      uses: actions/checkout@v2
+
     - uses: dorny/paths-filter@v2
       id: filter
       with:
@@ -114,6 +118,7 @@ jobs:
         tags: signadot/hotrod-route:${{ github.sha }}
 
   update_signadot:
+    if: ${{ github.event_name == 'pull_request' }}
     needs: [build, changes]
     runs-on: ubuntu-latest
     steps:

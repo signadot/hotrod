@@ -156,14 +156,14 @@ jobs:
          
          echo ${joined%,}
          RESULT=$(curl -H 'Content-Type: application/json' \
-              -H 'Authorization: Bearer ${{ secrets.SIGNADOT_TOKEN }}' \
+              -H 'Authorization: ApiKey ${{ secrets.SIGNADOT_API_KEY }}' \
               -d  "{\"org\": \"signadot\",
                   \"cluster\": \"demo\",
                   \"namespace\": \"hotrod\",
                   \"defaultService\": \"frontend\",
                   \"defaultServicePort\": 8080,
                   \"images\": [ ${joined%,} ] }" \
-         https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces)
+         https://ec06196d8c1f.ngrok.io/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces)
          echo $RESULT
          URL=$(jq -r '.previewURLs[0]' <<< $RESULT)
          WORKSPACE=$(jq -r '.workspaceIDs[0]' <<< $RESULT)

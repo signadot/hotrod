@@ -156,7 +156,7 @@ jobs:
          
          echo ${joined%,}
          RESULT=$(curl -H 'Content-Type: application/json' \
-              -H 'Authorization: Bearer ${{ secrets.SIGNADOT_TOKEN }}' \
+              -H 'Authorization: ApiKey ${{ secrets.SIGNADOT_API_KEY }}' \
               -d  "{\"org\": \"signadot\",
                   \"cluster\": \"demo\",
                   \"namespace\": \"hotrod\",

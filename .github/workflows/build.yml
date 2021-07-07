@@ -100,11 +100,12 @@ jobs:
 
     - name: Build frontend image
       if: ${{ needs.changes.outputs.frontend == 'true' }}
-      uses: docker/build-push-action@v2
+      uses: whoan/docker-build-with-cache-action@v5
       with:
-        context: .
-        push: true
-        tags: signadot/hotrod-frontend:${{ github.sha }}
+        username: ${{ secrets.DOCKERHUB_USER }}
+        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        image_name: signadot/hotrod-frontend
+        image_tag: ${{ github.sha }}
       
     - name: Build route image
       if: ${{ needs.changes.outputs.route == 'true' }}

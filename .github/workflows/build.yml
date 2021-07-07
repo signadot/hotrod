@@ -81,38 +81,34 @@ jobs:
       with:
         username: ${{ secrets.DOCKERHUB_USER }}
         password: ${{ secrets.DOCKERHUB_TOKEN }}
-        
+
     - name: Build customer image
       if: ${{ needs.changes.outputs.customer == 'true' }}
-      uses: docker/build-push-action@v2
+      uses: whoan/docker-build-with-cache-action@v5
       with:
-        context: .
-        push: true
-        tags: signadot/hotrod-customer:${{ github.sha }}
+        image_name: signadot/hotrod-customer
+        image_tag: ${{ github.sha }}
 
     - name: Build driver image
       if: ${{ needs.changes.outputs.driver == 'true' }}
-      uses: docker/build-push-action@v2
+      uses: whoan/docker-build-with-cache-action@v5
       with:
-        context: .
-        push: true
-        tags: signadot/hotrod-driver:${{ github.sha }}
+        image_name: signadot/hotrod-driver
+        image_tag: ${{ github.sha }}
 
     - name: Build frontend image
       if: ${{ needs.changes.outputs.frontend == 'true' }}
-      uses: docker/build-push-action@v2
+      uses: whoan/docker-build-with-cache-action@v5
       with:
-        context: .
-        push: true
-        tags: signadot/hotrod-frontend:${{ github.sha }}
+        image_name: signadot/hotrod-frontend
+        image_tag: ${{ github.sha }}
       
     - name: Build route image
       if: ${{ needs.changes.outputs.route == 'true' }}
-      uses: docker/build-push-action@v2
+      uses: whoan/docker-build-with-cache-action@v5
       with:
-        context: .
-        push: true
-        tags: signadot/hotrod-route:${{ github.sha }}
+        image_name: signadot/hotrod-route
+        image_tag: ${{ github.sha }}
 
   update_signadot:
     if: ${{ github.event_name == 'pull_request' }}

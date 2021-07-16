@@ -47,12 +47,12 @@ func newDatabase(tracer opentracing.Tracer, logger log.Factory) *database {
 		customers: map[string]*Customer{
 			"123": {
 				ID:       "123",
-				Name:     "Rachel's Floral Designs",
+				Name:     "Rachel's Gloral Designs",
 				Location: "115,277",
 			},
 			"567": {
 				ID:       "567",
-				Name:     "Amazing Coffee Roasters",
+				Name:     "Amazing Coffee Coasters",
 				Location: "211,653",
 			},
 			"392": {

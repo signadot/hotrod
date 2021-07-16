@@ -162,6 +162,11 @@ jobs:
                   \"images\": [ ${joined%,} ] }" \
          https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces)
          echo $RESULT
+         ERROR=$(jq -r '.error' <<< $RESULT)
+         if [ $ERROR != "null" ]; then
+           echo "error: $ERROR"
+           exit 1
+         fi
          URL=$(jq -r '.previewURLs[0]' <<< $RESULT)
          WORKSPACE=$(jq -r '.workspaceIDs[0]' <<< $RESULT)
          echo "::set-output name=preview::$URL"

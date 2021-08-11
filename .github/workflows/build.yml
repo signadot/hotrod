@@ -154,8 +154,7 @@ jobs:
          echo ${joined%,}
          RESULT=$(curl -H 'Content-Type: application/json' \
               -H 'Authorization: ApiKey ${{ secrets.SIGNADOT_API_KEY }}' \
-              -d  "{\"org\": \"signadot\",
-                  \"cluster\": \"demo\",
+              -d  "{\"cluster\": \"demo\",
                   \"namespace\": \"hotrod\",
                   \"defaultService\": \"frontend\",
                   \"defaultServicePort\": 8080,
@@ -190,7 +189,7 @@ jobs:
         sha: ${{github.event.pull_request.head.sha || github.sha}}
         state: success
         context: "Signadot Dashboard URL"
-        target_url: "https://app.signadot.com/workspace/${{ steps.upsert_workspace.outputs.workspace }}"
+        target_url: "https://app.signadot.com/workspace/id/${{ steps.upsert_workspace.outputs.workspace }}"
         description: "Signadot Dashboard"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

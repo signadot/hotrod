@@ -144,21 +144,24 @@ jobs:
          fi
          
          printf -v joined '%s,' "${imageReplacements[@]}"
-         if [ ${#imageReplacements[@]} -eq 0 ]; then
-              echo "no update required"
-              exit 0
-          else
-              echo "${#imageReplacements[@]} image updates found"
-          fi
-         
          echo ${joined%,}
+         
+         payload=$(cat <<EOF
+         {
+           "cluster": "demo",
+           "namespace": "hotrod",
+           "defaultService": "frontend",
+           "defaultServicePort": 8080,
+           "baseBranch": "${{ github.event.pull_request.base.ref }}",
+           "branch": "${{ github.event.pull_request.head.ref }}",
+           "headCommit": "${{ github.event.pull_request.head.sha }}",
+           "images": [ ${joined%,} ]
+         }
+         EOF
+         )
          RESULT=$(curl -H 'Content-Type: application/json' \
               -H 'Authorization: ApiKey ${{ secrets.SIGNADOT_API_KEY }}' \
-              -d  "{\"cluster\": \"demo\",
-                  \"namespace\": \"hotrod\",
-                  \"defaultService\": \"frontend\",
-                  \"defaultServicePort\": 8080,
-                  \"images\": [ ${joined%,} ] }" \
+              -d "${payload}" \
          https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces)
          echo $RESULT
          ERROR=$(jq -r '.error' <<< $RESULT)

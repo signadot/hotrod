@@ -76,9 +76,6 @@ jobs:
       run: |
         ./build.sh
 
-    - name: Set up Docker Buildx
-      uses: docker/setup-buildx-action@v1
-
     - name: Docker Login
       uses: docker/login-action@v1.9.0
       with:
@@ -147,48 +144,55 @@ jobs:
          fi
          
          printf -v joined '%s,' "${imageReplacements[@]}"
-         if [ ${#imageReplacements[@]} -eq 0 ]; then
-              echo "no update required"
-              exit 0
-          else
-              echo "${#imageReplacements[@]} image updates found"
-          fi
-         
          echo ${joined%,}
+         
+         payload=$(cat <<EOF
+         {
+           "cluster": "demo",
+           "namespace": "hotrod",
+           "defaultService": "frontend",
+           "defaultServicePort": 8080,
+           "baseBranch": "${{ github.event.pull_request.base.ref }}",
+           "branch": "${{ github.event.pull_request.head.ref }}",
+           "headCommit": "${{ github.event.pull_request.head.sha }}",
+           "images": [ ${joined%,} ]
+         }
+         EOF
+         )
          RESULT=$(curl -H 'Content-Type: application/json' \
               -H 'Authorization: ApiKey ${{ secrets.SIGNADOT_API_KEY }}' \
-              -d  "{\"org\": \"signadot\",
-                  \"cluster\": \"demo\",
-                  \"namespace\": \"hotrod\",
-                  \"defaultService\": \"frontend\",
-                  \"defaultServicePort\": 8080,
-                  \"images\": [ ${joined%,} ] }" \
+              -d "${payload}" \
          https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces)
          echo $RESULT
+         ERROR=$(jq -r '.error' <<< $RESULT)
+         if [ $ERROR != "null" ]; then
+           echo "error: $ERROR"
+           exit 1
+         fi
          URL=$(jq -r '.previewURLs[0]' <<< $RESULT)
          WORKSPACE=$(jq -r '.workspaceIDs[0]' <<< $RESULT)
          echo "::set-output name=preview::$URL"
          echo "::set-output name=workspace::$WORKSPACE"
       shell: bash
     - name: Update PR with Signadot Preview
-      uses: niteoweb/pull_request_status_action@v1.0.0
+      uses: Sibz/github-status-action@v1
       with:
-        pr_number: ${{ github.event.number }}
+        authToken: ${{secrets.GITHUB_TOKEN}}
+        sha: ${{github.event.pull_request.head.sha || github.sha}}
         state: success
-        repository: signadot/hotrod
         context: "Signadot Workspace Deployed"
         target_url: ${{ steps.upsert_workspace.outputs.preview }}
         description: "Preview URL for your change"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Update PR with Signadot Dashboard URL
-      uses: niteoweb/pull_request_status_action@v1.0.0
+      uses: Sibz/github-status-action@v1
       with:
-        pr_number: ${{ github.event.number }}
+        authToken: ${{secrets.GITHUB_TOKEN}}
+        sha: ${{github.event.pull_request.head.sha || github.sha}}
         state: success
-        repository: signadot/hotrod
         context: "Signadot Dashboard URL"
-        target_url: "https://app.signadot.com/workspace/${{ steps.upsert_workspace.outputs.workspace }}"
+        target_url: "https://app.signadot.com/workspace/id/${{ steps.upsert_workspace.outputs.workspace }}"
         description: "Signadot Dashboard"
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

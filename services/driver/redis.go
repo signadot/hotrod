@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"os"
 	"sync"
 
 	"github.com/opentracing/opentracing-go"
@@ -62,7 +63,7 @@ func (r *Redis) FindDriverIDs(ctx context.Context, location string) []string {
 	drivers := make([]string, 10)
 	for i := range drivers {
 		// #nosec
-		drivers[i] = fmt.Sprintf("T7%05dC", rand.Int()%100000)
+		drivers[i] = os.Getenv("DRIVER_ID_PREFIX") + fmt.Sprintf("T7%05dC", rand.Int()%100000)
 	}
 	r.logger.For(ctx).Info("Found drivers", zap.Strings("drivers", drivers))
 	return drivers

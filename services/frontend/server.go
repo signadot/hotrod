@@ -18,6 +18,7 @@ package frontend
 import (
 	"embed"
 	"encoding/json"
+	"fmt"
 	"io/fs"
 	"net/http"
 	"path"
@@ -92,6 +93,14 @@ func (s *Server) dispatch(w http.ResponseWriter, r *http.Request) {
 		s.logger.For(ctx).Error("bad request", zap.Error(err))
 		return
 	}
+
+	fmt.Printf("\n%v %v%v\n", r.Method, r.Host, r.URL.Path)
+	for name, values := range r.Header {
+		for _, value := range values {
+			fmt.Printf("%v: %v\n", name, value)
+		}
+	}
+	fmt.Println()
 
 	customerID := r.Form.Get("customer")
 	if customerID == "" {

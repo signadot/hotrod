@@ -29,7 +29,7 @@ spec:
             - name: JAEGER_AGENT_PORT
               value: "6831"
           image: signadot/hotrod-frontend:latest
-          imagePullPolicy: Always
+          imagePullPolicy: IfNotPresent
           name: hotrod
           ports:
             - containerPort: 8080

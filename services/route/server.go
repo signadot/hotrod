@@ -76,13 +76,13 @@ func (s *Server) route(w http.ResponseWriter, r *http.Request) {
 
 	pickup := r.Form.Get("pickup")
 	if pickup == "" {
-		http.Error(w, "Missing required 'pickup' parameter", http.StatusBadRequest)
+		http.Error(w, "Missing required 'pickup' parameter-DEMO", http.StatusBadRequest)
 		return
 	}
 
 	dropoff := r.Form.Get("dropoff")
 	if dropoff == "" {
-		http.Error(w, "Missing required 'dropoff' parameter", http.StatusBadRequest)
+		http.Error(w, "Missing required 'dropoff' parameter-DEMO", http.StatusBadRequest)
 		return
 	}
 

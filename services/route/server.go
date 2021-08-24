@@ -22,6 +22,7 @@ import (
 	"math"
 	"math/rand"
 	"net/http"
+	"os"
 	"time"
 
 	"github.com/opentracing/opentracing-go"
@@ -76,7 +77,7 @@ func (s *Server) route(w http.ResponseWriter, r *http.Request) {
 
 	pickup := r.Form.Get("pickup")
 	if pickup == "" {
-		http.Error(w, "Missing required 'pickup' parameter-DEMO", http.StatusBadRequest)
+		http.Error(w, "Missing required 'pickup' parameter-DEMO: " + os.Getenv("my_var"), http.StatusBadRequest)
 		return
 	}
 

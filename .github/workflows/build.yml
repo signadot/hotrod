@@ -121,6 +121,7 @@ jobs:
     steps:
     - name: call signadot API
       id: upsert_workspace
+      shell: bash
       run: |      
          imageReplacements=()
          if [[ ${{ needs.changes.outputs.customer }} == 'true' ]]
@@ -169,30 +170,3 @@ jobs:
            echo "error: $ERROR"
            exit 1
          fi
-         URL=$(jq -r '.previewURLs[0]' <<< $RESULT)
-         WORKSPACE=$(jq -r '.workspaceIDs[0]' <<< $RESULT)
-         echo "::set-output name=preview::$URL"
-         echo "::set-output name=workspace::$WORKSPACE"
-      shell: bash
-    - name: Update PR with Signadot Preview
-      uses: Sibz/github-status-action@v1
-      with:
-        authToken: ${{secrets.GITHUB_TOKEN}}
-        sha: ${{github.event.pull_request.head.sha || github.sha}}
-        state: success
-        context: "Signadot Workspace Deployed"
-        target_url: ${{ steps.upsert_workspace.outputs.preview }}
-        description: "Preview URL for your change"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-    - name: Update PR with Signadot Dashboard URL
-      uses: Sibz/github-status-action@v1
-      with:
-        authToken: ${{secrets.GITHUB_TOKEN}}
-        sha: ${{github.event.pull_request.head.sha || github.sha}}
-        state: success
-        context: "Signadot Dashboard URL"
-        target_url: "https://app.signadot.com/workspace/id/${{ steps.upsert_workspace.outputs.workspace }}"
-        description: "Signadot Dashboard"
-      env:
-        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

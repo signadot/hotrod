@@ -35,9 +35,9 @@ var frontendCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 
 		options.FrontendHostPort = net.JoinHostPort("0.0.0.0", strconv.Itoa(frontendPort))
-		options.DriverHostPort = net.JoinHostPort("driver.hotrod.svc", strconv.Itoa(driverPort))
-		options.CustomerHostPort = net.JoinHostPort("customer.hotrod.svc", strconv.Itoa(customerPort))
-		options.RouteHostPort = net.JoinHostPort("route.hotrod.svc", strconv.Itoa(routePort))
+		options.DriverHostPort = net.JoinHostPort("driver", strconv.Itoa(driverPort))
+		options.CustomerHostPort = net.JoinHostPort("customer", strconv.Itoa(customerPort))
+		options.RouteHostPort = net.JoinHostPort("route", strconv.Itoa(routePort))
 		options.Basepath = basepath
 
 		zapLogger := logger.With(zap.String("service", "frontend"))

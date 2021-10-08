@@ -20,153 +20,203 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
       route: ${{ steps.filter.outputs.route }}
     steps:
-    # The paths-filter action requires a checkout step for push events.
-    - if: ${{ github.event_name == 'push' }}
-      uses: actions/checkout@v2
+      # The paths-filter action requires a checkout step for push events.
+      - if: ${{ github.event_name == 'push' }}
+        uses: actions/checkout@v2
 
-    - uses: dorny/paths-filter@v2
-      id: filter
-      with:
-        filters: |
-          customer:
-            - 'services/customer/**'
-            - 'cmd/customer.go'
-            - 'pkg/**'
-          driver:
-            - 'services/driver/**'
-            - 'cmd/driver.go'
-            - 'pkg/**'
-          frontend:
-            - 'services/frontend/**'
-            - 'cmd/frontend.go'
-            - 'pkg/**'
-          route:
-            - 'services/route/**'
-            - 'cmd/route.go'
-            - 'pkg/**'
+      - uses: dorny/paths-filter@v2
+        id: filter
+        with:
+          filters: |
+            customer:
+              - 'services/customer/**'
+              - 'cmd/customer.go'
+              - 'pkg/**'
+            driver:
+              - 'services/driver/**'
+              - 'cmd/driver.go'
+              - 'pkg/**'
+            frontend:
+              - 'services/frontend/**'
+              - 'cmd/frontend.go'
+              - 'pkg/**'
+            route:
+              - 'services/route/**'
+              - 'cmd/route.go'
+              - 'pkg/**'
 
   build:
     runs-on: ubuntu-latest
-    needs: [changes]
+    needs: [ changes ]
     steps:
-    - uses: actions/checkout@v2
+      - uses: actions/checkout@v2
 
-    - name: Set up Go
-      uses: actions/setup-go@v2
-      with:
-        go-version: ${{ env.GO_VERSION }}
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
 
-    - name: Go Mod Cache
-      uses: actions/cache@v2
-      with:
-        path: ~/go/pkg/mod
-        key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-mod-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-${{ env.GO_VERSION }}-mod-
+      - name: Go Mod Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-mod-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-mod-
 
-    - name: Go Build Cache
-      uses: actions/cache@v2
-      with:
-        path: ~/.cache/go-build
-        key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-build-${{ hashFiles('**/go.sum') }}
-        restore-keys: |
-          ${{ runner.os }}-go-${{ env.GO_VERSION }}-build-
+      - name: Go Build Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-build-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-build-
 
-    - name: Build
-      run: |
-        ./build.sh
+      - name: Build
+        run: |
+          ./build.sh
 
-    - name: Docker Login
-      uses: docker/login-action@v1.9.0
-      with:
-        username: ${{ secrets.DOCKERHUB_USER }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
-        
-    - name: Build customer image
-      if: ${{ needs.changes.outputs.customer == 'true' }}
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        push: true
-        tags: signadot/hotrod-customer:${{ github.sha }}
+      - name: Docker Login
+        uses: docker/login-action@v1.9.0
+        with:
+          username: ${{ secrets.DOCKERHUB_USER }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-    - name: Build driver image
-      if: ${{ needs.changes.outputs.driver == 'true' }}
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        push: true
-        tags: signadot/hotrod-driver:${{ github.sha }}
+      - name: Build customer image
+        if: ${{ needs.changes.outputs.customer == 'true' }}
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: signadot/hotrod-customer:${{ github.sha }}
 
-    - name: Build frontend image
-      if: ${{ needs.changes.outputs.frontend == 'true' }}
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        push: true
-        tags: signadot/hotrod-frontend:${{ github.sha }}
-      
-    - name: Build route image
-      if: ${{ needs.changes.outputs.route == 'true' }}
-      uses: docker/build-push-action@v2
-      with:
-        context: .
-        push: true
-        tags: signadot/hotrod-route:${{ github.sha }}
+      - name: Build driver image
+        if: ${{ needs.changes.outputs.driver == 'true' }}
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: signadot/hotrod-driver:${{ github.sha }}
+
+      - name: Build frontend image
+        if: ${{ needs.changes.outputs.frontend == 'true' }}
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: signadot/hotrod-frontend:${{ github.sha }}
+
+      - name: Build route image
+        if: ${{ needs.changes.outputs.route == 'true' }}
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: signadot/hotrod-route:${{ github.sha }}
 
   update_signadot:
     if: ${{ github.event_name == 'pull_request' }}
-    needs: [build, changes]
+    needs: [ build, changes ]
     runs-on: ubuntu-latest
+    outputs:
+      defaultService: ${{ steps.upsert_workspace.outputs.defaultService }}
+      previewURL: ${{ steps.upsert_workspace.outputs.previewURL }}
     steps:
-    - name: call signadot API
-      id: upsert_workspace
-      shell: bash
-      run: |      
-         imageReplacements=()
-         if [[ ${{ needs.changes.outputs.customer }} == 'true' ]]
-         then
-           imageReplacements+=('{"name": "signadot/hotrod-customer", "newTag": "${{ github.sha }}"}')
-         fi
-         
-         if [[ ${{ needs.changes.outputs.driver }} == 'true' ]]
-         then
-           imageReplacements+=('{"name": "signadot/hotrod-driver", "newTag": "${{ github.sha }}"}')
-         fi
-         
-         if [[ ${{ needs.changes.outputs.frontend }} == 'true' ]]
-         then
-           imageReplacements+=('{"name": "signadot/hotrod-frontend", "newTag": "${{ github.sha }}"}')
-         fi
-         
-         if [[ ${{ needs.changes.outputs.route }} == 'true' ]]
-         then
-           imageReplacements+=('{"name": "signadot/hotrod-route", "newTag": "${{ github.sha }}"}')
-         fi
-         
-         printf -v joined '%s,' "${imageReplacements[@]}"
-         echo ${joined%,}
-         
-         payload=$(cat <<EOF
-         {
-           "cluster": "demo",
-           "namespace": "hotrod",
-           "defaultService": "frontend",
-           "defaultServicePort": 8080,
-           "baseBranch": "${{ github.event.pull_request.base.ref }}",
-           "branch": "${{ github.event.pull_request.head.ref }}",
-           "headCommit": "${{ github.event.pull_request.head.sha }}",
-           "images": [ ${joined%,} ]
-         }
-         EOF
-         )
-         RESULT=$(curl -H 'Content-Type: application/json' \
-              -H 'Authorization: ApiKey ${{ secrets.SIGNADOT_API_KEY }}' \
-              -d "${payload}" \
-         https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces)
-         echo $RESULT
-         ERROR=$(jq -r '.error' <<< $RESULT)
-         if [ $ERROR != "null" ]; then
-           echo "error: $ERROR"
-           exit 1
-         fi
+      - name: call signadot API
+        id: upsert_workspace
+        shell: bash
+        run: |
+          imageReplacements=()
+          defaultService=()
+          defaultPort=0
+
+          if [[ ${{ needs.changes.outputs.customer }} == 'true' ]]
+          then
+            imageReplacements+=('{"name": "signadot/hotrod-customer", "newTag": "${{ github.sha }}"}')
+            defaultService="customer"
+            defaultPort=8081
+          fi
+
+          if [[ ${{ needs.changes.outputs.driver }} == 'true' ]]
+          then
+            imageReplacements+=('{"name": "signadot/hotrod-driver", "newTag": "${{ github.sha }}"}')
+            defaultService="driver"
+            defaultPort=8082
+          fi
+
+          if [[ ${{ needs.changes.outputs.frontend }} == 'true' ]]
+          then
+            imageReplacements+=('{"name": "signadot/hotrod-frontend", "newTag": "${{ github.sha }}"}')
+            defaultService="frontend"
+            defaultPort=8080
+          fi
+
+          if [[ ${{ needs.changes.outputs.route }} == 'true' ]]
+          then
+            imageReplacements+=('{"name": "signadot/hotrod-route", "newTag": "${{ github.sha }}"}')
+            defaultService="route"
+            defaultPort=8083
+          fi
+
+          printf -v joined '%s,' "${imageReplacements[@]}"
+          echo ${joined%,}
+
+          payload=$(cat <<EOF
+          {
+            "cluster": "demo",
+            "namespace": "hotrod",
+            "defaultService": "${defaultService}",
+            "defaultServicePort": ${defaultPort},
+            "baseBranch": "${{ github.event.pull_request.base.ref }}",
+            "branch": "${{ github.event.pull_request.head.ref }}",
+            "headCommit": "${{ github.event.pull_request.head.sha }}",
+            "images": [ ${joined%,} ]
+          }
+          EOF
+          )
+          RESULT=$(curl -H 'Content-Type: application/json' \
+               -H 'Authorization: ApiKey ${{ secrets.SIGNADOT_API_KEY }}' \
+               -d "${payload}" \
+          https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces)
+          echo $RESULT
+          ERROR=$(jq -r '.error' <<< $RESULT)
+          if [ $ERROR != "null" ]; then
+            echo "error: $ERROR"
+            exit 1
+          fi
+          PREVIEW_URL=$(jq -r '.previewURLs[0]' <<< $RESULT)
+               echo "::set-output name=defaultService::${defaultService}"
+               echo "::set-output name=previewURL::${PREVIEW_URL}"
+  run_integration_tests:
+    if: ${{ github.event_name == 'pull_request' && needs.update_signadot.outputs.defaultService == 'route' }}
+    runs-on: ubuntu-latest
+    needs: update_signadot
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Go Mod Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-mod-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-mod-
+      - name: Go Build Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-build-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-build-
+      - name: Run Integration test on Route service
+        run: |
+          previewURL=${{ needs.update_signadot.outputs.previewURL }}
+          echo $previewURL
+          ./build.sh
+          cd services/route
+          go test -v ./... --tags=integration -args -previewUrl=$previewURL -signadotApiKey=${{ secrets.SIGNADOT_API_KEY }}

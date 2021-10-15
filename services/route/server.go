@@ -112,6 +112,6 @@ func computeRoute(ctx context.Context, pickup, dropoff string) *Route {
 	return &Route{
 		Pickup:  pickup,
 		Dropoff: dropoff,
-		ETA:     time.Duration(eta) * time.Day,
+		ETA:     time.Duration(eta) * time.Second,
 	}
 }

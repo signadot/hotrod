@@ -28,6 +28,8 @@ spec:
               value: jaeger
             - name: JAEGER_AGENT_PORT
               value: "6831"
+            - name: ANIRUDH_ENV
+              value: "whoa"
           image: signadot/hotrod-customer:latest
           imagePullPolicy: Always
           name: hotrod

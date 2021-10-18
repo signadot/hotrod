@@ -177,7 +177,7 @@ jobs:
           RESULT=$(curl -H 'Content-Type: application/json' \
                -H 'Authorization: ApiKey ${{ secrets.SIGNADOT_API_KEY }}' \
                -d "${payload}" \
-          https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces)
+          https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/0/workspaces)
           echo $RESULT
           ERROR=$(jq -r '.error' <<< $RESULT)
           if [ $ERROR != "null" ]; then

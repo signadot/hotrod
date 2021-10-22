@@ -19,6 +19,7 @@ spec:
         component: frontend
       annotations:
         sidecar.signadot.com/inject: "http"
+        new.annotation: "foxish" 
     spec:
       containers:
         - args:

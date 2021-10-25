@@ -167,8 +167,6 @@ jobs:
             "namespace": "hotrod",
             "defaultService": "${defaultService}",
             "defaultServicePort": ${defaultPort},
-            "baseBranch": "${{ github.event.pull_request.base.ref }}",
-            "branch": "${{ github.event.pull_request.head.ref }}",
             "headCommit": "${{ github.event.pull_request.head.sha }}",
             "images": [ ${joined%,} ]
           }

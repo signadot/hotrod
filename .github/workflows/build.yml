@@ -163,7 +163,7 @@ jobs:
 
           payload=$(cat <<EOF
           {
-            "cluster": "demo",
+            "cluster": "foxish-minikube",
             "namespace": "hotrod",
             "defaultService": "${defaultService}",
             "defaultServicePort": ${defaultPort},

@@ -29,7 +29,7 @@ spec:
             - name: JAEGER_AGENT_PORT
               value: "6831"
             - name: DRIVER_ID_PREFIX
-              value: enisoc-
+              value: foxish-
           image: signadot/hotrod-driver:latest
           imagePullPolicy: Always
           name: hotrod

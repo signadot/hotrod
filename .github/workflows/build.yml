@@ -173,7 +173,7 @@ jobs:
           EOF
           )
           RESULT=$(curl -H 'Content-Type: application/json' \
-               -H 'Authorization: ApiKey ${{ secrets.SIGNADOT_API_KEY }}' \
+               -H 'signadot-api-key: ${{ secrets.SIGNADOT_API_KEY }}' \
                -d "${payload}" \
           https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces)
           echo $RESULT

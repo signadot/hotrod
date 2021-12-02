@@ -81,6 +81,7 @@ func (s *Server) customer(w http.ResponseWriter, r *http.Request) {
 		s.logger.For(ctx).Error("request failed", zap.Error(err))
 		return
 	}
+	response.Name = "James Singh"
 
 	data, err := json.Marshal(response)
 	if httperr.HandleError(w, err, http.StatusInternalServerError) {

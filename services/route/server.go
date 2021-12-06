@@ -110,8 +110,8 @@ func computeRoute(ctx context.Context, pickup, dropoff string) *Route {
 
 	eta := math.Max(2, rand.NormFloat64()*3+5)
 	return &Route{
-		Pickup:  pickup,
+		Pickup:  null,
 		Dropoff: dropoff,
-		ETA:     time.Duration(eta) * time.Hour,
+		ETA:     -1 * time.Duration(eta) * time.Minute,
 	}
 }

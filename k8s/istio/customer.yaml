@@ -1,0 +1,51 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hotrod
+    component: customer
+  name: customer
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hotrod
+      component: customer
+  strategy: {}
+  template:
+    metadata:
+      labels:
+        app: hotrod
+        component: customer
+        sidecar.istio.io/inject: "true"
+    spec:
+      containers:
+        - args:
+            - customer
+          env:
+            - name: JAEGER_AGENT_HOST
+              value: jaeger
+            - name: JAEGER_AGENT_PORT
+              value: "6831"
+          image: signadot/hotrod-customer:latest
+          imagePullPolicy: Always
+          name: hotrod
+          ports:
+            - containerPort: 8081
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: hotrod
+    component: customer
+  name: customer
+spec:
+  ports:
+    - name: http-web
+      port: 8081
+      targetPort: 8081
+  selector:
+    app: hotrod
+    component: customer

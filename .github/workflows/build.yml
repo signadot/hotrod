@@ -183,6 +183,7 @@ jobs:
           routePreviewURL=$(jq -r '[.previewEndpoints[] | select(.forkOf != null and .forkOf.name == "route")] | .[0] | .previewURL' <<< $RESULT)
           echo "Route preview URL: routePreviewURL"
           echo "::set-output name=routePreviewURL::${routePreviewURL}"
+  
   run_integration_tests:
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.route == 'true' }}
     runs-on: ubuntu-latest
@@ -222,3 +223,46 @@ jobs:
           ./build.sh
           cd services/route
           go test -v ./... --tags=integration -args -previewUrl=$routePreviewURL -signadotApiKey=${{ secrets.SIGNADOT_API_KEY }}
+
+  run_integration_tests:
+    if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.route == 'true' }}
+    runs-on: ubuntu-latest
+    needs: [ build, changes ]
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Go Mod Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/go/pkg/mod
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-mod-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-mod-
+      - name: Go Build Cache
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/go-build
+          key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-build-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-go-${{ env.GO_VERSION }}-build-
+      - name: Run Integration test on Route service
+        env:
+          SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
+          ROUTE_SERVICE_IMAGE_NAME: signadot/hotrod-route-staging
+          ROUTE_SERVICE_IMAGE_TAG: ${{ github.sha }}
+        run: |
+          echo "Image name: $ROUTE_SERVICE_IMAGE_NAME , Image tag: $ROUTE_SERVICE_IMAGE_TAG"
+          cd test/api-test/
+          SIGNADOT_API_KEY=${{ secrets.SIGNADOT_API_KEY }} gradle test
+      - name: Publish Route Service Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v1
+        if: always()
+        with:
+          comment_title: Route Service Test Result
+          check_name: Route Service Test Result
+          files: test/api-test/build/test-results/**/*.xml

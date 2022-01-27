@@ -215,7 +215,7 @@ jobs:
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
           ROUTE_SERVICE_IMAGE: signadot/hotrod-route:${{ github.sha }} 
         run: |
-          echo "Image name: $ROUTE_SERVICE_IMAGE
+          echo "Image name: $ROUTE_SERVICE_IMAGE"
           cd test/api-test/
           SIGNADOT_API_KEY=${{ secrets.SIGNADOT_API_KEY }} gradle test
       - name: Publish Route Service Test Results

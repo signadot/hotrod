@@ -19,7 +19,7 @@ public class RouteServiceTest {
     public static final String ORG_NAME = "signadot";
     public static final String HOTROD = "hotrod";
     public static final String SIGNADOT_API_KEY = System.getenv("SIGNADOT_API_KEY");
-    public static final String ROUTE_SERVICE_IMAGE_NAME = System.getenv("ROUTE_SERVICE_IMAGE_NAME");
+    public static final String ROUTE_SERVICE_IMAGE = System.getenv("ROUTE_SERVICE_IMAGE");
 
     ApiClient apiClient;
     WorkspacesApi workspacesApi;
@@ -37,7 +37,7 @@ public class RouteServiceTest {
                 .forkOf(new ForkOf().kind("Deployment").namespace(HOTROD).name("route"))
                 .customizations(new WorkspaceCustomizations()
                         .addEnvItem(new EnvOp().name("DEV").value("true"))
-                        .addImagesItem(new Image().image(ROUTE_SERVICE_IMAGE_NAME)))
+                        .addImagesItem(new Image().image(ROUTE_SERVICE_IMAGE)))
                 .addEndpointsItem(new ForkEndpoint().name("route").port(8083).protocol("http"));
 
         CreateWorkspaceRequest request = new CreateWorkspaceRequest()
@@ -49,7 +49,7 @@ public class RouteServiceTest {
         response = workspacesApi.createNewWorkspace(ORG_NAME, request);
 
         workspaceID = response.getWorkspaceID();
-        if (workspaceID == null || workspaceID == "") {
+        if (workspaceID == null || workspaceID.equals("")) {
             throw new RuntimeException("Workspace ID not set");
         }
 
@@ -86,7 +86,7 @@ public class RouteServiceTest {
                 get("/route?pickup=123&dropoff=456").
                 then().
                 statusCode(200).
-                assertThat().body("ETA", lessThan(Long.valueOf(0)));
+                assertThat().body("ETA", greaterThan(Long.valueOf(0)));
     }
 
     @Test
@@ -148,7 +148,7 @@ public class RouteServiceTest {
                 body(containsString("Missing required 'dropoff' parameter"));
     }
 
-    @AfterSuite
+    @AfterSuite(alwaysRun=true)
     public void deleteWorkspace() throws ApiException {
         workspacesApi.deleteWorkspaceById(ORG_NAME, workspaceID);
     }

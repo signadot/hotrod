@@ -213,10 +213,9 @@ jobs:
       - name: Run Integration test on Route service
         env:
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
-          ROUTE_SERVICE_IMAGE_NAME: signadot/hotrod-route
-          ROUTE_SERVICE_IMAGE_TAG: ${{ github.sha }}
+          ROUTE_SERVICE_IMAGE: signadot/hotrod-route:${{ github.sha }} 
         run: |
-          echo "Image name: $ROUTE_SERVICE_IMAGE_NAME , Image tag: $ROUTE_SERVICE_IMAGE_TAG"
+          echo "Image name: $ROUTE_SERVICE_IMAGE
           cd test/api-test/
           SIGNADOT_API_KEY=${{ secrets.SIGNADOT_API_KEY }} gradle test
       - name: Publish Route Service Test Results

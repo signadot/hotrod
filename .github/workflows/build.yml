@@ -213,7 +213,7 @@ jobs:
       - name: Run Integration test on Route service
         env:
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
-          ROUTE_SERVICE_IMAGE_NAME: signadot/hotrod-route-staging
+          ROUTE_SERVICE_IMAGE_NAME: signadot/hotrod-route
           ROUTE_SERVICE_IMAGE_TAG: ${{ github.sha }}
         run: |
           echo "Image name: $ROUTE_SERVICE_IMAGE_NAME , Image tag: $ROUTE_SERVICE_IMAGE_TAG"

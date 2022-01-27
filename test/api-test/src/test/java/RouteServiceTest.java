@@ -28,7 +28,7 @@ public class RouteServiceTest {
 
     @BeforeSuite
     public void createWorkspace() throws ApiException, InterruptedException {
-        apiClient = new ApiClient().addDefaultHeader("Accept-Version", "20211220");
+        apiClient = new ApiClient();
         apiClient.setApiKey(SIGNADOT_API_KEY);
         workspacesApi = new WorkspacesApi(apiClient);
 
@@ -36,12 +36,12 @@ public class RouteServiceTest {
         WorkspaceFork routeFork = new WorkspaceFork()
                 .forkOf(new ForkOf().kind("Deployment").namespace(HOTROD).name("route"))
                 .customizations(new WorkspaceCustomizations()
-                        .addEnvItem(new EnvOp().name("abc").value("def").operation("upsert"))
+                        .addEnvItem(new EnvOp().name("DEV").value("true"))
                         .addImagesItem(new Image().image(ROUTE_SERVICE_IMAGE_NAME)))
                 .addEndpointsItem(new ForkEndpoint().name("route").port(8083).protocol("http"));
 
         CreateWorkspaceRequest request = new CreateWorkspaceRequest()
-                .cluster("signadot-staging")
+                .cluster("demo")
                 .name(workspaceName)
                 .description("test workspace created using signadot-sdk")
                 .addForksItem(routeFork);
@@ -86,7 +86,7 @@ public class RouteServiceTest {
                 get("/route?pickup=123&dropoff=456").
                 then().
                 statusCode(200).
-                assertThat().body("ETA", greaterThan(Long.valueOf(-1)));
+                assertThat().body("ETA", lessThan(Long.valueOf(0)));
     }
 
     @Test

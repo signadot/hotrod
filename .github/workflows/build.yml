@@ -225,4 +225,5 @@ jobs:
         with:
           comment_title: Route Service Test Result
           check_name: Route Service Test Result
+          comment_mode: "create new"
           files: test/api-test/build/test-results/**/*.xml

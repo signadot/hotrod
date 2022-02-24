@@ -1,6 +1,6 @@
 import com.signadot.ApiClient;
 import com.signadot.ApiException;
-import com.signadot.api.WorkspacesApi;
+import com.signadot.api.SandboxesApi;
 import com.signadot.model.*;
 import io.restassured.RestAssured;
 import io.restassured.http.ContentType;
@@ -22,35 +22,35 @@ public class RouteServiceTest {
     public static final String ROUTE_SERVICE_IMAGE = System.getenv("ROUTE_SERVICE_IMAGE");
 
     ApiClient apiClient;
-    WorkspacesApi workspacesApi;
-    CreateWorkspaceResponse response;
-    String workspaceID;
+    SandboxesApi sandboxesApi;
+    CreateSandboxResponse response;
+    String sandboxID;
 
     @BeforeSuite
-    public void createWorkspace() throws ApiException, InterruptedException {
+    public void createSandbox() throws ApiException, InterruptedException {
         apiClient = new ApiClient();
         apiClient.setApiKey(SIGNADOT_API_KEY);
-        workspacesApi = new WorkspacesApi(apiClient);
+        sandboxesApi = new SandboxesApi(apiClient);
 
-        String workspaceName = String.format("test-ws-%s", RandomStringUtils.randomAlphanumeric(5));
-        WorkspaceFork routeFork = new WorkspaceFork()
+        String sandboxName = String.format("test-ws-%s", RandomStringUtils.randomAlphanumeric(5));
+        SandboxFork routeFork = new SandboxFork()
                 .forkOf(new ForkOf().kind("Deployment").namespace(HOTROD).name("route"))
-                .customizations(new WorkspaceCustomizations()
+                .customizations(new SandboxCustomizations()
                         .addEnvItem(new EnvOp().name("DEV").value("true"))
                         .addImagesItem(new Image().image(ROUTE_SERVICE_IMAGE)))
                 .addEndpointsItem(new ForkEndpoint().name("route").port(8083).protocol("http"));
 
-        CreateWorkspaceRequest request = new CreateWorkspaceRequest()
+        CreateSandboxRequest request = new CreateSandboxRequest()
                 .cluster("demo")
-                .name(workspaceName)
-                .description("test workspace created using signadot-sdk")
+                .name(sandboxName)
+                .description("test sandbox created using signadot-sdk")
                 .addForksItem(routeFork);
 
-        response = workspacesApi.createNewWorkspace(ORG_NAME, request);
+        response = sandboxesApi.createNewSandbox(ORG_NAME, request);
 
-        workspaceID = response.getWorkspaceID();
-        if (workspaceID == null || workspaceID.equals("")) {
-            throw new RuntimeException("Workspace ID not set");
+        sandboxID = response.getSandboxID();
+        if (sandboxID == null || sandboxID.equals("")) {
+            throw new RuntimeException("Sandbox ID not set");
         }
 
         List<PreviewEndpoint> endpoints = response.getPreviewEndpoints();
@@ -72,8 +72,8 @@ public class RouteServiceTest {
         // set the base URL for tests
         RestAssured.baseURI = endpoint.getPreviewURL();
 
-        // Check for workspace readiness
-        while (!workspacesApi.getWorkspaceReady(ORG_NAME, workspaceID).isReady()) {
+        // Check for sandbox readiness
+        while (!sandboxesApi.getSandboxReady(ORG_NAME, sandboxID).isReady()) {
             Thread.sleep(5000);
         };
     }
@@ -149,7 +149,7 @@ public class RouteServiceTest {
     }
 
     @AfterSuite(alwaysRun=true)
-    public void deleteWorkspace() throws ApiException {
-        workspacesApi.deleteWorkspaceById(ORG_NAME, workspaceID);
+    public void deleteSandbox() throws ApiException {
+        sandboxesApi.deleteSandboxById(ORG_NAME, sandboxID);
     }
 }

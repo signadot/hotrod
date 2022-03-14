@@ -105,13 +105,13 @@ func computeRoute(ctx context.Context, pickup, dropoff string) *Route {
 	}()
 
 	// Simulate expensive calculation
-	time.Sleep(500 * time.Millisecond)
+	//time.Sleep(500 * time.Millisecond)
 	delay.Sleep(config.RouteCalcDelay, config.RouteCalcDelayStdDev)
 
 	eta := math.Max(2, rand.NormFloat64()*3+5)
 	return &Route{
 		Pickup:  pickup,
 		Dropoff: dropoff,
-		ETA:     time.Duration(eta) * time.Hour,
+		ETA:     -time.Duration(eta) * time.Hour,
 	}
 }

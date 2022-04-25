@@ -8,4 +8,7 @@ This demo is based on the Jaeger Hotrod demo [hotrod-tutorial]
 ## Running
 
 ### Run everything in Kubernetes
-`kubectl apply -f k8s/all-in-one/demo.yaml`
+
+Decide on a namespace in which things are to run and then run
+
+./install.sh <namespace>

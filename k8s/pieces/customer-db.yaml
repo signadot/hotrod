@@ -1,0 +1,71 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: customer-db
+  labels:
+    app: customer-db
+spec:
+  ports:
+  - port: 3306
+    name: tcp
+    protocol: TCP
+  selector:
+    app: customer-db
+---
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: customer-db
+spec:
+  serviceName: customer-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: customer-db
+  template:
+    metadata:
+      labels:
+        app: customer-db
+    spec:
+      containers:
+      - name: mysql
+        image: mysql/mysql-server:8.0
+        env:
+        - name: MYSQL_ROOT_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: refdb-auth
+              key: password
+        - name: MYSQL_ROOT_HOST
+          value: '%'
+        ports:
+        - containerPort: 3306
+          name: tcp
+          protocol: TCP
+        volumeMounts:
+        - name: customer-db
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: customer-db
+        emptyDir: {}
+---
+# secret for mysql-8.0-plugin
+apiVersion: v1
+kind: Secret
+data:
+  #
+  # we specify the following keys for the mysql-8.0-plugin
+  # but we consume only the password above
+  #
+
+  # root
+  username: cm9vdA==
+  # abc
+  password: YWJj
+  # customer-db.hotrod.svc
+  host: Y3VzdG9tZXItZGIuaG90cm9kLnN2Yw==
+  # 3306
+  port: MzMwNg==
+metadata:
+  name: refdb-auth
+type: Opaque

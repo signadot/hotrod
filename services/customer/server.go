@@ -17,6 +17,7 @@ package customer
 
 import (
 	"encoding/json"
+	"errors"
 	"net/http"
 
 	"github.com/opentracing/opentracing-go"
@@ -59,12 +60,47 @@ func (s *Server) Run() error {
 func (s *Server) createServeMux() http.Handler {
 	mux := tracing.NewServeMux(s.tracer)
 	mux.Handle("/customer", http.HandlerFunc(s.customer))
+	mux.Handle("/customers", http.HandlerFunc(s.customers))
 	return mux
+}
+
+func (s *Server) customers(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
+	customers, err := s.database.List(ctx)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("cannot get customers", zap.Error(err))
+		return
+	}
+
+	data, err := json.Marshal(customers)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("cannot marshal response", zap.Error(err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(data)
 }
 
 func (s *Server) customer(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
+	switch r.Method {
+	case "GET":
+		s.get(w, r)
+	case "PUT":
+		s.put(w, r)
+	default:
+		err := errors.New("bad method")
+		httperr.HandleError(w, err, http.StatusBadRequest)
+		s.logger.For(ctx).Error("bad method", zap.Error(err))
+		return
+	}
+}
+
+func (s *Server) get(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
 	if err := r.ParseForm(); httperr.HandleError(w, err, http.StatusBadRequest) {
 		s.logger.For(ctx).Error("bad request", zap.Error(err))
 		return
@@ -90,4 +126,28 @@ func (s *Server) customer(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(data)
+}
+
+func (s *Server) put(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	var c Customer
+	err := json.NewDecoder(r.Body).Decode(&c)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("cannot unmarshal customer", zap.Error(err))
+		return
+	}
+	err = s.database.Put(ctx, &c)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("cannot update db", zap.Error(err))
+		return
+	}
+	data, err := json.Marshal(&c)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("cannot encode response", zap.Error(err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(data)
+
 }

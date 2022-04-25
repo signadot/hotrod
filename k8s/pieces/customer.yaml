@@ -28,12 +28,23 @@ spec:
               value: jaeger
             - name: JAEGER_AGENT_PORT
               value: "6831"
-          image: signadot/hotrod-customer:latest
+            - name: MYSQL_HOST
+              value: "customer-db"
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: MYSQL_ROOT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: refdb-auth
+                  key: password
+          image: signadot/hotrod:latest
           imagePullPolicy: Always
           name: hotrod
           ports:
             - containerPort: 8081
       restartPolicy: Always
+      imagePullSecrets:
+      - name: signadot-registry
 ---
 apiVersion: v1
 kind: Service

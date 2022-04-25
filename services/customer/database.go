@@ -43,6 +43,18 @@ type database struct {
 	db        *sqlx.DB
 }
 
+const tableSchema = `
+CREATE TABLE IF NOT EXISTS customers
+(
+    id bigint unsigned NOT NULL,
+
+    name varchar(255) NOT NULL,
+
+    location varchar(255) NOT NULL,
+    PRIMARY KEY (id)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+`
+
 var seed = []Customer{
 	{
 		ID:       123,
@@ -68,6 +80,11 @@ var seed = []Customer{
 
 func newDatabase(tracer opentracing.Tracer, logger log.Factory) *database {
 	db, err := sqlx.ConnectContext(context.TODO(), "mysql", driverConfig().FormatDSN())
+	if err != nil {
+		panic(err)
+	}
+	// Create the table if it doesn't already exist.
+	_, err = db.Exec(tableSchema)
 	if err != nil {
 		panic(err)
 	}

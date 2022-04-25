@@ -33,10 +33,7 @@ spec:
             - name: MYSQL_PORT
               value: "3306"
             - name: MYSQL_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: refdb-auth
-                  key: password
+              value: abc
           image: signadot/hotrod:latest
           imagePullPolicy: Always
           name: hotrod

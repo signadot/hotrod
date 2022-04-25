@@ -11,4 +11,12 @@ This demo is based on the Jaeger Hotrod demo [hotrod-tutorial]
 
 Decide on a namespace in which things are to run and then run
 
-./install.sh <namespace>
+```sh
+kubectl -n "${NAMESPACE}" apply -f k8s/pieces
+```
+
+To uninstall:
+
+```sh
+kubectl -n "${NAMESPACE}" delete -f k8s/pieces
+```

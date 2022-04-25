@@ -29,18 +29,17 @@ spec:
     spec:
       containers:
       - name: mysql
-        image: mysql/mysql-server:8.0
+        image: mariadb:latest
         env:
+        - name: MYSQL_DATABASE
+          value: customer
         - name: MYSQL_ROOT_PASSWORD
-          valueFrom:
-            secretKeyRef:
-              name: refdb-auth
-              key: password
+          value: abc
         - name: MYSQL_ROOT_HOST
           value: '%'
         ports:
         - containerPort: 3306
-          name: tcp
+          name: mysql
           protocol: TCP
         volumeMounts:
         - name: customer-db
@@ -48,24 +47,3 @@ spec:
       volumes:
       - name: customer-db
         emptyDir: {}
----
-# secret for mysql-8.0-plugin
-apiVersion: v1
-kind: Secret
-data:
-  #
-  # we specify the following keys for the mysql-8.0-plugin
-  # but we consume only the password above
-  #
-
-  # root
-  username: cm9vdA==
-  # abc
-  password: YWJj
-  # customer-db.hotrod.svc
-  host: Y3VzdG9tZXItZGIuaG90cm9kLnN2Yw==
-  # 3306
-  port: MzMwNg==
-metadata:
-  name: refdb-auth
-type: Opaque

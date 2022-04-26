@@ -76,6 +76,11 @@ var seed = []Customer{
 		Name:     "Japanese Desserts",
 		Location: "728,326",
 	},
+	{
+		ID:       999,
+		Name:     "Resources Test",
+		Location: "123,456",
+	},
 }
 
 func newDatabase(tracer opentracing.Tracer, logger log.Factory) *database {

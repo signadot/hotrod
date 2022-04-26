@@ -1,10 +1,10 @@
 apiVersion: signadot.com/v1
 kind: SignadotResourcePlugin
 metadata:
-  name: hotrod-db
+  name: hotrod-mariadb
 spec:
   description: |
-    Provision a database for one of HotROD's services.
+    Provision a MariaDB instance for one of HotROD's services.
 
     Sandbox should provide input 'dbname' for the name of the database.
 
@@ -16,22 +16,22 @@ spec:
       metadata:
         namespace: signadot
       spec:
-        serviceAccountName: hotrod-resource-plugin
+        serviceAccountName: hotrod-mariadb-plugin
         containers:
-        - image: signadot/hotrod-resource-plugin:latest
+        - image: signadot/hotrod-mariadb-plugin:latest
           name: plugin
 ---
 apiVersion: v1
 kind: ServiceAccount
 metadata:
   namespace: signadot
-  name: hotrod-resource-plugin
+  name: hotrod-mariadb-plugin
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   namespace: signadot
-  name: hotrod-resource-plugin
+  name: hotrod-mariadb-plugin
 rules:
 - apiGroups: [""]
   resources: ["pods"]
@@ -47,12 +47,12 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   namespace: signadot
-  name: hotrod-resource-plugin
+  name: hotrod-mariadb-plugin
 subjects:
 - kind: ServiceAccount
   namespace: signadot
-  name: hotrod-resource-plugin
+  name: hotrod-mariadb-plugin
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: Role
-  name: hotrod-resource-plugin
+  name: hotrod-mariadb-plugin

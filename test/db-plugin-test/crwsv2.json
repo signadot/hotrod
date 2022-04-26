@@ -5,7 +5,7 @@
   "resources": [
     {
       "name": "testdb",
-      "plugin": "sd-mysql8-plugin",
+      "plugin": "hotrod-mariadb",
       "params": {
         "dbname": "customer"
       }

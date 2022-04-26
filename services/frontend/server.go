@@ -21,6 +21,7 @@ import (
 	"io/fs"
 	"net/http"
 	"path"
+	"text/template"
 
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
@@ -28,19 +29,24 @@ import (
 	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/httperr"
 	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
 	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/tracing"
+	"github.com/jaegertracing/jaeger/examples/hotrod/services/customer"
 )
 
 //go:embed web_assets/*
 var webAssetsFS embed.FS
 
+//go:embed templates/*
+var tplFS embed.FS
+
 // Server implements jaeger-demo-frontend service
 type Server struct {
-	hostPort string
-	tracer   opentracing.Tracer
-	logger   log.Factory
-	bestETA  *bestETA
-	assetFS  http.FileSystem
-	basepath string
+	hostPort   string
+	tracer     opentracing.Tracer
+	logger     log.Factory
+	bestETA    *bestETA
+	tplFS      fs.FS
+	basepath   string
+	custClient *customer.Client
 }
 
 // ConfigOptions used to make sure service clients
@@ -55,18 +61,20 @@ type ConfigOptions struct {
 
 // NewServer creates a new frontend.Server
 func NewServer(options ConfigOptions, tracer opentracing.Tracer, logger log.Factory) *Server {
-	// Strip the /web_assets prefix.
-	assetFS, err := fs.Sub(webAssetsFS, "web_assets")
+	tplFS, err := fs.Sub(tplFS, "templates")
+	_ = tplFS
 	if err != nil {
 		panic(err)
 	}
+	custClient := customer.NewClient(tracer, logger, options.CustomerHostPort)
 	return &Server{
-		hostPort: options.FrontendHostPort,
-		tracer:   tracer,
-		logger:   logger,
-		bestETA:  newBestETA(tracer, logger, options),
-		assetFS:  http.FS(assetFS),
-		basepath: options.Basepath,
+		hostPort:   options.FrontendHostPort,
+		tracer:     tracer,
+		logger:     logger,
+		bestETA:    newBestETA(tracer, logger, options),
+		tplFS:      tplFS,
+		basepath:   options.Basepath,
+		custClient: custClient,
 	}
 }
 
@@ -80,9 +88,40 @@ func (s *Server) Run() error {
 func (s *Server) createServeMux() http.Handler {
 	mux := tracing.NewServeMux(s.tracer)
 	p := path.Join("/", s.basepath)
-	mux.Handle(p, http.StripPrefix(p, http.FileServer(s.assetFS)))
-	mux.Handle(path.Join(p, "/dispatch"), http.HandlerFunc(s.dispatch))
+	ap := path.Join(p, "/web_assets")
+	mux.Handle(ap+"/", http.StripPrefix(s.basepath, http.FileServer(http.FS(webAssetsFS))))
+	dp := path.Join(p, "/dispatch")
+	mux.Handle(dp, http.HandlerFunc(s.dispatch))
+	mux.Handle(p, http.HandlerFunc(s.splash))
 	return mux
+}
+
+func (s *Server) splash(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
+	t, err := template.ParseFS(s.tplFS, "*")
+	if err != nil {
+		httperr.HandleError(w, err, http.StatusInternalServerError)
+		return
+	}
+	cs, err := s.custClient.List(ctx)
+	if err != nil {
+		httperr.HandleError(w, err, http.StatusInternalServerError)
+		return
+	}
+	var rows [][]customer.Customer
+	mod := 4
+	for i, cust := range cs {
+		if i%mod == 0 {
+			rows = append(rows, []customer.Customer{})
+		}
+		ri := len(rows) - 1
+		rows[ri] = append(rows[ri], cust)
+	}
+	if err := t.Execute(w, struct{ Rows [][]customer.Customer }{rows}); err != nil {
+		httperr.HandleError(w, err, http.StatusInternalServerError)
+		return
+	}
 }
 
 func (s *Server) dispatch(w http.ResponseWriter, r *http.Request) {

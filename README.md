@@ -7,5 +7,28 @@ This demo is based on the Jaeger Hotrod demo [hotrod-tutorial]
 
 ## Running
 
+First, [install Signadot Operator](https://docs.signadot.com/docs/installation)
+if you haven't already.
+
 ### Run everything in Kubernetes
-`kubectl apply -f k8s/all-in-one/demo.yaml`
+
+Decide on a namespace in which to install HotROD and then run:
+
+```sh
+kubectl create ns "${NAMESPACE}"
+kubectl -n "${NAMESPACE}" apply -f k8s/pieces
+```
+
+To try the demo Signadot Resource Plugin, you must also install the HotROD
+reource plugin into the `signadot` namespace where Signadot Operator runs:
+
+```sh
+kubectl -n signadot apply -f resource-plugin
+```
+
+To uninstall:
+
+```sh
+kubectl -n "${NAMESPACE}" delete -f k8s/pieces
+kubectl -n signadot delete -f resource-plugin
+```

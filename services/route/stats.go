@@ -24,6 +24,7 @@ import (
 )
 
 var routeCalcByCustomer = expvar.NewMap("route.calc.by.customer.sec")
+
 var routeCalcBySession = expvar.NewMap("route.calc.by.session.sec")
 
 var stats = []struct {

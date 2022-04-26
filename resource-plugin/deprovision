@@ -1,0 +1,21 @@
+#!/usr/bin/env bash
+
+set -euo pipefail
+
+if [ $# -ne 2 ]; then
+	echo "usage: deprovision <sandbox-id> <resource-name>"
+	exit 1
+fi
+
+# Get values passed to us by Signadot Operator.
+# These tell us which resource name in which Sandbox we should provision.
+SANDBOX_ID=$1
+RESOURCE_NAME=$2
+
+echo "sandbox id: ${SANDBOX_ID}"
+echo "resource name: ${RESOURCE_NAME}"
+
+# Undeploy the temporary DB for this Sandbox.
+RELEASE_NAME="hotrod-${RESOURCE_NAME}-${SANDBOX_ID}"
+echo "Deleting Helm release: ${RELEASE_NAME}"
+helm -n signadot delete "${RELEASE_NAME}"

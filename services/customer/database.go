@@ -68,7 +68,7 @@ var seed = []Customer{
 	},
 	{
 		ID:       392,
-		Name:     "Trom Chocolatier",
+		Name:     "Resource Test",
 		Location: "577,322",
 	},
 	{

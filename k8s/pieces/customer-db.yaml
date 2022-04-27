@@ -1,17 +1,3 @@
-apiVersion: v1
-kind: Service
-metadata:
-  name: customer-db
-  labels:
-    app: customer-db
-spec:
-  ports:
-  - port: 3306
-    name: tcp
-    protocol: TCP
-  selector:
-    app: customer-db
----
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:

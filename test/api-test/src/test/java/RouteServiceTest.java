@@ -27,55 +27,59 @@ public class RouteServiceTest {
     String sandboxID;
 
     @BeforeSuite
-    public void createSandbox() throws ApiException, InterruptedException {
-        apiClient = new ApiClient();
-        apiClient.setApiKey(SIGNADOT_API_KEY);
-        sandboxesApi = new SandboxesApi(apiClient);
+    public void createSandbox() {
+        try {
+            apiClient = new ApiClient();
+            apiClient.setApiKey(SIGNADOT_API_KEY);
+            sandboxesApi = new SandboxesApi(apiClient);
 
-        String sandboxName = String.format("test-ws-%s", RandomStringUtils.randomAlphanumeric(5));
-        SandboxFork routeFork = new SandboxFork()
-                .forkOf(new ForkOf().kind("Deployment").namespace(HOTROD).name("route"))
-                .customizations(new SandboxCustomizations()
-                        .addEnvItem(new EnvOp().name("DEV").value("true"))
-                        .addImagesItem(new Image().image(ROUTE_SERVICE_IMAGE)))
-                .addEndpointsItem(new ForkEndpoint().name("route").port(8083).protocol("http"));
+            String sandboxName = String.format("test-ws-%s", RandomStringUtils.randomAlphanumeric(5));
+            SandboxFork routeFork = new SandboxFork()
+                    .forkOf(new ForkOf().kind("Deployment").namespace(HOTROD).name("route"))
+                    .customizations(new SandboxCustomizations()
+                            .addEnvItem(new EnvOp().name("DEV").value("true"))
+                            .addImagesItem(new Image().image(ROUTE_SERVICE_IMAGE)))
+                    .addEndpointsItem(new ForkEndpoint().name("route").port(8083).protocol("http"));
 
-        CreateSandboxRequest request = new CreateSandboxRequest()
-                .cluster("demo")
-                .name(sandboxName)
-                .description("test sandbox created using signadot-sdk")
-                .addForksItem(routeFork);
+            CreateSandboxRequest request = new CreateSandboxRequest()
+                    .cluster("demo")
+                    .name(sandboxName)
+                    .description("test sandbox created using signadot-sdk")
+                    .addForksItem(routeFork);
 
-        response = sandboxesApi.createNewSandbox(ORG_NAME, request);
+            response = sandboxesApi.createNewSandbox(ORG_NAME, request);
 
-        sandboxID = response.getSandboxID();
-        if (sandboxID == null || sandboxID.equals("")) {
-            throw new RuntimeException("Sandbox ID not set");
-        }
-
-        List<PreviewEndpoint> endpoints = response.getPreviewEndpoints();
-        if (endpoints.size() == 0) {
-            throw new RuntimeException("preview URL not generated");
-        }
-
-        PreviewEndpoint endpoint = null;
-        for (PreviewEndpoint ep: endpoints) {
-            if ("route".equals(ep.getName())) {
-                endpoint = ep;
-                break;
+            sandboxID = response.getSandboxID();
+            if (sandboxID == null || sandboxID.equals("")) {
+                throw new RuntimeException("Sandbox ID not set");
             }
-        }
-        if (endpoint == null) {
-            throw new RuntimeException("No matching endpoint found");
-        }
 
-        // set the base URL for tests
-        RestAssured.baseURI = endpoint.getPreviewURL();
+            List<PreviewEndpoint> endpoints = response.getPreviewEndpoints();
+            if (endpoints.size() == 0) {
+                throw new RuntimeException("preview URL not generated");
+            }
 
-        // Check for sandbox readiness
-        while (!sandboxesApi.getSandboxReady(ORG_NAME, sandboxID).isReady()) {
-            Thread.sleep(5000);
-        };
+            PreviewEndpoint endpoint = null;
+            for (PreviewEndpoint ep: endpoints) {
+                if ("route".equals(ep.getName())) {
+                    endpoint = ep;
+                    break;
+                }
+            }
+            if (endpoint == null) {
+                throw new RuntimeException("No matching endpoint found");
+            }
+
+            // set the base URL for tests
+            RestAssured.baseURI = endpoint.getPreviewURL();
+
+            // Check for sandbox readiness
+            while (!sandboxesApi.getSandboxReady(ORG_NAME, sandboxID).isReady()) {
+                Thread.sleep(5000);
+            };
+        } catch (ApiException | InterruptedException e) {
+            System.out.println(((ApiException)e).getResponseBody());
+        }
     }
 
     @Test

@@ -24,6 +24,8 @@ type Customer struct {
 	ID       int64
 	Name     string
 	Location string
+	PatchVar string
+	FromVar  string
 }
 
 // Interface exposed by the Customer service.

@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"os"
 
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-lib/metrics"
@@ -117,6 +118,8 @@ func (s *Server) get(w http.ResponseWriter, r *http.Request) {
 		s.logger.For(ctx).Error("request failed", zap.Error(err))
 		return
 	}
+	response.PatchVar = os.Getenv("PATCH_TEST_VAR")
+	response.FromVar = os.Getenv("FROM_TEST_VAR")
 
 	data, err := json.Marshal(response)
 	if httperr.HandleError(w, err, http.StatusInternalServerError) {

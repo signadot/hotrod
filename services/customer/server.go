@@ -118,6 +118,7 @@ func (s *Server) get(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	response.Name = "some value"
 	data, err := json.Marshal(response)
 	if httperr.HandleError(w, err, http.StatusInternalServerError) {
 		s.logger.For(ctx).Error("cannot marshal response", zap.Error(err))

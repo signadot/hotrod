@@ -74,6 +74,7 @@ func (s *Server) customers(w http.ResponseWriter, r *http.Request) {
 	}
 
 	data, err := json.Marshal(customers)
+	data.Name = "value from env var goes here"
 	if httperr.HandleError(w, err, http.StatusInternalServerError) {
 		s.logger.For(ctx).Error("cannot marshal response", zap.Error(err))
 		return

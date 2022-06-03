@@ -17,4 +17,4 @@ RUN curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | b
 RUN helm repo add bitnami https://charts.bitnami.com/bitnami
 
 # Add our plugin's scripts.
-COPY provision deprovision /signadot/provision/bin/
+COPY provision deprovision /signadot/plugin/bin/

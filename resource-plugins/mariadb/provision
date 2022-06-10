@@ -7,8 +7,8 @@ if [ $# -ne 2 ]; then
   exit 1
 fi
 
-INPUT_DIR=/signadot/provision/input
-OUTPUT_DIR=/signadot/provision/output
+INPUT_DIR=/signadot/plugin/input
+OUTPUT_DIR=/signadot/plugin/output
 
 # Get values passed to us by Signadot Operator.
 # These tell us which resource name in which Sandbox we should provision.

@@ -12,6 +12,7 @@ spec:
     an empty database instance tied to the lifetime of the sandbox.
   type: ExecPod
   execPod:
+    imageSpecVersion: v1.0
     template:
       metadata:
         namespace: signadot

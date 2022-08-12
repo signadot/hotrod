@@ -160,10 +160,6 @@ jobs:
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
           IMAGE_TAG: ${{ github.sha }}
         run: |
-          # this is specific to staging: the api url needs to be
-          # a staging one
-          mkdir ${HOME}/.signadot
-          echo "api_url: \"https://api.staging.signadot.com\""  > ${HOME}/.signadot/config
           # run the cli
           # setting the gitsha to a short version to respect the name
           # limit (30 chars)

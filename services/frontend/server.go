@@ -110,7 +110,7 @@ func (s *Server) splash(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	var rows [][]customer.Customer
-	mod := 4
+	mod := 3
 	for i, cust := range cs {
 		if i%mod == 0 {
 			rows = append(rows, []customer.Customer{})

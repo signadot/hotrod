@@ -165,7 +165,7 @@ jobs:
           # limit (30 chars)
           go run \
             github.com/signadot/cli/cmd/signadot@latest sandbox apply \
-            --set image=signadot/hotrod-staging:${IMAGE_TAG} \
+            --set image=signadot/hotrod:${IMAGE_TAG} \
             --set git-short-commit=${IMAGE_TAG:0:6} \
             -f ${GITHUB_WORKSPACE}/.signadot/frontend-template.yaml \
             -o yaml > ${GITHUB_WORKSPACE}/.signadot/frontend.yaml

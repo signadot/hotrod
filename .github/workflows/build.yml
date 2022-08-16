@@ -168,7 +168,7 @@ jobs:
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
             signadot/signadot-cli \
             /signadot sandbox apply \
-            --set image=signadot/hotrod-staging:${IMAGE_TAG} \
+            --set image=signadot/hotrod:${IMAGE_TAG} \
             --set git-short-commit=${IMAGE_TAG:0:6} \
             -f - \
             -o yaml \

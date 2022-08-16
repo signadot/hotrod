@@ -163,12 +163,17 @@ jobs:
           # run the cli
           # setting the gitsha to a short version to respect the name
           # limit (30 chars)
-          go run \
-            github.com/signadot/cli/cmd/signadot@latest sandbox apply \
-            --set image=signadot/hotrod:${IMAGE_TAG} \
+          docker run -i \
+            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
+            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
+            signadot/signadot-cli \
+            /signadot sandbox apply \
+            --set image=signadot/hotrod-staging:${IMAGE_TAG} \
             --set git-short-commit=${IMAGE_TAG:0:6} \
-            -f ${GITHUB_WORKSPACE}/.signadot/frontend-template.yaml \
-            -o yaml > ${GITHUB_WORKSPACE}/.signadot/frontend.yaml
+            -f - \
+            -o yaml \
+            < ${GITHUB_WORKSPACE}/.signadot/frontend-template.yaml \
+            > ${GITHUB_WORKSPACE}/.signadot/frontend.yaml
       - name: Test Sandbox
         run: |
           go install github.com/mikefarah/yq/v4@latest
@@ -179,6 +184,12 @@ jobs:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
         run: |
-          go run github.com/signadot/cli/cmd/signadot@latest \
-            sandbox delete \
-            -f ${GITHUB_WORKSPACE}/.signadot/frontend.yaml
+          docker run -i \
+            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
+            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
+            signadot/signadot-cli \
+            /signadot sandbox apply \
+            --set image=signadot/hotrod-staging:${IMAGE_TAG} \
+            --set git-short-commit=${IMAGE_TAG:0:6} \
+            -f - \
+            < ${GITHUB_WORKSPACE}/.signadot/frontend.yaml

@@ -188,6 +188,6 @@ jobs:
             -e SIGNADOT_ORG=${SIGNADOT_ORG} \
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
             signadot/signadot-cli \
-            /signadot sandbox apply \
+            /signadot sandbox delete \
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/frontend.yaml

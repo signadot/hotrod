@@ -173,11 +173,11 @@ jobs:
             -f - \
             -o yaml \
             < ${GITHUB_WORKSPACE}/.signadot/frontend-template.yaml \
-            > ${GITHUB_WORKSPACE}/.signadot/frontend.yaml
+            > ${GITHUB_WORKSPACE}/.signadot/frontend-response.yaml
       - name: Test Sandbox
         run: |
           go install github.com/mikefarah/yq/v4@latest
-          endpoint=$(yq '.endpoints[0].url' ${GITHUB_WORKSPACE}/.signadot/frontend.yaml)
+          endpoint=$(yq '.endpoints[0].url' ${GITHUB_WORKSPACE}/.signadot/frontend-response.yaml)
           curl -H "signadot-api-key: ${{ secrets.SIGNADOT_API_KEY }}" $endpoint
       - name: Delete Sandbox
         env:
@@ -190,4 +190,4 @@ jobs:
             signadot/signadot-cli \
             /signadot sandbox delete \
             -f - \
-            < ${GITHUB_WORKSPACE}/.signadot/frontend.yaml
+            < ${GITHUB_WORKSPACE}/.signadot/frontend-response.yaml

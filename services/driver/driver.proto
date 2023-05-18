@@ -17,6 +17,14 @@ package driver;
 
 option go_package = "driver";
 
+
+message DriverInfo {
+  string DriverID = 1;
+  string Name = 2;
+  string Location = 3;
+  string ImageURL = 4;
+}
+
 message DriverLocationRequest {
   string location = 1;
 }
@@ -24,6 +32,7 @@ message DriverLocationRequest {
 message DriverLocation {
   string driverID = 1;
   string location = 2;
+  DriverInfo driver = 3;
 }
 
 message DriverLocationResponse {

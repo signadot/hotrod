@@ -19,13 +19,12 @@ import (
 	"context"
 	"net"
 
+	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
 	otgrpc "github.com/opentracing-contrib/go-grpc"
 	"github.com/opentracing/opentracing-go"
 	"github.com/uber/jaeger-lib/metrics"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
-
-	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
 )
 
 // Server implements jaeger-demo-frontend service
@@ -91,6 +90,12 @@ func (s *Server) FindNearest(ctx context.Context, location *DriverLocationReques
 		retMe[i] = &DriverLocation{
 			DriverID: drv.DriverID,
 			Location: drv.Location,
+			Driver: &DriverInfo{
+				DriverID: drv.DriverID,
+				Name:     drv.Name,
+				Location: drv.Location,
+				ImageURL: drv.ImageURL,
+			},
 		}
 	}
 	s.logger.For(ctx).Info("Search successful", zap.Int("num_drivers", len(retMe)))

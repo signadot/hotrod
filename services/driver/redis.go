@@ -20,6 +20,7 @@ import (
 	"errors"
 	"fmt"
 	"math/rand"
+	"strconv"
 	"sync"
 
 	"github.com/opentracing/opentracing-go"
@@ -32,6 +33,10 @@ import (
 	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/tracing"
 	"github.com/jaegertracing/jaeger/examples/hotrod/services/config"
 )
+
+var names = []string{"Silver Head", "Sparky", "Andy Roid", "Combot", "Artron", "Brobot", "Servo", "Cyborgan", "Robyte", "Lyftr", "Machina", "Dee Royd"}
+
+const imageBucketPath = "https://signadot-public.s3.us-west-2.amazonaws.com/bots/"
 
 // Redis is a simulator of remote Redis cache
 type Redis struct {
@@ -59,10 +64,10 @@ func (r *Redis) FindDriverIDs(ctx context.Context, location string) []string {
 	// simulate RPC delay
 	delay.Sleep(config.RedisFindDelay, config.RedisFindDelayStdDev)
 
-	drivers := make([]string, 10)
+	drivers := make([]string, len(names))
 	for i := range drivers {
 		// #nosec
-		drivers[i] = fmt.Sprintf("T7%05dC", rand.Int()%100000)
+		drivers[i] = strconv.Itoa(i + 1)
 	}
 	r.logger.For(ctx).Info("Found drivers", zap.Strings("drivers", drivers))
 	return drivers
@@ -88,9 +93,15 @@ func (r *Redis) GetDriver(ctx context.Context, driverID string) (Driver, error) 
 	}
 
 	// #nosec
+	idx, err := strconv.Atoi(driverID)
+	if err != nil {
+		panic("driverID expected to be a number")
+	}
 	return Driver{
 		DriverID: driverID,
+		Name:     names[idx-1],
 		Location: fmt.Sprintf("%d,%d", rand.Int()%1000, rand.Int()%1000),
+		ImageURL: fmt.Sprintf("%sbot%s.png", imageBucketPath, driverID),
 	}, nil
 }
 

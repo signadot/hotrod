@@ -58,22 +58,22 @@ CREATE TABLE IF NOT EXISTS customers
 var seed = []Customer{
 	{
 		ID:       123,
-		Name:     "Rachel's Floral Designs",
+		Name:     "Bjarne Stroustrup",
 		Location: "115,277",
 	},
 	{
 		ID:       567,
-		Name:     "Amazing Coffee Roasters",
+		Name:     "Donald Knuth",
 		Location: "211,653",
 	},
 	{
 		ID:       392,
-		Name:     "Trom Chocolatier",
+		Name:     "Tim Berners-Lee",
 		Location: "577,322",
 	},
 	{
 		ID:       731,
-		Name:     "Japanese Desserts",
+		Name:     "Vint Cerf",
 		Location: "728,326",
 	},
 }

@@ -70,7 +70,9 @@ func fromProto(response *DriverLocationResponse) []Driver {
 	for i, result := range response.Locations {
 		retMe[i] = Driver{
 			DriverID: result.DriverID,
+			Name:     result.Driver.Name,
 			Location: result.Location,
+			ImageURL: result.Driver.ImageURL,
 		}
 	}
 	return retMe

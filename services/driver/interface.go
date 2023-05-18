@@ -22,7 +22,9 @@ import (
 // Driver describes a driver and the current car location.
 type Driver struct {
 	DriverID string
+	Name     string
 	Location string
+	ImageURL string
 }
 
 // Interface exposed by the Driver service.

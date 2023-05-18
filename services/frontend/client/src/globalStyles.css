@@ -1,0 +1,7 @@
+/* In a global .css file */
+body {
+    background-color: lightblue;
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+}

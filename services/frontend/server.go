@@ -18,10 +18,8 @@ package frontend
 import (
 	"embed"
 	"encoding/json"
-	"io/fs"
 	"net/http"
 	"path"
-	"text/template"
 
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
@@ -32,11 +30,8 @@ import (
 	"github.com/jaegertracing/jaeger/examples/hotrod/services/customer"
 )
 
-//go:embed web_assets/*
-var webAssetsFS embed.FS
-
-//go:embed templates/*
-var tplFS embed.FS
+//go:embed client/build/*
+var reactAppFS embed.FS
 
 // Server implements jaeger-demo-frontend service
 type Server struct {
@@ -44,7 +39,6 @@ type Server struct {
 	tracer     opentracing.Tracer
 	logger     log.Factory
 	bestETA    *bestETA
-	tplFS      fs.FS
 	basepath   string
 	custClient *customer.Client
 }
@@ -61,18 +55,12 @@ type ConfigOptions struct {
 
 // NewServer creates a new frontend.Server
 func NewServer(options ConfigOptions, tracer opentracing.Tracer, logger log.Factory) *Server {
-	tplFS, err := fs.Sub(tplFS, "templates")
-	_ = tplFS
-	if err != nil {
-		panic(err)
-	}
 	custClient := customer.NewClient(tracer, logger, options.CustomerHostPort)
 	return &Server{
 		hostPort:   options.FrontendHostPort,
 		tracer:     tracer,
 		logger:     logger,
 		bestETA:    newBestETA(tracer, logger, options),
-		tplFS:      tplFS,
 		basepath:   options.Basepath,
 		custClient: custClient,
 	}
@@ -87,23 +75,50 @@ func (s *Server) Run() error {
 
 func (s *Server) createServeMux() http.Handler {
 	mux := tracing.NewServeMux(s.tracer)
-	p := path.Join("/", s.basepath)
-	ap := path.Join(p, "/web_assets")
-	mux.Handle(ap+"/", http.StripPrefix(s.basepath, http.FileServer(http.FS(webAssetsFS))))
+	p := path.Join("/api", s.basepath)
+
+	// handle the built React application files
+	reactAppPath := path.Join(p, "/")
+	mux.Handle(reactAppPath, http.StripPrefix(s.basepath, http.FileServer(http.FS(reactAppFS))))
+
+	// handle your API endpoints
+	cp := path.Join(p, "/customers")
+	mux.Handle(cp, http.HandlerFunc(s.customers))
+
+	// handle your API endpoints
 	dp := path.Join(p, "/dispatch")
 	mux.Handle(dp, http.HandlerFunc(s.dispatch))
-	mux.Handle(p, http.HandlerFunc(s.splash))
+
+	// handle data for the splash page
+	sp := path.Join(p, "/splash")
+	mux.Handle(sp, http.HandlerFunc(s.splash))
+
 	return mux
 }
 
-func (s *Server) splash(w http.ResponseWriter, r *http.Request) {
+func (s *Server) customers(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
-	t, err := template.ParseFS(s.tplFS, "*")
+	cs, err := s.custClient.List(ctx)
 	if err != nil {
 		httperr.HandleError(w, err, http.StatusInternalServerError)
 		return
 	}
+	// Respond with JSON data
+	jsonResponse, err := json.Marshal(cs)
+	if err != nil {
+		httperr.HandleError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
+}
+
+func (s *Server) splash(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	w.Header().Set("Content-Type", "application/json")
+	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
 	cs, err := s.custClient.List(ctx)
 	if err != nil {
 		httperr.HandleError(w, err, http.StatusInternalServerError)
@@ -118,10 +133,15 @@ func (s *Server) splash(w http.ResponseWriter, r *http.Request) {
 		ri := len(rows) - 1
 		rows[ri] = append(rows[ri], cust)
 	}
-	if err := t.Execute(w, struct{ Rows [][]customer.Customer }{rows}); err != nil {
+	// Respond with JSON data
+	jsonResponse, err := json.Marshal(rows)
+	if err != nil {
 		httperr.HandleError(w, err, http.StatusInternalServerError)
 		return
 	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(jsonResponse)
 }
 
 func (s *Server) dispatch(w http.ResponseWriter, r *http.Request) {

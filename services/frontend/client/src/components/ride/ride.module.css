@@ -1,0 +1,32 @@
+.container {
+    background-color: #fff;
+    border-radius: 10px;
+    padding: 1em;
+    color: #333;
+    display: flex;
+    margin-bottom: 1.5em;
+}
+
+.container img {
+    height: 80px;
+    background-color: #eaeaea;
+}
+
+.info {
+    width: 100%;
+    margin-left: 1em;
+}
+
+.info p {
+    margin: 0.5em 0em;
+    padding: 0px;
+}
+
+.info span {
+    font-weight: bold;
+}
+
+.eta {
+    font-size: 0.8em;
+    font-weight: 500;
+}

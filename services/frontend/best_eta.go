@@ -19,6 +19,7 @@ import (
 	"context"
 	"errors"
 	"math"
+	"math/rand"
 	"sync"
 	"time"
 
@@ -43,7 +44,7 @@ type bestETA struct {
 
 // Response contains ETA for a trip.
 type Response struct {
-	Driver string
+	Driver driver.Driver
 	ETA    time.Duration
 }
 
@@ -90,6 +91,11 @@ func (eta *bestETA) Get(ctx context.Context, customerID string) (*Response, erro
 	eta.logger.For(ctx).Info("Found routes", zap.Any("routes", results))
 
 	resp := &Response{ETA: math.MaxInt64}
+
+	// Let's shuffle the order of drivers in the result.
+	rand.Seed(time.Now().UnixNano())
+	rand.Shuffle(len(results), func(i, j int) { results[i], results[j] = results[j], results[i] })
+
 	for _, result := range results {
 		if result.err != nil {
 			return nil, err
@@ -99,16 +105,15 @@ func (eta *bestETA) Get(ctx context.Context, customerID string) (*Response, erro
 			resp.Driver = result.driver
 		}
 	}
-	if resp.Driver == "" {
+	if resp.Driver.DriverID == "" {
 		return nil, errors.New("no routes found")
 	}
-
-	eta.logger.For(ctx).Info("Dispatch successful", zap.String("driver", resp.Driver), zap.String("eta", resp.ETA.String()))
+	eta.logger.For(ctx).Info("Dispatch successful", zap.String("driver", resp.Driver.Name), zap.String("eta", resp.ETA.String()))
 	return resp, nil
 }
 
 type routeResult struct {
-	driver string
+	driver driver.Driver
 	route  *route.Route
 	err    error
 }
@@ -127,7 +132,7 @@ func (eta *bestETA) getRoutes(ctx context.Context, customer *customer.Customer, 
 			route, err := eta.route.FindRoute(ctx, driver.Location, customer.Location)
 			routesLock.Lock()
 			results = append(results, routeResult{
-				driver: driver.DriverID,
+				driver: driver,
 				route:  route,
 				err:    err,
 			})

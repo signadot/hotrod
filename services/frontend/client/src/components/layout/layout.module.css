@@ -1,0 +1,58 @@
+.container {
+    background-color: #1A1A1A;
+    height: 100vh;
+    color: #fff;
+    display: flex;
+    padding: 0px;
+    margin: 0px;
+}
+
+@media screen and (max-width: 800px) {
+    .container {
+        flex-direction: column;
+    }
+}
+
+.side {
+    flex: 3 1;
+    margin: 2em;
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    margin: 0em;
+    padding: 0em;
+}
+
+.logo {
+    margin: 0em;
+    padding: 0em;
+}
+
+.logo img {
+    height: 64px;
+}
+
+.title {
+    margin: 0px 0px 0px 24px;
+    padding: 0em;
+}
+
+.title h2 {
+    margin: 0px;
+    padding: 0px;
+    color: #ddd;
+}
+
+.title span {
+    display: block;
+    font-size: 0.8em;
+    margin-top: 0.25em;
+    color: #888;
+}
+
+.main {
+    flex: 7 1;
+    background-color: purple;
+}

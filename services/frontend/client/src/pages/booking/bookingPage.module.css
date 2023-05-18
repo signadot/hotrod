@@ -1,0 +1,42 @@
+.tripInfo {
+    padding: 2em 0em;
+}
+
+.title {
+    margin-top: 2em;
+}
+
+.location {
+    all: unset;
+    width: 100%;
+    max-width: 360px;
+    color: #777;
+    font-size: 0.9em;
+    border: 1px solid #777;
+    padding: 0.6em 1em;
+    border-radius: 1em;
+}
+
+.book {
+    margin-top: 2em;
+    width: 40%;
+    background-color: #34B663;
+    color: #fff;
+    font-size: 0.8em;
+    font-weight: 700;
+    padding: 0.8em;
+    height: 50px;
+    border: 0px;
+    border-radius: 25px;
+    cursor: pointer;
+}
+
+.book:disabled {
+    cursor: default;
+    animation: mymove 5s infinite;
+}
+
+@keyframes mymove {
+    from {background-color: #34B663;}
+    to {background-color: purple;}
+}

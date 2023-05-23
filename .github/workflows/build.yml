@@ -145,3 +145,49 @@ jobs:
           check_name: Route Service Test Result
           comment_mode: "create new"
           files: test/api-test/build/test-results/**/*.xml
+  cli-sandbox:
+    runs-on: ubuntu-latest
+    needs: [ build, changes ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Create Sandbox
+        env:
+          SIGNADOT_ORG: signadot
+          SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # run the cli
+          # setting the gitsha to a short version to respect the name
+          # limit (30 chars)
+          docker run -i \
+            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
+            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
+            signadot/signadot-cli \
+            /signadot sandbox apply \
+            --set image=signadot/hotrod:${IMAGE_TAG} \
+            --set git-short-commit=${IMAGE_TAG:0:6} \
+            -f - \
+            -o yaml \
+            < ${GITHUB_WORKSPACE}/.signadot/frontend-template.yaml \
+            > ${GITHUB_WORKSPACE}/.signadot/frontend-response.yaml
+      - name: Test Sandbox
+        run: |
+          go install github.com/mikefarah/yq/v4@latest
+          endpoint=$(yq '.endpoints[0].url' ${GITHUB_WORKSPACE}/.signadot/frontend-response.yaml)
+          curl -H "signadot-api-key: ${{ secrets.SIGNADOT_API_KEY }}" $endpoint
+      - name: Delete Sandbox
+        env:
+          SIGNADOT_ORG: signadot
+          SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
+        run: |
+          docker run -i \
+            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
+            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
+            signadot/signadot-cli \
+            /signadot sandbox delete \
+            -f - \
+            < ${GITHUB_WORKSPACE}/.signadot/frontend-response.yaml

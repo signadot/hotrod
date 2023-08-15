@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"io/fs"
 	"net/http"
+	"os"
 	"path"
 	"text/template"
 
@@ -118,7 +119,13 @@ func (s *Server) splash(w http.ResponseWriter, r *http.Request) {
 		ri := len(rows) - 1
 		rows[ri] = append(rows[ri], cust)
 	}
-	if err := t.Execute(w, struct{ Rows [][]customer.Customer }{rows}); err != nil {
+
+	data := struct {
+		Rows        [][]customer.Customer
+		TitleSuffix string
+	}{rows, os.Getenv("FRONTEND_TITLE_SUFFIX")}
+
+	if err := t.Execute(w, data); err != nil {
 		httperr.HandleError(w, err, http.StatusInternalServerError)
 		return
 	}

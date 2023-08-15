@@ -33,12 +33,29 @@ var frontendCmd = &cobra.Command{
 	Short: "Starts Frontend service",
 	Long:  `Starts Frontend service.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Resolve hosts
+		var driverHost, customerHost, routeHost string
+		if baseDomain == "" {
+			driverHost = "driver"
+			customerHost = "customer"
+			routeHost = "route"
+		} else {
+			if baseDomain == "localhost" || net.ParseIP(baseDomain) != nil {
+				driverHost = baseDomain
+				customerHost = baseDomain
+				routeHost = baseDomain
+			} else {
+				driverHost = "driver." + baseDomain
+				customerHost = "customer." + baseDomain
+				routeHost = "route." + baseDomain
+			}
+		}
 
 		options.FrontendHostPort = net.JoinHostPort("0.0.0.0", strconv.Itoa(frontendPort))
-		options.DriverHostPort = net.JoinHostPort("driver", strconv.Itoa(driverPort))
-		options.CustomerHostPort = net.JoinHostPort("customer", strconv.Itoa(customerPort))
-		options.RouteHostPort = net.JoinHostPort("route", strconv.Itoa(routePort))
-		options.Basepath = basepath
+		options.DriverHostPort = net.JoinHostPort(driverHost, strconv.Itoa(driverPort))
+		options.CustomerHostPort = net.JoinHostPort(customerHost, strconv.Itoa(customerPort))
+		options.RouteHostPort = net.JoinHostPort(routeHost, strconv.Itoa(routePort))
+		options.Basepath = basePath
 
 		zapLogger := logger.With(zap.String("service", "frontend"))
 		logger := log.NewFactory(zapLogger)

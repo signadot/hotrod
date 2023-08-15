@@ -44,7 +44,8 @@ var (
 	frontendPort int
 	routePort    int
 
-	basepath string
+	basePath   string
+	baseDomain string
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -75,8 +76,9 @@ func init() {
 	RootCmd.PersistentFlags().IntVarP(&frontendPort, "frontend-service-port", "f", 8080, "Port for frontend service")
 	RootCmd.PersistentFlags().IntVarP(&routePort, "route-service-port", "r", 8083, "Port for routing service")
 
-	// Flag for serving frontend at custom basepath url
-	RootCmd.PersistentFlags().StringVarP(&basepath, "basepath", "b", "", `Basepath for frontend service(default "/")`)
+	// Extra flags
+	RootCmd.PersistentFlags().StringVarP(&basePath, "basepath", "b", "", `Base path for frontend service (default "/")`)
+	RootCmd.PersistentFlags().StringVarP(&baseDomain, "basedomain", "B", "", `Base domain for accessing hotrod services`)
 
 	rand.Seed(int64(time.Now().Nanosecond()))
 	logger, _ = zap.NewDevelopment(
@@ -127,8 +129,8 @@ func onInitialize() {
 		logger.Info("changing route service port", zap.Int("old", 8083), zap.Int("new", routePort))
 	}
 
-	if basepath != "" {
-		logger.Info("changing basepath for frontend", zap.String("old", "/"), zap.String("new", basepath))
+	if basePath != "" {
+		logger.Info("changing basepath for frontend", zap.String("old", "/"), zap.String("new", basePath))
 	}
 }
 

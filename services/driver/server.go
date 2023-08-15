@@ -90,7 +90,7 @@ func (s *Server) FindNearest(ctx context.Context, location *DriverLocationReques
 			return nil, err
 		}
 		retMe[i] = &DriverLocation{
-			DriverID: os.Getenv("DRIVER_ID_PREFIX") + drv.DriverID + " (e2e-test:driver)",
+			DriverID: os.Getenv("DRIVER_ID_PREFIX") + drv.DriverID + os.Getenv("DRIVER_ID_SUFFIX"),
 			Location: drv.Location,
 		}
 	}

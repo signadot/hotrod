@@ -18,6 +18,7 @@ package driver
 import (
 	"context"
 	"net"
+	"os"
 
 	otgrpc "github.com/opentracing-contrib/go-grpc"
 	"github.com/opentracing/opentracing-go"

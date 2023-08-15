@@ -1,4 +1,4 @@
-project_name: hotrod
+project_name: hotrod-e2e
 builds:
 - main: ./cmd/hotrod
   binary: hotrod
@@ -13,21 +13,21 @@ dockers:
   goos: linux
   goarch: amd64
   image_templates:
-  - "signadot/{{ .ProjectName }}:{{ .Env.GIT_SHA }}-amd64"
+  - "signadot/{{ .ProjectName }}:latest-amd64"
   build_flag_templates:
   - "--platform=linux/amd64"
 - use: buildx
   goos: linux
   goarch: arm64
   image_templates:
-  - "signadot/{{ .ProjectName }}:{{ .Env.GIT_SHA }}-arm64"
+  - "signadot/{{ .ProjectName }}:latest-arm64"
   build_flag_templates:
   - "--platform=linux/arm64"
 docker_manifests:
   # we only use latest here
-- name_template: "signadot/{{ .ProjectName }}:{{ .Env.GIT_SHA }}"
+- name_template: "signadot/{{ .ProjectName }}:latest"
   image_templates:
-  - "signadot/{{ .ProjectName }}:{{ .Env.GIT_SHA }}-amd64"
-  - "signadot/{{ .ProjectName }}:{{ .Env.GIT_SHA }}-arm64"
+  - "signadot/{{ .ProjectName }}:latest-amd64"
+  - "signadot/{{ .ProjectName }}:latest-arm64"
 release:
   disable: true

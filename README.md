@@ -23,7 +23,7 @@ To try the demo Signadot Resource Plugin, you must also install the HotROD
 reource plugin into the `signadot` namespace where Signadot Operator runs:
 
 ```sh
-kubectl -n signadot apply -f resource-plugin
+kubectl -n signadot apply -f resource-plugins/mariadb
 ```
 
 To uninstall:

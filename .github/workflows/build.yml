@@ -103,76 +103,6 @@ jobs:
         env:
           GIT_SHA: ${{ github.sha }}
 
-  update_signadot:
-    if: ${{ github.event_name == 'pull_request' }}
-    needs: [ build, changes ]
-    runs-on: ubuntu-latest
-    outputs:
-      routePreviewURL: ${{ steps.upsert_workspace.outputs.routePreviewURL }}
-    steps:
-      - name: call signadot API
-        id: upsert_workspace
-        shell: bash
-        run: |
-          imageReplacements=()
-          endpointSegments=('{"routeType": "static", "protocol": "http", "port": 8080, "host": "frontend.hotrod.svc"}')
-
-          if [[ ${{ needs.changes.outputs.customer }} == 'true' ]]
-          then
-            imageReplacements+=('{"name": "signadot/hotrod-customer", "newTag": "${{ github.sha }}"}')
-            endpointSegments+=('{"routeType": "fork", "protocol": "http", "forkOf": {"kind": "Deployment", "name": "customer", "namespace": "hotrod"}}')
-          fi
-
-          if [[ ${{ needs.changes.outputs.driver }} == 'true' ]]
-          then
-            imageReplacements+=('{"name": "signadot/hotrod-driver", "newTag": "${{ github.sha }}"}')
-            endpointSegments+=('{"routeType": "fork", "protocol": "http", "forkOf": {"kind": "Deployment", "name": "driver", "namespace": "hotrod"}}')
-          fi
-
-          if [[ ${{ needs.changes.outputs.frontend }} == 'true' ]]
-          then
-            imageReplacements+=('{"name": "signadot/hotrod-frontend", "newTag": "${{ github.sha }}"}')
-            endpointSegments+=('{"routeType": "fork", "protocol": "http", "forkOf": {"kind": "Deployment", "name": "frontend", "namespace": "hotrod"}}')
-          fi
-
-          if [[ ${{ needs.changes.outputs.route }} == 'true' ]]
-          then
-            imageReplacements+=('{"name": "signadot/hotrod-route", "newTag": "${{ github.sha }}"}')
-            endpointSegments+=('{"routeType": "fork", "protocol": "http", "forkOf": {"kind": "Deployment", "name": "route", "namespace": "hotrod"}}')
-          fi
-
-          printf -v joined '%s,' "${imageReplacements[@]}"
-          printf -v endpoints '%s,' "${endpointSegments[@]}"
-
-          payload=$(cat <<EOF
-          {
-            "cluster": "demo",
-            "namespace": "hotrod",
-            "headCommit": "${{ github.event.pull_request.head.sha }}",
-            "images": [ ${joined%,} ],
-            "endpoints": [ ${endpoints%,} ]
-          }
-          EOF
-          )
-          echo "Request body:"
-          echo $payload | jq
-          RESULT=$(curl -H 'Content-Type: application/json' \
-               -H 'Authorization: ApiKey ${{ secrets.SIGNADOT_API_KEY }}' \
-               -d "${payload}" \
-          https://api.signadot.com/api/v1/repos/signadot/hotrod/pulls/${{ github.event.number }}/workspaces)
-          echo "Response body:"
-          echo $RESULT | jq
-
-          ERROR=$(jq -r '.error' <<< $RESULT)
-          if [ $ERROR != "null" ]; then
-            echo "error: $ERROR"
-            exit 1
-          fi
-
-          routePreviewURL=$(jq -r '[.previewEndpoints[] | select(.forkOf != null and .forkOf.name == "route")] | .[0] | .previewURL' <<< $RESULT)
-          echo "Route preview URL: routePreviewURL"
-          echo "::set-output name=routePreviewURL::${routePreviewURL}"
-  
   run_integration_tests:
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.route == 'true' }}
     runs-on: ubuntu-latest
@@ -215,3 +145,49 @@ jobs:
           check_name: Route Service Test Result
           comment_mode: "create new"
           files: test/api-test/build/test-results/**/*.xml
+  cli-sandbox:
+    runs-on: ubuntu-latest
+    needs: [ build, changes ]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Create Sandbox
+        env:
+          SIGNADOT_ORG: signadot
+          SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # run the cli
+          # setting the gitsha to a short version to respect the name
+          # limit (30 chars)
+          docker run -i \
+            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
+            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
+            signadot/signadot-cli \
+            /signadot sandbox apply \
+            --set image=signadot/hotrod:${IMAGE_TAG} \
+            --set git-short-commit=${IMAGE_TAG:0:6} \
+            -f - \
+            -o yaml \
+            < ${GITHUB_WORKSPACE}/.signadot/frontend-template.yaml \
+            > ${GITHUB_WORKSPACE}/.signadot/frontend-response.yaml
+      - name: Test Sandbox
+        run: |
+          go install github.com/mikefarah/yq/v4@latest
+          endpoint=$(yq '.endpoints[0].url' ${GITHUB_WORKSPACE}/.signadot/frontend-response.yaml)
+          curl -H "signadot-api-key: ${{ secrets.SIGNADOT_API_KEY }}" $endpoint
+      - name: Delete Sandbox
+        env:
+          SIGNADOT_ORG: signadot
+          SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
+        run: |
+          docker run -i \
+            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
+            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
+            signadot/signadot-cli \
+            /signadot sandbox delete \
+            -f - \
+            < ${GITHUB_WORKSPACE}/.signadot/frontend-response.yaml

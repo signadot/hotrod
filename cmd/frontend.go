@@ -17,6 +17,7 @@ package cmd
 
 import (
 	"net"
+	"os"
 	"strconv"
 
 	"github.com/spf13/cobra"
@@ -33,7 +34,10 @@ var frontendCmd = &cobra.Command{
 	Short: "Starts Frontend service",
 	Long:  `Starts Frontend service.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		// Resolve hosts
+		options.FrontendHostPort = net.JoinHostPort("0.0.0.0", strconv.Itoa(frontendPort))
+		options.Basepath = basePath
+
+		// Resolve services addresses
 		var driverHost, customerHost, routeHost string
 		if baseDomain == "" {
 			driverHost = "driver"
@@ -50,12 +54,21 @@ var frontendCmd = &cobra.Command{
 				routeHost = "route." + baseDomain
 			}
 		}
-
-		options.FrontendHostPort = net.JoinHostPort("0.0.0.0", strconv.Itoa(frontendPort))
-		options.DriverHostPort = net.JoinHostPort(driverHost, strconv.Itoa(driverPort))
-		options.CustomerHostPort = net.JoinHostPort(customerHost, strconv.Itoa(customerPort))
-		options.RouteHostPort = net.JoinHostPort(routeHost, strconv.Itoa(routePort))
-		options.Basepath = basePath
+		if val := os.Getenv("FRONTEND_DRIVER_ADDR"); val != "" {
+			options.DriverHostPort = val
+		} else {
+			options.DriverHostPort = net.JoinHostPort(driverHost, strconv.Itoa(driverPort))
+		}
+		if val := os.Getenv("FRONTEND_CUSTOMER_ADDR"); val != "" {
+			options.CustomerHostPort = val
+		} else {
+			options.CustomerHostPort = net.JoinHostPort(customerHost, strconv.Itoa(customerPort))
+		}
+		if val := os.Getenv("FRONTEND_ROUTE_ADDR"); val != "" {
+			options.RouteHostPort = val
+		} else {
+			options.RouteHostPort = net.JoinHostPort(routeHost, strconv.Itoa(routePort))
+		}
 
 		zapLogger := logger.With(zap.String("service", "frontend"))
 		logger := log.NewFactory(zapLogger)

@@ -41,4 +41,3 @@ spec:
   - name: v1
     labels:
       component: route
----

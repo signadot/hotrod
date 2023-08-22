@@ -36,11 +36,10 @@ import (
 
 // database simulates Customer repository implemented on top of an SQL database
 type database struct {
-	tracer    opentracing.Tracer
-	logger    log.Factory
-	customers map[string]*Customer
-	lock      *tracing.Mutex
-	db        *sqlx.DB
+	tracer opentracing.Tracer
+	logger log.Factory
+	lock   *tracing.Mutex
+	db     *sqlx.DB
 }
 
 const tableSchema = `
@@ -122,9 +121,8 @@ func newDatabase(tracer opentracing.Tracer, logger log.Factory) *database {
 func driverConfig() *mysql.Config {
 	dc := mysql.NewConfig()
 	dc.Net = "tcp"
-	dc.Addr = envDefault("MYSQL_HOST", "customer-db.hotrod.svc") +
-		":" +
-		envDefault("MYSQL_PORT", "3306")
+	dc.Addr = envDefault("MYSQL_HOST", "customer-db") +
+		":" + envDefault("MYSQL_PORT", "3306")
 	dc.DBName = "customer"
 	dc.User = "root"
 	dc.Passwd = envDefault("MYSQL_ROOT_PASSWORD", "abc")
@@ -135,7 +133,6 @@ func driverConfig() *mysql.Config {
 	dc.Params = map[string]string{
 		"time_zone": "'+00:00'",
 	}
-
 	return dc
 }
 
@@ -157,7 +154,7 @@ func (d *database) List(ctx context.Context) ([]Customer, error) {
 		// #nosec
 		span.SetTag("sql.query", "SELECT id, name, location FROM customers")
 		defer span.Finish()
-		ctx = opentracing.ContextWithSpan(ctx, span)
+		opentracing.ContextWithSpan(ctx, span)
 	}
 	rows, err := d.db.Query("SELECT id, name, location FROM customers")
 	if err != nil {

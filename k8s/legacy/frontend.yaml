@@ -3,26 +3,26 @@ kind: Deployment
 metadata:
   labels:
     app: hotrod
-    component: route
-  name: route
+    component: frontend
+  name: frontend
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: hotrod
-      component: route
+      component: frontend
   strategy: {}
   template:
     metadata:
       labels:
         app: hotrod
-        component: route
+        component: frontend
       annotations:
-        sidecar.signadot.com/inject: "true"
+        sidecar.signadot.com/inject: "http"
     spec:
       containers:
         - args:
-            - route
+            - frontend
           env:
             - name: JAEGER_AGENT_HOST
               value: jaeger
@@ -32,7 +32,7 @@ spec:
           imagePullPolicy: Always
           name: hotrod
           ports:
-            - containerPort: 8083
+            - containerPort: 8080
       restartPolicy: Always
 ---
 apiVersion: v1
@@ -40,13 +40,13 @@ kind: Service
 metadata:
   labels:
     app: hotrod
-    component: route
-  name: route
+    component: frontend
+  name: frontend
 spec:
   ports:
     - name: http-web
-      port: 8083
-      targetPort: 8083
+      port: 8080
+      targetPort: 8080
   selector:
     app: hotrod
-    component: route
+    component: frontend

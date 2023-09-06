@@ -68,7 +68,7 @@ spec:
         app: hotrod
         component: customer
       annotations:
-        sidecar.signadot.com/inject: "http"
+        sidecar.signadot.com/inject: "true"
     spec:
       containers:
         - args:
@@ -126,7 +126,7 @@ spec:
   template:
     metadata:
       annotations:
-        sidecar.signadot.com/inject: "grpc"
+        sidecar.signadot.com/inject: "true"
       labels:
         app: hotrod
         component: driver
@@ -185,7 +185,7 @@ spec:
         app: hotrod
         component: frontend
       annotations:
-        sidecar.signadot.com/inject: "http"
+        sidecar.signadot.com/inject: "true"
     spec:
       containers:
         - args:
@@ -238,7 +238,7 @@ spec:
         app: hotrod
         component: route
       annotations:
-        sidecar.signadot.com/inject: "http"
+        sidecar.signadot.com/inject: "true"
     spec:
       containers:
         - args:

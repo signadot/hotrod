@@ -18,7 +18,7 @@ spec:
         app: hotrod
         component: frontend
       annotations:
-        sidecar.signadot.com/inject: "http"
+        sidecar.signadot.com/inject: "true"
     spec:
       containers:
         - args:

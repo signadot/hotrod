@@ -15,7 +15,7 @@ spec:
   template:
     metadata:
       annotations:
-        sidecar.signadot.com/inject: "grpc"
+        sidecar.signadot.com/inject: "true"
       labels:
         app: hotrod
         component: driver

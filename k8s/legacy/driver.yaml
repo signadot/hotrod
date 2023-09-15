@@ -3,26 +3,26 @@ kind: Deployment
 metadata:
   labels:
     app: hotrod
-    component: route
-  name: route
+    component: driver
+  name: driver
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: hotrod
-      component: route
+      component: driver
   strategy: {}
   template:
     metadata:
+      annotations:
+        sidecar.signadot.com/inject: "grpc"
       labels:
         app: hotrod
-        component: route
-      annotations:
-        sidecar.signadot.com/inject: "true"
+        component: driver
     spec:
       containers:
         - args:
-            - route
+            - driver
           env:
             - name: JAEGER_AGENT_HOST
               value: jaeger
@@ -32,21 +32,24 @@ spec:
           imagePullPolicy: Always
           name: hotrod
           ports:
-            - containerPort: 8083
+            - containerPort: 8082
+              name: web
       restartPolicy: Always
+      imagePullSecrets:
+      - name: signadot-registry
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     app: hotrod
-    component: route
-  name: route
+    component: driver
+  name: driver
 spec:
   ports:
-    - name: http-web
-      port: 8083
-      targetPort: 8083
+    - name: grpc-web
+      port: 8082
+      targetPort: web
   selector:
     app: hotrod
-    component: route
+    component: driver

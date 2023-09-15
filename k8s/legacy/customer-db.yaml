@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: customer-db
+spec:
+  serviceName: customer-db
+  replicas: 1
+  selector:
+    matchLabels:
+      app: customer-db
+  template:
+    metadata:
+      labels:
+        app: customer-db
+    spec:
+      containers:
+      - name: mysql
+        image: mariadb:latest
+        env:
+        - name: MYSQL_DATABASE
+          value: customer
+        - name: MYSQL_ROOT_PASSWORD
+          value: abc
+        - name: MYSQL_ROOT_HOST
+          value: '%'
+        ports:
+        - containerPort: 3306
+          name: mysql
+          protocol: TCP
+        volumeMounts:
+        - name: customer-db
+          mountPath: /var/lib/mysql
+      volumes:
+      - name: customer-db
+        emptyDir: {}

@@ -3,50 +3,58 @@ kind: Deployment
 metadata:
   labels:
     app: hotrod
-    component: route
-  name: route
+    component: customer
+  name: customer
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: hotrod
-      component: route
+      component: customer
   strategy: {}
   template:
     metadata:
       labels:
         app: hotrod
-        component: route
+        component: customer
       annotations:
-        sidecar.signadot.com/inject: "true"
+        sidecar.signadot.com/inject: "http"
     spec:
       containers:
         - args:
-            - route
+            - customer
           env:
             - name: JAEGER_AGENT_HOST
               value: jaeger
             - name: JAEGER_AGENT_PORT
               value: "6831"
+            - name: MYSQL_HOST
+              value: "customer-db"
+            - name: MYSQL_PORT
+              value: "3306"
+            - name: MYSQL_ROOT_PASSWORD
+              value: abc
           image: signadot/hotrod:latest
           imagePullPolicy: Always
           name: hotrod
           ports:
-            - containerPort: 8083
+            - containerPort: 8081
       restartPolicy: Always
+      imagePullSecrets:
+      - name: signadot-registry
 ---
 apiVersion: v1
 kind: Service
 metadata:
   labels:
     app: hotrod
-    component: route
-  name: route
+    component: customer
+  name: customer
 spec:
   ports:
     - name: http-web
-      port: 8083
-      targetPort: 8083
+      port: 8081
+      targetPort: 8081
   selector:
     app: hotrod
-    component: route
+    component: customer

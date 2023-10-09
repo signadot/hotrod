@@ -67,7 +67,6 @@ spec:
       labels:
         app: hotrod
         component: customer
-      annotations:
         sidecar.istio.io/inject: "true"
     spec:
       containers:
@@ -125,11 +124,10 @@ spec:
   strategy: {}
   template:
     metadata:
-      annotations:
-        sidecar.istio.io/inject: "true"
       labels:
         app: hotrod
         component: driver-route
+        sidecar.istio.io/inject: "true"
     spec:
       containers:
         - name: driver
@@ -232,7 +230,6 @@ spec:
       labels:
         app: hotrod
         component: frontend
-      annotations:
         sidecar.istio.io/inject: "true"
     spec:
       containers:

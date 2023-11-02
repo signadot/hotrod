@@ -1,13 +1,26 @@
 const request = require('request');
 const assert = require('assert');
 
-const host = "localhost:8083";
+const HOST = process.env.ENDPOINT;
+const SIGNADOT_API_KEY = process.env.SIGNADOT_API_KEY;
+
+// Set the default headers for all requests.
+if (SIGNADOT_API_KEY) {
+    console.log("Setting Signadot API key", SIGNADOT_API_KEY);
+    req = request.defaults({
+        headers: {
+            'signadot-api-key': SIGNADOT_API_KEY,
+        }
+    });
+} else {
+    req = request;
+}
 
 describe("Route Service", function() {
     it("should return a 200 status code and response body matches the expected JSON structure for /route", function(done) {
         // Make a request to the /route endpoint with query parameters
-        request.get({
-            url: 'http://localhost:8083/route',
+        req.get({
+            url: `${HOST}/route`,
             qs: {
                 pickup: '123',
                 dropoff: '456'
@@ -33,7 +46,7 @@ describe("Route Service", function() {
 
     it("should return a 400 status code when missing required 'pickup' parameter' message for /route", function(done) {
         // Make a request to the /route endpoint
-        request.get('http://localhost:8083/route', function(error, response, body) {
+        req.get(`${HOST}/route`, function(error, response, body) {
             // Assert that the status code is 400
             assert.equal(response.statusCode, 400);
 
@@ -46,7 +59,7 @@ describe("Route Service", function() {
 
     it("should return a 400 status code with 'Missing required 'dropoff' parameter' message for /route", function(done) {
         // Make a request to the /route endpoint with query parameter
-        request.get('http://localhost:8083/route?pickup=123', function(error, response, body) {
+        req.get(`${HOST}/route?pickup=123`, function(error, response, body) {
             // Assert that the status code is 400
             assert.equal(response.statusCode, 400);
 

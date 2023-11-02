@@ -1,0 +1,20 @@
+name: "route-@{git-short-commit}"
+spec:
+  description: sandbox for route service
+  cluster: demo
+  labels:
+    signadot/github-repo: "signadot/hotrod"
+    signadot/github-pull-request: "@{github-pr}"
+  forks:
+  - forkOf:
+      kind: Deployment
+      name: frontend
+      namespace: hotrod
+    customizations:
+      images:
+      - container: hotrod
+        image: "@{image}"
+  defaultRouteGroup:
+    endpoints:
+    - name: route-endpoint
+      target: http://route.hotrod.svc:8083

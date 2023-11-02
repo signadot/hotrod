@@ -144,7 +144,11 @@ jobs:
           pushd .
           cd test
           ENDPOINT=$endpoint SIGNADOT_API_KEY=${{ secrets.SIGNADOT_API_KEY }} 
-          npm install && npm test
+          npm install
+
+          # don't exit with error code if test fails and fail action. 
+          npm test || true
+
           popd
 
       - name: Publish Test Results

@@ -1,0 +1,20 @@
+name: "route-@{git-branch}"
+spec:
+  description: sandbox for frontend service
+  cluster: demo
+  labels:
+    signadot/github-repo: "signadot/hotrod"
+    signadot/github-pull-request: "@{github-pr}"
+  forks:
+  - forkOf:
+      kind: Deployment
+      name: frontend
+      namespace: hotrod
+    customizations:
+      images:
+      - container: hotrod
+        image: "@{image}"
+  defaultRouteGroup:
+    endpoints:
+    - name: frontend-endpoint
+      target: http://frontend.hotrod.svc:8080

@@ -1,0 +1,22 @@
+name: "route-@{git-branch}"
+spec:
+  description: sandbox for driver service
+  cluster: demo
+  labels:
+    signadot/github-repo: "signadot/hotrod"
+    signadot/github-pull-request: "@{github-pr}"
+  forks:
+  - forkOf:
+      kind: Deployment
+      name: driver
+      namespace: hotrod
+    customizations:
+      images:
+      - container: hotrod
+        image: "@{image}"
+  defaultRouteGroup:
+    endpoints:
+    - name: driver-endpoint
+      target: grpc://driver.hotrod.svc:8082
+    - name: frontend-endpoint
+      target: http://frontend.hotrod.svc:8080

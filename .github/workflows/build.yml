@@ -130,7 +130,7 @@ jobs:
             /signadot sandbox apply \
             --set github-pr=${{ github.event.number }} \
             --set image=signadot/hotrod:${IMAGE_TAG} \
-            --set git-short-commit=${IMAGE_TAG:0:6} \
+            --set git-branch=${{ github.ref_name }} \
             -f - \
             -o yaml \
             < ${GITHUB_WORKSPACE}/.signadot/route-template.yaml \

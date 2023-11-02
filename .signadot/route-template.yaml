@@ -1,4 +1,4 @@
-name: "route-@{git-short-commit}"
+name: "route-@{git-branch}"
 spec:
   description: sandbox for route service
   cluster: demo

@@ -6,7 +6,7 @@ const SIGNADOT_API_KEY = process.env.SIGNADOT_API_KEY;
 
 // Set the default headers for all requests.
 if (SIGNADOT_API_KEY) {
-    console.log("Setting Signadot API key", SIGNADOT_API_KEY);
+    console.log("Setting Signadot API key");
     req = request.defaults({
         headers: {
             'signadot-api-key': SIGNADOT_API_KEY,

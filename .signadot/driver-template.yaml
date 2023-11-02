@@ -1,4 +1,4 @@
-name: "route-@{git-branch}"
+name: "@{git-branch}"
 spec:
   description: sandbox for driver service
   cluster: demo

@@ -8,7 +8,7 @@ spec:
   forks:
   - forkOf:
       kind: Deployment
-      name: frontend
+      name: route
       namespace: hotrod
     customizations:
       images:
@@ -18,3 +18,5 @@ spec:
     endpoints:
     - name: route-endpoint
       target: http://route.hotrod.svc:8083
+    - name: frontend-endpoint
+      target: http://frontend.hotrod.svc:8080

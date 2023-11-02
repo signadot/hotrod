@@ -230,7 +230,7 @@ jobs:
 
   sandbox-driver:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.customer == 'true' }}
+    if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.driver == 'true' }}
     needs: [ build, changes ]
     steps:
       - uses: actions/checkout@v3

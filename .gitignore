@@ -1,3 +1,4 @@
 .idea/
 /hotrod
 /dist/
+node_modules/

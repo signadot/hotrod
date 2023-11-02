@@ -101,10 +101,10 @@ jobs:
           args: release --rm-dist
         env:
           GIT_SHA: ${{ github.sha }}
-
-
-  cli-sandbox:
+  
+  sandbox-route:
     runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.route == 'true' }}
     needs: [ build, changes ]
     steps:
       - uses: actions/checkout@v3
@@ -129,29 +129,138 @@ jobs:
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
             signadot/signadot-cli \
             /signadot sandbox apply \
+            --set github-pr=${{ github.event.number }} \
             --set image=signadot/hotrod:${IMAGE_TAG} \
-            --set git-short-commit=${IMAGE_TAG:0:6} \
+            --set git-branch=pr-${{ github.event.number }}-route \
             -f - \
             -o yaml \
-            < ${GITHUB_WORKSPACE}/.signadot/frontend-template.yaml \
-            > ${GITHUB_WORKSPACE}/.signadot/frontend-response.yaml
+            < ${GITHUB_WORKSPACE}/.signadot/route-template.yaml \
+            > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
 
       - name: Test Sandbox
         run: |
-          go install github.com/mikefarah/yq/v4@latest
-          endpoint=$(yq '.endpoints[0].url' ${GITHUB_WORKSPACE}/.signadot/frontend-response.yaml)
-          curl -H "signadot-api-key: ${{ secrets.SIGNADOT_API_KEY }}" $endpoint
+          sleep 20 # just to make sure our sandbox is ready.
 
-      - name: Delete Sandbox
-        if: steps.create-sandbox.outcome == 'success'
+          go install github.com/mikefarah/yq/v4@latest
+          endpoint=$(yq '.endpoints[0].url' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)
+          
+          pushd .
+          cd test
+          npm install
+
+          # don't exit with error code if test fails and fail action. 
+          ENDPOINT=$endpoint SIGNADOT_API_KEY=${{ secrets.SIGNADOT_API_KEY }} npm test || true
+
+          popd
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action/composite@v2
+        with:
+          files: |
+            test/*.xml
+
+  sandbox-frontend:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.frontend == 'true' }}
+    needs: [ build, changes ]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Create Sandbox
+        id: create-sandbox
         env:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
+          # run the cli
+          # setting the gitsha to a short version to respect the name
+          # limit (30 chars)
           docker run -i \
             -e SIGNADOT_ORG=${SIGNADOT_ORG} \
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
             signadot/signadot-cli \
-            /signadot sandbox delete \
+            /signadot sandbox apply \
+            --set github-pr=${{ github.event.number }} \
+            --set image=signadot/hotrod:${IMAGE_TAG} \
+            --set git-branch=pr-${{ github.event.number }}-frontend \
             -f - \
-            < ${GITHUB_WORKSPACE}/.signadot/frontend-response.yaml
+            -o yaml \
+            < ${GITHUB_WORKSPACE}/.signadot/frontend-template.yaml \
+            > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
+
+
+  sandbox-customer:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.customer == 'true' }}
+    needs: [ build, changes ]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Create Sandbox
+        id: create-sandbox
+        env:
+          SIGNADOT_ORG: signadot
+          SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # run the cli
+          # setting the gitsha to a short version to respect the name
+          # limit (30 chars)
+          docker run -i \
+            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
+            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
+            signadot/signadot-cli \
+            /signadot sandbox apply \
+            --set github-pr=${{ github.event.number }} \
+            --set image=signadot/hotrod:${IMAGE_TAG} \
+            --set git-branch=pr-${{ github.event.number }}-customer \
+            -f - \
+            -o yaml \
+            < ${GITHUB_WORKSPACE}/.signadot/customer-template.yaml \
+            > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
+
+  sandbox-driver:
+    runs-on: ubuntu-latest
+    if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.driver == 'true' }}
+    needs: [ build, changes ]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Go
+        uses: actions/setup-go@v2
+        with:
+          go-version: ${{ env.GO_VERSION }}
+
+      - name: Create Sandbox
+        id: create-sandbox
+        env:
+          SIGNADOT_ORG: signadot
+          SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
+          IMAGE_TAG: ${{ github.sha }}
+        run: |
+          # run the cli
+          # setting the gitsha to a short version to respect the name
+          # limit (30 chars)
+          docker run -i \
+            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
+            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
+            signadot/signadot-cli \
+            /signadot sandbox apply \
+            --set github-pr=${{ github.event.number }} \
+            --set image=signadot/hotrod:${IMAGE_TAG} \
+            --set git-branch=pr-${{ github.event.number }}-driver \
+            -f - \
+            -o yaml \
+            < ${GITHUB_WORKSPACE}/.signadot/driver-template.yaml \
+            > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml

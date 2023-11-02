@@ -1,0 +1,21 @@
+{
+  "name": "test",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "mocha --reporter spec ./"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "chai": "^4.3.10",
+    "express": "^4.18.2",
+    "mocha": "^10.2.0"
+  },
+  "devDependencies": {
+    "assert": "^2.1.0",
+    "mocha-junit-reporter": "^2.2.1",
+    "request": "^2.88.2"
+  }
+}

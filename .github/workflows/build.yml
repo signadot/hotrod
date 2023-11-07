@@ -137,11 +137,12 @@ jobs:
             -o yaml \
             < ${GITHUB_WORKSPACE}/.signadot/route-template.yaml \
             > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
+          go install github.com/mikefarah/yq/v4@latest
       
       - id: get-comment-body
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
         run: |
-          body="https://app.staging.signadot.com/sandbox/name/$(cat ${GITHUB_WORKSPACE}/.signadot/sbx-response.json | jq -r '.name')"
+          body="https://app.signadot.com/sandbox/name/$(yq -r '.name' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)"
           body="${body//'%'/'%25'}"
           body="${body//$'\n'/'%0A'}"
           body="${body//$'\r'/'%0D'}"
@@ -171,8 +172,6 @@ jobs:
       - name: Test Sandbox
         run: |
           sleep 20 # just to make sure our sandbox is ready.
-
-          go install github.com/mikefarah/yq/v4@latest
           endpoint=$(yq '.endpoints[0].url' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)
           
           pushd .
@@ -225,6 +224,37 @@ jobs:
             -o yaml \
             < ${GITHUB_WORKSPACE}/.signadot/frontend-template.yaml \
             > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
+          go install github.com/mikefarah/yq/v4@latest
+
+      - id: get-comment-body
+        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+        run: |
+          body="https://app.signadot.com/sandbox/name/$(yq -r '.name' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)"
+          body="${body//'%'/'%25'}"
+          body="${body//$'\n'/'%0A'}"
+          body="${body//$'\r'/'%0D'}"
+          echo "::set-output name=body::$body"
+      
+      - name: Find Comment
+        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+        uses: peter-evans/find-comment@v2
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Sandbox
+      
+      - name: Create or update comment
+        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body: |
+            Sandbox Ready!
+            ${{ steps.get-comment-body.outputs.body }}
+          edit-mode: replace
 
 
   sandbox-customer:
@@ -262,6 +292,37 @@ jobs:
             -o yaml \
             < ${GITHUB_WORKSPACE}/.signadot/customer-template.yaml \
             > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
+          go install github.com/mikefarah/yq/v4@latest
+      
+      - id: get-comment-body
+        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+        run: |
+          body="https://app.signadot.com/sandbox/name/$(yq -r '.name' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)"
+          body="${body//'%'/'%25'}"
+          body="${body//$'\n'/'%0A'}"
+          body="${body//$'\r'/'%0D'}"
+          echo "::set-output name=body::$body"
+      - name: Find Comment
+        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+        uses: peter-evans/find-comment@v2
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Sandbox
+      
+      - name: Create or update comment
+        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body: |
+            Sandbox Ready!
+            ${{ steps.get-comment-body.outputs.body }}
+          edit-mode: replace
+
 
   sandbox-driver:
     runs-on: ubuntu-latest
@@ -298,3 +359,33 @@ jobs:
             -o yaml \
             < ${GITHUB_WORKSPACE}/.signadot/driver-template.yaml \
             > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
+          go install github.com/mikefarah/yq/v4@latest
+          
+      - id: get-comment-body
+        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+        run: |
+          body="https://app.signadot.com/sandbox/name/$(yq -r '.name' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)"
+          body="${body//'%'/'%25'}"
+          body="${body//$'\n'/'%0A'}"
+          body="${body//$'\r'/'%0D'}"
+          echo "::set-output name=body::$body"
+      - name: Find Comment
+        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+        uses: peter-evans/find-comment@v2
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body-includes: Sandbox
+      
+      - name: Create or update comment
+        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+        uses: peter-evans/create-or-update-comment@v3
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: 'github-actions[bot]'
+          body: |
+            Sandbox Ready!
+            ${{ steps.get-comment-body.outputs.body }}
+          edit-mode: replace

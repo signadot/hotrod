@@ -137,11 +137,12 @@ jobs:
             -o yaml \
             < ${GITHUB_WORKSPACE}/.signadot/route-template.yaml \
             > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
+          go install github.com/mikefarah/yq/v4@latest
       
       - id: get-comment-body
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
         run: |
-          body="https://app.staging.signadot.com/sandbox/name/$(cat ${GITHUB_WORKSPACE}/.signadot/sbx-response.json | jq -r '.name')"
+          body="https://app.staging.signadot.com/sandbox/name/$(yq -r '.name' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)"
           body="${body//'%'/'%25'}"
           body="${body//$'\n'/'%0A'}"
           body="${body//$'\r'/'%0D'}"
@@ -171,8 +172,6 @@ jobs:
       - name: Test Sandbox
         run: |
           sleep 20 # just to make sure our sandbox is ready.
-
-          go install github.com/mikefarah/yq/v4@latest
           endpoint=$(yq '.endpoints[0].url' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)
           
           pushd .

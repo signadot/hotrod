@@ -3,8 +3,8 @@ spec:
   description: sandbox for route service
   cluster: demo
   labels:
-    signadot/github-repo: "signadot/hotrod"
-    signadot/github-pull-request: "@{github-pr}"
+    github-repo: "signadot/hotrod"
+    github-pull-request: "@{github-pr}"
     branch: "@{branch}"
   forks:
   - forkOf:

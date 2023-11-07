@@ -21,14 +21,14 @@
       <div class="uuid alert alert-info"></div>
       <center>
         <h1>Hot R.O.D.{{ .TitleSuffix }}</h1>
-        <h4><em>Rides On Demand Test</em></h4>
+        <h4><em>Rides On Demand</em></h4>
 
 {{ range $row := .Rows}}
         <div class="row">
     {{ range $customer := $row }}
-            <div class="col-md-3 col-sm-6">
+            <div class="col-md-4 col-sm-8">
                 <span
-                    class="btn btn-info btn-block hotrod-button"
+                    class="btn btn-info btn-danger hotrod-button"
                     data-customer="{{ $customer.ID }}">{{ $customer.Name }}</span>
             </div>
     {{ end }}

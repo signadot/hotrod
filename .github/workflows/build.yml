@@ -131,7 +131,7 @@ jobs:
             /signadot sandbox apply \
             --set github-pr=${{ github.event.number }} \
             --set image=signadot/hotrod:${IMAGE_TAG} \
-            --set branch=${{ github.ref_name }} \
+            --set branch=${{ github.head_ref }} \
             --set name=pr-${{ github.event.number }}-route \
             -f - \
             -o yaml \
@@ -189,7 +189,7 @@ jobs:
             /signadot sandbox apply \
             --set github-pr=${{ github.event.number }} \
             --set image=signadot/hotrod:${IMAGE_TAG} \
-            --set branch=${{ github.ref_name }} \
+            --set branch=${{ github.head_ref }} \
             --set name=pr-${{ github.event.number }}-frontend \
             -f - \
             -o yaml \
@@ -226,7 +226,7 @@ jobs:
             /signadot sandbox apply \
             --set github-pr=${{ github.event.number }} \
             --set image=signadot/hotrod:${IMAGE_TAG} \
-            --set branch=${{ github.ref_name }} \
+            --set branch=${{ github.head_ref }} \
             --set name=pr-${{ github.event.number }}-customer \
             -f - \
             -o yaml \
@@ -262,7 +262,7 @@ jobs:
             /signadot sandbox apply \
             --set github-pr=${{ github.event.number }} \
             --set image=signadot/hotrod:${IMAGE_TAG} \
-            --set branch=${{ github.ref_name }} \
+            --set branch=${{ github.head_ref }} \
             --set name=pr-${{ github.event.number }}-driver \
             -f - \
             -o yaml \

@@ -1,10 +1,11 @@
-name: "@{git-branch}"
+name: "@{name}"
 spec:
   description: sandbox for customer service
   cluster: demo
   labels:
     signadot/github-repo: "signadot/hotrod"
     signadot/github-pull-request: "@{github-pr}"
+    branch: "@{branch}"
   forks:
   - forkOf:
       kind: Deployment

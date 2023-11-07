@@ -16,7 +16,7 @@ spec:
         image: "@{image}"
   defaultRouteGroup:
     endpoints:
-    - name: route-endpoint
+    - name: ep1-route
       target: http://route.hotrod.svc:8083
-    - name: frontend-endpoint
+    - name: ep2-frontend
       target: http://frontend.hotrod.svc:8080

@@ -26,9 +26,9 @@
 {{ range $row := .Rows}}
         <div class="row">
     {{ range $customer := $row }}
-            <div class="col-md-4 col-sm-8">
+            <div class="col-md-4">
                 <span
-                    class="btn btn-info btn-danger hotrod-button"
+                    class="btn btn-info btn-success hotrod-button"
                     data-customer="{{ $customer.ID }}">{{ $customer.Name }}</span>
             </div>
     {{ end }}

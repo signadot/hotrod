@@ -16,7 +16,7 @@ spec:
         image: "@{image}"
   defaultRouteGroup:
     endpoints:
-    - name: driver-endpoint
+    - name: ep1-driver
       target: grpc://driver.hotrod.svc:8082
-    - name: frontend-endpoint
+    - name: ep2-frontend
       target: http://frontend.hotrod.svc:8080

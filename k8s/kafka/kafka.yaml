@@ -21,10 +21,6 @@ spec:
   clusterIP: None
   clusterIPs:
   - None
-  internalTrafficPolicy: Cluster
-  ipFamilies:
-  - IPv4
-  ipFamilyPolicy: SingleStack
   ports:
   - name: tcp-kafka-int
     port: 9092
@@ -36,7 +32,6 @@ spec:
     targetPort: tcp-kafka-ctrl
   selector:
     app: kafka
-  sessionAffinity: None
   type: ClusterIP
 ---
 apiVersion: apps/v1
@@ -65,7 +60,7 @@ spec:
         - sh
         - -exc
         - |
-          export CLUSTER_ID="W2VhISZwVU92QVJEJC8lM0ZzQjd6Kn5gKXR3NWpj" && \
+          export CLUSTER_ID="2dd8oDpjQRGlRWObUIROyQ" && \
           export KAFKA_NODE_ID=${HOSTNAME##*-} 
           export KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${POD_NAME}.kafka-headless.kafka.svc.cluster.local:9092
           export KAFKA_CONTROLLER_QUORUM_VOTERS="0@kafka-0.kafka-headless.kafka.svc.cluster.local:29093" 
@@ -145,7 +140,7 @@ spec:
         - name: KAFKA_CLUSTERS_0_NAME
           value: "K8 Kafka Cluster"
         - name: KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS
-          value: kafka-svc:9092
+          value: kafka-0.kafka-headless.kafka:9092
         imagePullPolicy: Always
         resources:
           requests:
@@ -156,3 +151,18 @@ spec:
             cpu: "1000m"
         ports:
         - containerPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: kafka
+  name: kafka-ui
+  namespace: kafka
+spec:
+  ports:
+  - name: kafka-ui
+    port: 8080
+  selector:
+    app: kafka-ui
+  type: ClusterIP

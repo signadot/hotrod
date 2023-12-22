@@ -21,14 +21,12 @@ import (
 
 // Customer contains data about a customer.
 type Customer struct {
-	ID       int64
+	ID       string
 	Name     string
 	Location string
 }
 
 // Interface exposed by the Customer service.
 type Interface interface {
-	Get(ctx context.Context, customerID string) (*Customer, error)
-	List(ctx context.Context) ([]Customer, error)
-	Put(ctx context.Context, customer *Customer) error
+	Get(ctx context.Context, customerID int) (*Customer, error)
 }

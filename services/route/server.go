@@ -18,14 +18,12 @@ package route
 import (
 	"context"
 	"encoding/json"
-	"expvar"
 	"math"
 	"math/rand"
 	"net/http"
 	"time"
 
-	"github.com/opentracing/opentracing-go"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
 	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/delay"
@@ -38,12 +36,12 @@ import (
 // Server implements Route service
 type Server struct {
 	hostPort string
-	tracer   opentracing.Tracer
+	tracer   trace.TracerProvider
 	logger   log.Factory
 }
 
 // NewServer creates a new route.Server
-func NewServer(hostPort string, tracer opentracing.Tracer, logger log.Factory) *Server {
+func NewServer(hostPort string, tracer trace.TracerProvider, logger log.Factory) *Server {
 	return &Server{
 		hostPort: hostPort,
 		tracer:   tracer,
@@ -55,15 +53,24 @@ func NewServer(hostPort string, tracer opentracing.Tracer, logger log.Factory) *
 func (s *Server) Run() error {
 	mux := s.createServeMux()
 	s.logger.Bg().Info("Starting", zap.String("address", "http://"+s.hostPort))
-	return http.ListenAndServe(s.hostPort, mux)
+	server := &http.Server{
+		Addr:              s.hostPort,
+		Handler:           mux,
+		ReadHeaderTimeout: 3 * time.Second,
+	}
+	return server.ListenAndServe()
 }
 
 func (s *Server) createServeMux() http.Handler {
-	mux := tracing.NewServeMux(s.tracer)
+	mux := tracing.NewServeMux(false, s.tracer, s.logger)
 	mux.Handle("/route", http.HandlerFunc(s.route))
-	mux.Handle("/debug/vars", expvar.Handler()) // expvar
-	mux.Handle("/metrics", promhttp.Handler())  // Prometheus
+	mux.Handle("/debug/vars", http.HandlerFunc(movedToFrontend))
+	mux.Handle("/metrics", http.HandlerFunc(movedToFrontend))
 	return mux
+}
+
+func movedToFrontend(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "endpoint moved to the frontend service", http.StatusNotFound)
 }
 
 func (s *Server) route(w http.ResponseWriter, r *http.Request) {
@@ -105,13 +112,12 @@ func computeRoute(ctx context.Context, pickup, dropoff string) *Route {
 	}()
 
 	// Simulate expensive calculation
-	time.Sleep(500 * time.Millisecond)
 	delay.Sleep(config.RouteCalcDelay, config.RouteCalcDelayStdDev)
 
 	eta := math.Max(2, rand.NormFloat64()*3+5)
 	return &Route{
 		Pickup:  pickup,
 		Dropoff: dropoff,
-		ETA:     time.Duration(eta) * time.Hour,
+		ETA:     time.Duration(eta) * time.Minute,
 	}
 }

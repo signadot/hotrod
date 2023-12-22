@@ -8,7 +8,7 @@ builds:
     - amd64
     - arm64
 dockers:
-  # note: buildx needs DOCKER_CLI_EXPERIMENTAL in evn
+  # note: buildx needs DOCKER_CLI_EXPERIMENTAL in env
 - use: buildx
   goos: linux
   goarch: amd64

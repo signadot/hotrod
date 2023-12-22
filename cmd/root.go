@@ -16,36 +16,22 @@
 package cmd
 
 import (
-	"math/rand"
 	"os"
-	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/uber/jaeger-lib/metrics"
-	jexpvar "github.com/uber/jaeger-lib/metrics/expvar"
-	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
 	"github.com/jaegertracing/jaeger/examples/hotrod/services/config"
+	"github.com/jaegertracing/jaeger/internal/jaegerclientenv2otel"
+	"github.com/jaegertracing/jaeger/internal/metrics/expvar"
+	"github.com/jaegertracing/jaeger/internal/metrics/prometheus"
+	"github.com/jaegertracing/jaeger/pkg/metrics"
 )
 
 var (
-	metricsBackend string
 	logger         *zap.Logger
 	metricsFactory metrics.Factory
-
-	fixDBConnDelay         time.Duration
-	fixDBConnDisableMutex  bool
-	fixRouteWorkerPoolSize int
-
-	customerPort int
-	driverPort   int
-	frontendPort int
-	routePort    int
-
-	basePath   string
-	baseDomain string
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -65,37 +51,31 @@ func Execute() {
 }
 
 func init() {
-	RootCmd.PersistentFlags().StringVarP(&metricsBackend, "metrics", "m", "expvar", "Metrics backend (expvar|prometheus)")
-	RootCmd.PersistentFlags().DurationVarP(&fixDBConnDelay, "fix-db-query-delay", "D", 300*time.Millisecond, "Average latency of MySQL DB query")
-	RootCmd.PersistentFlags().BoolVarP(&fixDBConnDisableMutex, "fix-disable-db-conn-mutex", "M", false, "Disables the mutex guarding db connection")
-	RootCmd.PersistentFlags().IntVarP(&fixRouteWorkerPoolSize, "fix-route-worker-pool-size", "W", 3, "Default worker pool size")
-
-	// Add flags to choose ports for services
-	RootCmd.PersistentFlags().IntVarP(&customerPort, "customer-service-port", "c", 8081, "Port for customer service")
-	RootCmd.PersistentFlags().IntVarP(&driverPort, "driver-service-port", "d", 8082, "Port for driver service")
-	RootCmd.PersistentFlags().IntVarP(&frontendPort, "frontend-service-port", "f", 8080, "Port for frontend service")
-	RootCmd.PersistentFlags().IntVarP(&routePort, "route-service-port", "r", 8083, "Port for routing service")
-
-	// Extra flags
-	RootCmd.PersistentFlags().StringVarP(&basePath, "basepath", "b", "", `Base path for frontend service (default "/")`)
-	RootCmd.PersistentFlags().StringVarP(&baseDomain, "basedomain", "B", "", `Base domain for accessing hotrod services`)
-
-	rand.Seed(int64(time.Now().Nanosecond()))
-	logger, _ = zap.NewDevelopment(
-		zap.AddStacktrace(zapcore.FatalLevel),
-		zap.AddCallerSkip(1),
-	)
+	addFlags(RootCmd)
 	cobra.OnInitialize(onInitialize)
 }
 
 // onInitialize is called before the command is executed.
 func onInitialize() {
+	zapOptions := []zap.Option{
+		zap.AddStacktrace(zapcore.FatalLevel),
+		zap.AddCallerSkip(1),
+	}
+	if !verbose {
+		zapOptions = append(zapOptions,
+			zap.IncreaseLevel(zap.LevelEnablerFunc(func(l zapcore.Level) bool { return l != zapcore.DebugLevel })),
+		)
+	}
+	logger, _ = zap.NewDevelopment(zapOptions...)
+
+	jaegerclientenv2otel.MapJaegerToOtelEnvVars(logger)
+
 	switch metricsBackend {
 	case "expvar":
-		metricsFactory = jexpvar.NewFactory(10) // 10 buckets for histograms
-		logger.Info("Using expvar as metrics backend")
+		metricsFactory = expvar.NewFactory(10) // 10 buckets for histograms
+		logger.Info("*** Using expvar as metrics backend " + expvarDepr)
 	case "prometheus":
-		metricsFactory = jprom.New().Namespace(metrics.NSOptions{Name: "hotrod", Tags: nil})
+		metricsFactory = prometheus.New().Namespace(metrics.NSOptions{Name: "hotrod", Tags: nil})
 		logger.Info("Using Prometheus as metrics backend")
 	default:
 		logger.Fatal("unsupported metrics backend " + metricsBackend)
@@ -129,8 +109,8 @@ func onInitialize() {
 		logger.Info("changing route service port", zap.Int("old", 8083), zap.Int("new", routePort))
 	}
 
-	if basePath != "" {
-		logger.Info("changing basepath for frontend", zap.String("old", "/"), zap.String("new", basePath))
+	if basepath != "" {
+		logger.Info("changing basepath for frontend", zap.String("old", "/"), zap.String("new", basepath))
 	}
 }
 

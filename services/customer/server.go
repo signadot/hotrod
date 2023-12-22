@@ -17,34 +17,35 @@ package customer
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
+	"strconv"
+	"time"
 
-	"github.com/opentracing/opentracing-go"
-	"github.com/uber/jaeger-lib/metrics"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
 	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/httperr"
 	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
 	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/tracing"
+	"github.com/jaegertracing/jaeger/pkg/metrics"
 )
 
 // Server implements Customer service
 type Server struct {
 	hostPort string
-	tracer   opentracing.Tracer
+	tracer   trace.TracerProvider
 	logger   log.Factory
 	database *database
 }
 
 // NewServer creates a new customer.Server
-func NewServer(hostPort string, tracer opentracing.Tracer, metricsFactory metrics.Factory, logger log.Factory) *Server {
+func NewServer(hostPort string, otelExporter string, metricsFactory metrics.Factory, logger log.Factory) *Server {
 	return &Server{
 		hostPort: hostPort,
-		tracer:   tracer,
+		tracer:   tracing.InitOTEL("customer", otelExporter, metricsFactory, logger),
 		logger:   logger,
 		database: newDatabase(
-			tracing.Init("mysql", metricsFactory, logger),
+			tracing.InitOTEL("mysql", otelExporter, metricsFactory, logger).Tracer("mysql"),
 			logger.With(zap.String("component", "mysql")),
 		),
 	}
@@ -54,61 +55,36 @@ func NewServer(hostPort string, tracer opentracing.Tracer, metricsFactory metric
 func (s *Server) Run() error {
 	mux := s.createServeMux()
 	s.logger.Bg().Info("Starting", zap.String("address", "http://"+s.hostPort))
-	return http.ListenAndServe(s.hostPort, mux)
+	server := &http.Server{
+		Addr:              s.hostPort,
+		Handler:           mux,
+		ReadHeaderTimeout: 3 * time.Second,
+	}
+	return server.ListenAndServe()
 }
 
 func (s *Server) createServeMux() http.Handler {
-	mux := tracing.NewServeMux(s.tracer)
+	mux := tracing.NewServeMux(false, s.tracer, s.logger)
 	mux.Handle("/customer", http.HandlerFunc(s.customer))
-	mux.Handle("/customers", http.HandlerFunc(s.customers))
 	return mux
-}
-
-func (s *Server) customers(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
-	customers, err := s.database.List(ctx)
-	if httperr.HandleError(w, err, http.StatusInternalServerError) {
-		s.logger.For(ctx).Error("cannot get customers", zap.Error(err))
-		return
-	}
-
-	data, err := json.Marshal(customers)
-	if httperr.HandleError(w, err, http.StatusInternalServerError) {
-		s.logger.For(ctx).Error("cannot marshal response", zap.Error(err))
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(data)
 }
 
 func (s *Server) customer(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
-	switch r.Method {
-	case "GET":
-		s.get(w, r)
-	case "PUT":
-		s.put(w, r)
-	default:
-		err := errors.New("bad method")
-		httperr.HandleError(w, err, http.StatusBadRequest)
-		s.logger.For(ctx).Error("bad method", zap.Error(err))
-		return
-	}
-}
-
-func (s *Server) get(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
 	if err := r.ParseForm(); httperr.HandleError(w, err, http.StatusBadRequest) {
 		s.logger.For(ctx).Error("bad request", zap.Error(err))
 		return
 	}
 
-	customerID := r.Form.Get("customer")
-	if customerID == "" {
+	customer := r.Form.Get("customer")
+	if customer == "" {
 		http.Error(w, "Missing required 'customer' parameter", http.StatusBadRequest)
+		return
+	}
+	customerID, err := strconv.Atoi(customer)
+	if err != nil {
+		http.Error(w, "Parameter 'customer' is not an integer", http.StatusBadRequest)
 		return
 	}
 
@@ -126,28 +102,4 @@ func (s *Server) get(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(data)
-}
-
-func (s *Server) put(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	var c Customer
-	err := json.NewDecoder(r.Body).Decode(&c)
-	if httperr.HandleError(w, err, http.StatusInternalServerError) {
-		s.logger.For(ctx).Error("cannot unmarshal customer", zap.Error(err))
-		return
-	}
-	err = s.database.Put(ctx, &c)
-	if httperr.HandleError(w, err, http.StatusInternalServerError) {
-		s.logger.For(ctx).Error("cannot update db", zap.Error(err))
-		return
-	}
-	data, err := json.Marshal(&c)
-	if httperr.HandleError(w, err, http.StatusInternalServerError) {
-		s.logger.For(ctx).Error("cannot encode response", zap.Error(err))
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(data)
-
 }

@@ -22,9 +22,9 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
-	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/tracing"
-	"github.com/jaegertracing/jaeger/examples/hotrod/services/route"
+	"github.com/signadot/hotrod/pkg/log"
+	"github.com/signadot/hotrod/pkg/tracing"
+	"github.com/signadot/hotrod/services/route"
 )
 
 // routeCmd represents the route command
@@ -37,7 +37,7 @@ var routeCmd = &cobra.Command{
 		logger := log.NewFactory(zapLogger)
 		server := route.NewServer(
 			net.JoinHostPort("0.0.0.0", strconv.Itoa(routePort)),
-			tracing.Init("route", metricsFactory, logger),
+			tracing.InitOTEL("route", otelExporter, metricsFactory, logger),
 			logger,
 		)
 		return logError(zapLogger, server.Run())
@@ -46,5 +46,4 @@ var routeCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(routeCmd)
-
 }

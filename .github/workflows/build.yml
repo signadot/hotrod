@@ -54,7 +54,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          # Goreleaser needs to see git history and tags.
           fetch-depth: 0
 
       - name: Set up Go
@@ -87,20 +86,12 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Tag
-        env:
-          GIT_SHA: ${{ github.sha }}
-        run: |
-          # Make a fake tag so goreleaser will actually push images.
-          git tag v0.0.1-snapshot.${GIT_SHA}
-
-      - name: GoReleaser
-        uses: goreleaser/goreleaser-action@v2
+      - name: Build and Push Docker Image
+        uses: docker/build-push-action@v2
         with:
-          version: latest
-          args: release --rm-dist
-        env:
-          GIT_SHA: ${{ github.sha }}
+          context: .
+          push: true
+          tags: signadot/hotrod:${{ github.sha }}
   
   sandbox-route:
     runs-on: ubuntu-latest

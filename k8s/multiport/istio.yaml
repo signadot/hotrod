@@ -83,7 +83,7 @@ spec:
               value: "3306"
             - name: MYSQL_ROOT_PASSWORD
               value: abc
-          image: signadot/hotrod:latest
+          image: signadot/hotrod:test
           imagePullPolicy: Always
           name: hotrod
           ports:
@@ -138,7 +138,7 @@ spec:
               value: jaeger
             - name: JAEGER_AGENT_PORT
               value: "6831"
-          image: signadot/hotrod:latest
+          image: signadot/hotrod:test
           imagePullPolicy: Always
           ports:
             - containerPort: 8082
@@ -151,7 +151,7 @@ spec:
               value: jaeger
             - name: JAEGER_AGENT_PORT
               value: "6831"
-          image: signadot/hotrod:latest
+          image: signadot/hotrod:test
           imagePullPolicy: Always
           ports:
             - containerPort: 8083
@@ -240,7 +240,7 @@ spec:
               value: jaeger
             - name: JAEGER_AGENT_PORT
               value: "6831"
-          image: signadot/hotrod:latest
+          image: signadot/hotrod:test
           imagePullPolicy: Always
           name: hotrod
           ports:

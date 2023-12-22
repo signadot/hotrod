@@ -23,9 +23,9 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
-	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/tracing"
-	"github.com/jaegertracing/jaeger/examples/hotrod/services/frontend"
+	"github.com/signadot/hotrod/pkg/log"
+	"github.com/signadot/hotrod/pkg/tracing"
+	"github.com/signadot/hotrod/services/frontend"
 )
 
 // frontendCmd represents the frontend command
@@ -35,6 +35,7 @@ var frontendCmd = &cobra.Command{
 	Long:  `Starts Frontend service.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		options.FrontendHostPort = net.JoinHostPort("0.0.0.0", strconv.Itoa(frontendPort))
+
 		options.Basepath = basePath
 
 		// Resolve services addresses
@@ -70,11 +71,13 @@ var frontendCmd = &cobra.Command{
 			options.RouteHostPort = net.JoinHostPort(routeHost, strconv.Itoa(routePort))
 		}
 
+		options.JaegerUI = jaegerUI
+
 		zapLogger := logger.With(zap.String("service", "frontend"))
 		logger := log.NewFactory(zapLogger)
 		server := frontend.NewServer(
 			options,
-			tracing.Init("frontend", metricsFactory, logger),
+			tracing.InitOTEL("frontend", otelExporter, metricsFactory, logger),
 			logger,
 		)
 		return logError(zapLogger, server.Run())
@@ -85,5 +88,4 @@ var options frontend.ConfigOptions
 
 func init() {
 	RootCmd.AddCommand(frontendCmd)
-
 }

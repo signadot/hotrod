@@ -17,22 +17,21 @@ package driver
 
 import (
 	"context"
+	"encoding/json"
 	"net"
-	"os"
 
-	otgrpc "github.com/opentracing-contrib/go-grpc"
-	"github.com/opentracing/opentracing-go"
-	"github.com/uber/jaeger-lib/metrics"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
-	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
+	"github.com/signadot/hotrod/pkg/log"
+	"github.com/signadot/hotrod/pkg/metrics"
+	"github.com/signadot/hotrod/pkg/tracing"
 )
 
 // Server implements jaeger-demo-frontend service
 type Server struct {
 	hostPort string
-	tracer   opentracing.Tracer
 	logger   log.Factory
 	redis    *Redis
 	server   *grpc.Server
@@ -41,17 +40,16 @@ type Server struct {
 var _ DriverServiceServer = (*Server)(nil)
 
 // NewServer creates a new driver.Server
-func NewServer(hostPort string, tracer opentracing.Tracer, metricsFactory metrics.Factory, logger log.Factory) *Server {
-	server := grpc.NewServer(grpc.UnaryInterceptor(
-		otgrpc.OpenTracingServerInterceptor(tracer)),
-		grpc.StreamInterceptor(
-			otgrpc.OpenTracingStreamServerInterceptor(tracer)))
+func NewServer(hostPort string, otelExporter string, metricsFactory metrics.Factory, logger log.Factory) *Server {
+	tracerProvider := tracing.InitOTEL("driver", otelExporter, metricsFactory, logger)
+	server := grpc.NewServer(
+		grpc.StatsHandler(otelgrpc.NewServerHandler(otelgrpc.WithTracerProvider(tracerProvider))),
+	)
 	return &Server{
 		hostPort: hostPort,
-		tracer:   tracer,
 		logger:   logger,
 		server:   server,
-		redis:    newRedis(metricsFactory, logger),
+		redis:    newRedis(otelExporter, metricsFactory, logger),
 	}
 }
 
@@ -62,6 +60,7 @@ func (s *Server) Run() error {
 		s.logger.Bg().Fatal("Unable to create http listener", zap.Error(err))
 	}
 	RegisterDriverServiceServer(s.server, s)
+	s.logger.Bg().Info("Starting", zap.String("address", s.hostPort), zap.String("type", "gRPC"))
 	err = s.server.Serve(lis)
 	if err != nil {
 		s.logger.Bg().Fatal("Unable to start gRPC server", zap.Error(err))
@@ -74,7 +73,7 @@ func (s *Server) FindNearest(ctx context.Context, location *DriverLocationReques
 	s.logger.For(ctx).Info("Searching for nearby drivers", zap.String("location", location.Location))
 	driverIDs := s.redis.FindDriverIDs(ctx, location.Location)
 
-	retMe := make([]*DriverLocation, len(driverIDs))
+	locations := make([]*DriverLocation, len(driverIDs))
 	for i, driverID := range driverIDs {
 		var drv Driver
 		var err error
@@ -89,11 +88,23 @@ func (s *Server) FindNearest(ctx context.Context, location *DriverLocationReques
 			s.logger.For(ctx).Error("Failed to get driver after 3 attempts", zap.Error(err))
 			return nil, err
 		}
-		retMe[i] = &DriverLocation{
-			DriverID: os.Getenv("DRIVER_ID_PREFIX") + drv.DriverID + os.Getenv("DRIVER_ID_SUFFIX"),
+		locations[i] = &DriverLocation{
+			DriverID: drv.DriverID,
 			Location: drv.Location,
 		}
 	}
-	s.logger.For(ctx).Info("Search successful", zap.Int("num_drivers", len(retMe)))
-	return &DriverLocationResponse{Locations: retMe}, nil
+	s.logger.For(ctx).Info(
+		"Search successful",
+		zap.Int("driver_count", len(locations)),
+		zap.String("locations", toJSON(locations)),
+	)
+	return &DriverLocationResponse{Locations: locations}, nil
+}
+
+func toJSON(v any) string {
+	str, err := json.Marshal(v)
+	if err != nil {
+		return err.Error()
+	}
+	return string(str)
 }

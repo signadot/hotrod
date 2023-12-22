@@ -22,9 +22,8 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
-	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/tracing"
-	"github.com/jaegertracing/jaeger/examples/hotrod/services/customer"
+	"github.com/signadot/hotrod/pkg/log"
+	"github.com/signadot/hotrod/services/customer"
 )
 
 // customerCmd represents the customer command
@@ -37,7 +36,7 @@ var customerCmd = &cobra.Command{
 		logger := log.NewFactory(zapLogger)
 		server := customer.NewServer(
 			net.JoinHostPort("0.0.0.0", strconv.Itoa(customerPort)),
-			tracing.Init("customer", metricsFactory, logger),
+			otelExporter,
 			metricsFactory,
 			logger,
 		)
@@ -47,5 +46,4 @@ var customerCmd = &cobra.Command{
 
 func init() {
 	RootCmd.AddCommand(customerCmd)
-
 }

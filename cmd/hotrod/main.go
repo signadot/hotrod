@@ -4,7 +4,7 @@
 package main
 
 import (
-	"github.com/jaegertracing/jaeger/examples/hotrod/cmd"
+	"github.com/signadot/hotrod/cmd"
 )
 
 func main() {

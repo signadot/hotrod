@@ -1,4 +1,4 @@
-module github.com/signadot/hotrod
+module github.com/jaegertracing/jaeger/examples/hotrod
 
 go 1.20
 

@@ -25,12 +25,12 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 
-	"github.com/signadot/hotrod/pkg/log"
-	"github.com/signadot/hotrod/pkg/pool"
-	"github.com/signadot/hotrod/services/config"
-	"github.com/signadot/hotrod/services/customer"
-	"github.com/signadot/hotrod/services/driver"
-	"github.com/signadot/hotrod/services/route"
+	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
+	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/pool"
+	"github.com/jaegertracing/jaeger/examples/hotrod/services/config"
+	"github.com/jaegertracing/jaeger/examples/hotrod/services/customer"
+	"github.com/jaegertracing/jaeger/examples/hotrod/services/driver"
+	"github.com/jaegertracing/jaeger/examples/hotrod/services/route"
 )
 
 type bestETA struct {

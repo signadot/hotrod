@@ -28,10 +28,10 @@ import (
 	tags "github.com/opentracing/opentracing-go/ext"
 	"go.uber.org/zap"
 
-	"github.com/signadot/hotrod/pkg/delay"
-	"github.com/signadot/hotrod/pkg/log"
-	"github.com/signadot/hotrod/pkg/tracing"
-	"github.com/signadot/hotrod/services/config"
+	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/delay"
+	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
+	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/tracing"
+	"github.com/jaegertracing/jaeger/examples/hotrod/services/config"
 )
 
 // database simulates Customer repository implemented on top of an SQL database
@@ -122,7 +122,7 @@ func driverConfig() *mysql.Config {
 	dc := mysql.NewConfig()
 	dc.Net = "tcp"
 	dc.Addr = envDefault("MYSQL_HOST", "customer-db") +
-			":" + envDefault("MYSQL_PORT", "3306")
+		":" + envDefault("MYSQL_PORT", "3306")
 	dc.DBName = "customer"
 	dc.User = "root"
 	dc.Passwd = envDefault("MYSQL_ROOT_PASSWORD", "abc")

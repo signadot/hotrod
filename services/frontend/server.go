@@ -27,10 +27,10 @@ import (
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
 
-	"github.com/signadot/hotrod/pkg/httperr"
-	"github.com/signadot/hotrod/pkg/log"
-	"github.com/signadot/hotrod/pkg/tracing"
-	"github.com/signadot/hotrod/services/customer"
+	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/httperr"
+	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
+	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/tracing"
+	"github.com/jaegertracing/jaeger/examples/hotrod/services/customer"
 )
 
 //go:embed web_assets/*

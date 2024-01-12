@@ -19,13 +19,13 @@ import (
 	"context"
 	"net/http"
 	"net/url"
-
+	
 	"github.com/opentracing-contrib/go-stdlib/nethttp"
 	"github.com/opentracing/opentracing-go"
 	"go.uber.org/zap"
-
-	"github.com/signadot/hotrod/pkg/log"
-	"github.com/signadot/hotrod/pkg/tracing"
+	
+	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
+	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/tracing"
 )
 
 // Client is a remote client that implements route.Interface
@@ -58,7 +58,7 @@ func (c *Client) FindRoute(ctx context.Context, pickup, dropoff string) (*Route,
 	v.Set("dropoff", dropoff)
 	url := "http://" + c.hostPort + "/route?" + v.Encode()
 	var route Route
-
+	
 	if err := c.client.GetJSON(ctx, "/route", url, &route); err != nil {
 		c.logger.For(ctx).Error("Error getting route", zap.Error(err))
 		return nil, err

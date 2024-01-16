@@ -70,18 +70,18 @@ describe("Route Service", function() {
         });
     });
 
-    // it("should return a non-negative ETA for /route", function(done) {
-    //     // Make a request to the /route endpoint with query parameters
-    //     req.get({
-    //         url: `${HOST}/route`,
-    //         qs: {
-    //             pickup: '123',
-    //             dropoff: '456'
-    //         }
-    //     }, function(error, response, body) {
-    //         const data = JSON.parse(body);
-    //         assert.ok(data.ETA >= 0);
-    //         done();
-    //     });
-    // });
+    it("should return a non-negative ETA for /route", function(done) {
+     // Make a request to the /route endpoint with query parameters
+         req.get({
+             url: `${HOST}/route`,
+             qs: {
+                 pickup: '123',
+                 dropoff: '456'
+             }
+         }, function(error, response, body) {
+             const data = JSON.parse(body);
+             assert.ok(data.ETA >= 0);
+             done();
+         });
+     });
 });

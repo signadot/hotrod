@@ -19,9 +19,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/jaegertracing/jaeger/pkg/metrics"
 	"github.com/prometheus/client_golang/prometheus"
-
-	"github.com/signadot/hotrod/pkg/metrics"
 )
 
 // Factory implements metrics.Factory backed by Prometheus registry.

@@ -29,7 +29,7 @@ var (
 	fixDBConnDisableMutex  bool
 	fixRouteWorkerPoolSize int
 
-	customerPort int
+	locationPort int
 	driverPort   int
 	frontendPort int
 	routePort    int
@@ -51,7 +51,7 @@ func addFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().IntVarP(&fixRouteWorkerPoolSize, "fix-route-worker-pool-size", "W", 3, "Default worker pool size")
 
 	// Add flags to choose ports for services
-	cmd.PersistentFlags().IntVarP(&customerPort, "customer-service-port", "c", 8081, "Port for customer service")
+	cmd.PersistentFlags().IntVarP(&locationPort, "location-service-port", "c", 8081, "Port for location service")
 	cmd.PersistentFlags().IntVarP(&driverPort, "driver-service-port", "d", 8082, "Port for driver service")
 	cmd.PersistentFlags().IntVarP(&frontendPort, "frontend-service-port", "f", 8080, "Port for frontend service")
 	cmd.PersistentFlags().IntVarP(&routePort, "route-service-port", "r", 8083, "Port for routing service")

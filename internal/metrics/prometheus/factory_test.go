@@ -24,8 +24,8 @@ import (
 	"github.com/stretchr/testify/require"
 	"go.uber.org/goleak"
 
-	. "github.com/jaegertracing/jaeger/internal/metrics/prometheus"
 	"github.com/jaegertracing/jaeger/pkg/metrics"
+	. "github.com/signadot/hotrod/internal/metrics/prometheus"
 )
 
 func TestOptions(t *testing.T) {

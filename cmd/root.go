@@ -26,7 +26,8 @@ import (
 	"github.com/signadot/hotrod/internal/metrics/expvar"
 	"github.com/signadot/hotrod/internal/metrics/prometheus"
 
-	"github.com/signadot/hotrod/pkg/metrics"
+	"github.com/jaegertracing/jaeger/pkg/metrics"
+
 	"github.com/signadot/hotrod/services/config"
 )
 
@@ -94,8 +95,8 @@ func onInitialize() {
 		config.RouteWorkerPoolSize = fixRouteWorkerPoolSize
 	}
 
-	if customerPort != 8081 {
-		logger.Info("changing customer service port", zap.Int("old", 8081), zap.Int("new", customerPort))
+	if locationPort != 8081 {
+		logger.Info("changing location service port", zap.Int("old", 8081), zap.Int("new", locationPort))
 	}
 
 	if driverPort != 8082 {

@@ -27,9 +27,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
+	"github.com/jaegertracing/jaeger/pkg/metrics"
 	"github.com/signadot/hotrod/pkg/delay"
 	"github.com/signadot/hotrod/pkg/log"
-	"github.com/signadot/hotrod/pkg/metrics"
 	"github.com/signadot/hotrod/pkg/tracing"
 	"github.com/signadot/hotrod/services/config"
 )
@@ -86,8 +86,8 @@ func (r *Redis) GetDriver(ctx context.Context, driverID string) (Driver, error) 
 
 	// #nosec
 	return Driver{
-		DriverID: driverID,
-		Location: fmt.Sprintf("%d,%d", rand.Int()%1000, rand.Int()%1000),
+		DriverID:    driverID,
+		Coordinates: fmt.Sprintf("%d,%d", rand.Int()%1000, rand.Int()%1000),
 	}, nil
 }
 

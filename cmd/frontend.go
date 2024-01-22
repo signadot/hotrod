@@ -24,7 +24,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/signadot/hotrod/pkg/log"
-	"github.com/signadot/hotrod/pkg/tracing"
 	"github.com/signadot/hotrod/services/frontend"
 )
 
@@ -39,19 +38,19 @@ var frontendCmd = &cobra.Command{
 		options.Basepath = basePath
 
 		// Resolve services addresses
-		var driverHost, customerHost, routeHost string
+		var driverHost, locationHost, routeHost string
 		if baseDomain == "" {
 			driverHost = "driver"
-			customerHost = "customer"
+			locationHost = "location"
 			routeHost = "route"
 		} else {
 			if baseDomain == "localhost" || net.ParseIP(baseDomain) != nil {
 				driverHost = baseDomain
-				customerHost = baseDomain
+				locationHost = baseDomain
 				routeHost = baseDomain
 			} else {
 				driverHost = "driver." + baseDomain
-				customerHost = "customer." + baseDomain
+				locationHost = "location." + baseDomain
 				routeHost = "route." + baseDomain
 			}
 		}
@@ -60,10 +59,10 @@ var frontendCmd = &cobra.Command{
 		} else {
 			options.DriverHostPort = net.JoinHostPort(driverHost, strconv.Itoa(driverPort))
 		}
-		if val := os.Getenv("FRONTEND_CUSTOMER_ADDR"); val != "" {
-			options.CustomerHostPort = val
+		if val := os.Getenv("FRONTEND_LOCATION_ADDR"); val != "" {
+			options.LocationHostPort = val
 		} else {
-			options.CustomerHostPort = net.JoinHostPort(customerHost, strconv.Itoa(customerPort))
+			options.LocationHostPort = net.JoinHostPort(locationHost, strconv.Itoa(locationPort))
 		}
 		if val := os.Getenv("FRONTEND_ROUTE_ADDR"); val != "" {
 			options.RouteHostPort = val
@@ -75,11 +74,7 @@ var frontendCmd = &cobra.Command{
 
 		zapLogger := logger.With(zap.String("service", "frontend"))
 		logger := log.NewFactory(zapLogger)
-		server := frontend.NewServer(
-			options,
-			tracing.InitOTEL("frontend", otelExporter, metricsFactory, logger),
-			logger,
-		)
+		server := frontend.NewServer(options, otelExporter, metricsFactory, logger)
 		return logError(zapLogger, server.Run())
 	},
 }

@@ -24,7 +24,7 @@ import (
 )
 
 var (
-	routeCalcByCustomer = expvar.NewMap("route.calc.by.customer.sec")
+	routeCalcByLocation = expvar.NewMap("route.calc.by.location.sec")
 	routeCalcBySession  = expvar.NewMap("route.calc.by.session.sec")
 )
 
@@ -33,8 +33,8 @@ var stats = []struct {
 	baggageKey string
 }{
 	{
-		expvar:     routeCalcByCustomer,
-		baggageKey: "customer",
+		expvar:     routeCalcByLocation,
+		baggageKey: "location",
 	},
 	{
 		expvar:     routeCalcBySession,

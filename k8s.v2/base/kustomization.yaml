@@ -1,0 +1,6 @@
+
+resources:
+  - mysql
+  - redis
+  - frontend.yaml
+  - location.yaml

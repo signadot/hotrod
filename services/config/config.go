@@ -26,9 +26,9 @@ var (
 	// Can be overwritten from command line.
 	RouteWorkerPoolSize = 3
 
-	// 'customer' service
+	// 'location' service
 
-	// MySQLGetDelay is how long retrieving a customer record takes.
+	// MySQLGetDelay is how long retrieving a location record takes.
 	// Using large value mostly because I cannot click the button fast enough to cause a queue.
 	MySQLGetDelay = 300 * time.Millisecond
 

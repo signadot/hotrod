@@ -17,15 +17,14 @@ package driver
 
 import (
 	"context"
-	"encoding/json"
 	"net"
 
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
 
+	"github.com/jaegertracing/jaeger/pkg/metrics"
 	"github.com/signadot/hotrod/pkg/log"
-	"github.com/signadot/hotrod/pkg/metrics"
 	"github.com/signadot/hotrod/pkg/tracing"
 )
 
@@ -70,41 +69,42 @@ func (s *Server) Run() error {
 
 // FindNearest implements gRPC driver interface
 func (s *Server) FindNearest(ctx context.Context, location *DriverLocationRequest) (*DriverLocationResponse, error) {
-	s.logger.For(ctx).Info("Searching for nearby drivers", zap.String("location", location.Location))
-	driverIDs := s.redis.FindDriverIDs(ctx, location.Location)
+	return &DriverLocationResponse{}, nil
+	// s.logger.For(ctx).Info("Searching for nearby drivers", zap.String("location", location.Location))
+	// driverIDs := s.redis.FindDriverIDs(ctx, location.Location)
 
-	locations := make([]*DriverLocation, len(driverIDs))
-	for i, driverID := range driverIDs {
-		var drv Driver
-		var err error
-		for i := 0; i < 3; i++ {
-			drv, err = s.redis.GetDriver(ctx, driverID)
-			if err == nil {
-				break
-			}
-			s.logger.For(ctx).Error("Retrying GetDriver after error", zap.Int("retry_no", i+1), zap.Error(err))
-		}
-		if err != nil {
-			s.logger.For(ctx).Error("Failed to get driver after 3 attempts", zap.Error(err))
-			return nil, err
-		}
-		locations[i] = &DriverLocation{
-			DriverID: drv.DriverID,
-			Location: drv.Location,
-		}
-	}
-	s.logger.For(ctx).Info(
-		"Search successful",
-		zap.Int("driver_count", len(locations)),
-		zap.String("locations", toJSON(locations)),
-	)
-	return &DriverLocationResponse{Locations: locations}, nil
+	// locations := make([]*DriverLocation, len(driverIDs))
+	// for i, driverID := range driverIDs {
+	// 	var drv Driver
+	// 	var err error
+	// 	for i := 0; i < 3; i++ {
+	// 		drv, err = s.redis.GetDriver(ctx, driverID)
+	// 		if err == nil {
+	// 			break
+	// 		}
+	// 		s.logger.For(ctx).Error("Retrying GetDriver after error", zap.Int("retry_no", i+1), zap.Error(err))
+	// 	}
+	// 	if err != nil {
+	// 		s.logger.For(ctx).Error("Failed to get driver after 3 attempts", zap.Error(err))
+	// 		return nil, err
+	// 	}
+	// 	locations[i] = &DriverLocation{
+	// 		DriverID: drv.DriverID,
+	// 		Location: drv.Location,
+	// 	}
+	// }
+	// s.logger.For(ctx).Info(
+	// 	"Search successful",
+	// 	zap.Int("driver_count", len(locations)),
+	// 	zap.String("locations", toJSON(locations)),
+	// )
+	// return &DriverLocationResponse{Locations: locations}, nil
 }
 
-func toJSON(v any) string {
-	str, err := json.Marshal(v)
-	if err != nil {
-		return err.Error()
-	}
-	return string(str)
-}
+// func toJSON(v any) string {
+// 	str, err := json.Marshal(v)
+// 	if err != nil {
+// 		return err.Error()
+// 	}
+// 	return string(str)
+// }

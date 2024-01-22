@@ -18,7 +18,7 @@ package rpcmetrics
 import (
 	"sync"
 
-	"github.com/signadot/hotrod/pkg/metrics"
+	"github.com/jaegertracing/jaeger/pkg/metrics"
 )
 
 const (

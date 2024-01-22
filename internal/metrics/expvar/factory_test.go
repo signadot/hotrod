@@ -22,9 +22,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/stretchr/testify/assert"
-
 	"github.com/jaegertracing/jaeger/pkg/metrics"
+	"github.com/stretchr/testify/assert"
 )
 
 var (

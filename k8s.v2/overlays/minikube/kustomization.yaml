@@ -1,0 +1,7 @@
+
+resources:
+- ../../base
+- ../../base/jaeger
+
+patches:
+- path: image-pull-config.yaml

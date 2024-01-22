@@ -65,11 +65,12 @@ func (c *Client) FindNearest(ctx context.Context, location string) ([]Driver, er
 
 func fromProto(response *DriverLocationResponse) []Driver {
 	retMe := make([]Driver, len(response.Locations))
-	for i, result := range response.Locations {
-		retMe[i] = Driver{
-			DriverID: result.DriverID,
-			Location: result.Location,
-		}
-	}
+	// TODO
+	// for i, result := range response.Locations {
+	// 	retMe[i] = Driver{
+	// 		DriverID: result.DriverID,
+	// 		Location: result.Location,
+	// 	}
+	// }
 	return retMe
 }

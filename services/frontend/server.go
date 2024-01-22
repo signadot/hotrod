@@ -19,33 +19,47 @@ import (
 	"embed"
 	"encoding/json"
 	"expvar"
+	"fmt"
+	"io/fs"
 	"net/http"
+	"os"
 	"path"
 	"strconv"
+	"text/template"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/otel/baggage"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
+	"github.com/jaegertracing/jaeger/pkg/metrics"
+	"github.com/signadot/hotrod/pkg/baggageutils"
 	"github.com/signadot/hotrod/pkg/httperr"
-	"github.com/signadot/hotrod/pkg/httpfs"
 	"github.com/signadot/hotrod/pkg/log"
+	"github.com/signadot/hotrod/pkg/notifications"
 	"github.com/signadot/hotrod/pkg/tracing"
+	"github.com/signadot/hotrod/services/location"
 )
 
 //go:embed web_assets/*
 var assetFS embed.FS
 
-// Server implements jaeger-demo-frontend service
+//go:embed templates/*
+var tplFS embed.FS
+
+// Server implements hotrod-frontend service
 type Server struct {
 	hostPort string
-	tracer   trace.TracerProvider
-	logger   log.Factory
-	bestETA  *bestETA
-	assetFS  http.FileSystem
 	basepath string
 	jaegerUI string
+
+	tracer       trace.TracerProvider
+	logger       log.Factory
+	tplFS        fs.FS
+	location     location.Interface
+	notification notifications.Interface
+	dispatcher   *dispatcher
 }
 
 // ConfigOptions used to make sure service clients
@@ -53,22 +67,47 @@ type Server struct {
 type ConfigOptions struct {
 	FrontendHostPort string
 	DriverHostPort   string
-	CustomerHostPort string
+	LocationHostPort string
 	RouteHostPort    string
 	Basepath         string
 	JaegerUI         string
 }
 
 // NewServer creates a new frontend.Server
-func NewServer(options ConfigOptions, tracer trace.TracerProvider, logger log.Factory) *Server {
+func NewServer(options ConfigOptions, otelExporter string, metricsFactory metrics.Factory, logger log.Factory) *Server {
+	// load templates
+	tplFS, err := fs.Sub(tplFS, "templates")
+	_ = tplFS
+	if err != nil {
+		panic(err)
+	}
+
+	// get a tracer
+	tracer := tracing.InitOTEL("frontend", otelExporter, metricsFactory, logger)
+
+	// get a location client
+	locationClient := location.NewClient(tracer, logger, options.LocationHostPort)
+
+	// get a notification handler
+	notificationHandler := notifications.NewNotificationHandler(
+		tracing.InitOTEL("redis", otelExporter, metricsFactory, logger),
+		logger,
+	)
+
+	// get a dispatcher
+	dispatcher := newDispatcher(logger, locationClient)
+
 	return &Server{
 		hostPort: options.FrontendHostPort,
-		tracer:   tracer,
-		logger:   logger,
-		bestETA:  newBestETA(tracer, logger, options),
-		assetFS:  httpfs.PrefixedFS("web_assets", http.FS(assetFS)),
 		basepath: options.Basepath,
 		jaegerUI: options.JaegerUI,
+
+		tracer:       tracer,
+		logger:       logger,
+		tplFS:        tplFS,
+		location:     locationClient,
+		notification: notificationHandler,
+		dispatcher:   dispatcher,
 	}
 }
 
@@ -87,12 +126,46 @@ func (s *Server) Run() error {
 func (s *Server) createServeMux() http.Handler {
 	mux := tracing.NewServeMux(true, s.tracer, s.logger)
 	p := path.Join("/", s.basepath)
-	mux.Handle(p, http.StripPrefix(p, http.FileServer(s.assetFS)))
+	mux.Handle(path.Join(p, "/web_assets")+"/",
+		http.StripPrefix(s.basepath, http.FileServer(http.FS(assetFS))))
 	mux.Handle(path.Join(p, "/dispatch"), http.HandlerFunc(s.dispatch))
+	mux.Handle(path.Join(p, "/notifications"), http.HandlerFunc(s.notifications))
 	mux.Handle(path.Join(p, "/config"), http.HandlerFunc(s.config))
 	mux.Handle(path.Join(p, "/debug/vars"), expvar.Handler()) // expvar
 	mux.Handle(path.Join(p, "/metrics"), promhttp.Handler())  // Prometheus
+	mux.Handle(p, http.HandlerFunc(s.splash))
 	return mux
+}
+
+func (s *Server) splash(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
+
+	// parse templates
+	t, err := template.ParseFS(s.tplFS, "*")
+	if err != nil {
+		httperr.HandleError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	// get all stored locations
+	locations, err := s.location.List(ctx)
+	if err != nil {
+		httperr.HandleError(w, err, http.StatusInternalServerError)
+		return
+	}
+
+	// load data for the template
+	data := struct {
+		Locations   []location.Location
+		TitleSuffix string
+	}{locations, os.Getenv("FRONTEND_TITLE_SUFFIX")}
+
+	// render the template
+	if err := t.Execute(w, data); err != nil {
+		httperr.HandleError(w, err, http.StatusInternalServerError)
+		return
+	}
 }
 
 func (s *Server) config(w http.ResponseWriter, r *http.Request) {
@@ -105,30 +178,86 @@ func (s *Server) config(w http.ResponseWriter, r *http.Request) {
 func (s *Server) dispatch(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
+
+	// decode request body
+	var dispatchReq DispatchRequest
+	err := json.NewDecoder(r.Body).Decode(&dispatchReq)
+	if httperr.HandleError(w, err, http.StatusBadRequest) {
+		s.logger.For(ctx).Error("error parsing request body", zap.Error(err))
+		return
+	}
+
+	// get request context
+	reqContext := &notifications.RequestContext{
+		ID:                dispatchReq.RequestID,
+		SessionID:         dispatchReq.SessionID,
+		PickupLocationID:  dispatchReq.PickupLocationID,
+		DropoffLocationID: dispatchReq.DropoffLocationID,
+	}
+
+	// inject the request context into baggage and update the current context
+	bag, err := baggageutils.InjectRequestContext(ctx, reqContext)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("cannot inject request context into baggage", zap.Error(err))
+		return
+	}
+	ctx = baggage.ContextWithBaggage(ctx, *bag)
+
+	// send frontend-dispatching-driver notification
+	s.logger.For(ctx).Info("Dispatching driver", zap.Any("request", dispatchReq))
+	s.notification.Store(ctx, &notifications.Notification{
+		ID:        fmt.Sprintf("req-%d-frontend-dispatching-driver", dispatchReq.RequestID),
+		Timestamp: time.Now(),
+		Context:   s.notification.NotificationContext(reqContext, baggageutils.GetRoutingKey(ctx)),
+		Body:      "Processing dispatch driver request",
+	})
+
+	// dispatch a driver request
+	err = s.dispatcher.DispatchDriver(ctx, &dispatchReq)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("request failed", zap.Error(err))
+		return
+	}
+	s.writeResponse(map[string]interface{}{}, w, r)
+}
+
+func (s *Server) notifications(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
 	if err := r.ParseForm(); httperr.HandleError(w, err, http.StatusBadRequest) {
 		s.logger.For(ctx).Error("bad request", zap.Error(err))
 		return
 	}
 
-	customer := r.Form.Get("customer")
-	if customer == "" {
-		http.Error(w, "Missing required 'customer' parameter", http.StatusBadRequest)
+	sessionIDStr := r.Form.Get("sessionID")
+	if sessionIDStr == "" {
+		http.Error(w, "Missing required 'sessionID' parameter", http.StatusBadRequest)
 		return
 	}
-	customerID, err := strconv.Atoi(customer)
+	sessionID, err := strconv.Atoi(sessionIDStr)
 	if err != nil {
-		http.Error(w, "Parameter 'customer' is not an integer", http.StatusBadRequest)
+		http.Error(w, "Parameter 'sessionID' is not an integer", http.StatusBadRequest)
 		return
 	}
 
-	// TODO distinguish between user errors (such as invalid customer ID) and server failures
-	response, err := s.bestETA.Get(ctx, customerID)
+	cursorStr := r.Form.Get("cursor")
+	if cursorStr == "" {
+		http.Error(w, "Missing required 'cursor' parameter", http.StatusBadRequest)
+		return
+	}
+	cursor, err := strconv.Atoi(cursorStr)
+	if err != nil {
+		http.Error(w, "Parameter 'cursor' is not an integer", http.StatusBadRequest)
+		return
+	}
+
+	data, err := s.notification.List(ctx, uint(sessionID), cursor)
 	if httperr.HandleError(w, err, http.StatusInternalServerError) {
 		s.logger.For(ctx).Error("request failed", zap.Error(err))
 		return
 	}
 
-	s.writeResponse(response, w, r)
+	s.writeResponse(data, w, r)
 }
 
 func (s *Server) writeResponse(response interface{}, w http.ResponseWriter, r *http.Request) {

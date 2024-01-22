@@ -29,7 +29,7 @@ import (
 	semconv "go.opentelemetry.io/otel/semconv/v1.21.0"
 	"go.opentelemetry.io/otel/trace"
 
-	u "github.com/jaegertracing/jaeger/internal/metricstest"
+	u "github.com/signadot/hotrod/internal/metricstest"
 )
 
 type testTracer struct {

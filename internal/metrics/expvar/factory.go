@@ -19,8 +19,7 @@ import (
 	"sort"
 
 	kexpvar "github.com/go-kit/kit/metrics/expvar"
-
-	"github.com/signadot/hotrod/pkg/metrics"
+	"github.com/jaegertracing/jaeger/pkg/metrics"
 )
 
 // NewFactory creates a new metrics factory using go-kit expvar package.

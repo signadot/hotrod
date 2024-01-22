@@ -20,7 +20,7 @@ import (
 
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jaegertracing/jaeger/internal/metricstest"
+	"github.com/signadot/hotrod/internal/metricstest"
 )
 
 // E.g. tags("key", "value", "key", "value")

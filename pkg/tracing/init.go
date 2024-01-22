@@ -35,8 +35,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
+	"github.com/jaegertracing/jaeger/pkg/metrics"
 	"github.com/signadot/hotrod/pkg/log"
-	"github.com/signadot/hotrod/pkg/metrics"
 	"github.com/signadot/hotrod/pkg/tracing/rpcmetrics"
 )
 

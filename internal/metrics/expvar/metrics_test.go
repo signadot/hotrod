@@ -21,8 +21,8 @@ import (
 	"github.com/go-kit/kit/metrics/generic"
 	"github.com/stretchr/testify/assert"
 
-	"github.com/jaegertracing/jaeger/internal/metrics/expvar"
 	"github.com/jaegertracing/jaeger/pkg/metrics"
+	"github.com/signadot/hotrod/internal/metrics/expvar"
 )
 
 func TestCounter(t *testing.T) {

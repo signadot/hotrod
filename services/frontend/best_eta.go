@@ -29,13 +29,13 @@ import (
 	"github.com/signadot/hotrod/pkg/log"
 	"github.com/signadot/hotrod/pkg/pool"
 	"github.com/signadot/hotrod/services/config"
-	"github.com/signadot/hotrod/services/customer"
 	"github.com/signadot/hotrod/services/driver"
+	"github.com/signadot/hotrod/services/location"
 	"github.com/signadot/hotrod/services/route"
 )
 
 type bestETA struct {
-	customer customer.Interface
+	location location.Interface
 	driver   driver.Interface
 	route    route.Interface
 	pool     *pool.Pool
@@ -50,10 +50,10 @@ type Response struct {
 
 func newBestETA(tracer trace.TracerProvider, logger log.Factory, options ConfigOptions) *bestETA {
 	return &bestETA{
-		customer: customer.NewClient(
+		location: location.NewClient(
 			tracer,
-			logger.With(zap.String("component", "customer_client")),
-			options.CustomerHostPort,
+			logger.With(zap.String("component", "location_client")),
+			options.LocationHostPort,
 		),
 		driver: driver.NewClient(
 			tracer,
@@ -70,14 +70,14 @@ func newBestETA(tracer trace.TracerProvider, logger log.Factory, options ConfigO
 	}
 }
 
-func (eta *bestETA) Get(ctx context.Context, customerID int) (*Response, error) {
-	customer, err := eta.customer.Get(ctx, customerID)
+func (eta *bestETA) Get(ctx context.Context, locationID int) (*Response, error) {
+	location, err := eta.location.Get(ctx, locationID)
 	if err != nil {
 		return nil, err
 	}
-	eta.logger.For(ctx).Info("Found customer", zap.Any("customer", customer))
+	eta.logger.For(ctx).Info("Found location", zap.Any("location", location))
 
-	m, err := baggage.NewMember("customer", customer.Name)
+	m, err := baggage.NewMember("location", location.Name)
 	if err != nil {
 		eta.logger.For(ctx).Error("cannot create baggage member", zap.Error(err))
 	}
@@ -88,13 +88,13 @@ func (eta *bestETA) Get(ctx context.Context, customerID int) (*Response, error) 
 	}
 	ctx = baggage.ContextWithBaggage(ctx, bag)
 
-	drivers, err := eta.driver.FindNearest(ctx, customer.Location)
+	drivers, err := eta.driver.FindNearest(ctx, location.Coordinates)
 	if err != nil {
 		return nil, err
 	}
 	eta.logger.For(ctx).Info("Found drivers", zap.Any("drivers", drivers))
 
-	results := eta.getRoutes(ctx, customer, drivers)
+	results := eta.getRoutes(ctx, location, drivers)
 	eta.logger.For(ctx).Info("Found routes", zap.Any("routes", results))
 
 	resp := &Response{ETA: math.MaxInt64}
@@ -121,8 +121,8 @@ type routeResult struct {
 	err    error
 }
 
-// getRoutes calls Route service for each (customer, driver) pair
-func (eta *bestETA) getRoutes(ctx context.Context, customer *customer.Customer, drivers []driver.Driver) []routeResult {
+// getRoutes calls Route service for each (location, driver) pair
+func (eta *bestETA) getRoutes(ctx context.Context, pickUpLocation *location.Location, drivers []driver.Driver) []routeResult {
 	results := make([]routeResult, 0, len(drivers))
 	wg := sync.WaitGroup{}
 	routesLock := sync.Mutex{}
@@ -131,7 +131,7 @@ func (eta *bestETA) getRoutes(ctx context.Context, customer *customer.Customer, 
 		driver := dd // capture loop var
 		// Use worker pool to (potentially) execute requests in parallel
 		eta.pool.Execute(func() {
-			route, err := eta.route.FindRoute(ctx, driver.Location, customer.Location)
+			route, err := eta.route.FindRoute(ctx, driver.Coordinates, pickUpLocation.Coordinates)
 			routesLock.Lock()
 			results = append(results, routeResult{
 				driver: driver.DriverID,

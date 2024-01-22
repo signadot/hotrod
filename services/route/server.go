@@ -1,123 +1,99 @@
-// Copyright (c) 2019 The Jaeger Authors.
-// Copyright (c) 2017 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package route
 
 import (
 	"context"
-	"encoding/json"
-	"math"
+	"fmt"
 	"math/rand"
-	"net/http"
+	"net"
 	"time"
 
+	"github.com/signadot/hotrod/pkg/baggageutils"
+	"github.com/signadot/hotrod/pkg/config"
+	"github.com/signadot/hotrod/pkg/delay"
+	"github.com/signadot/hotrod/pkg/notifications"
+	"github.com/signadot/hotrod/pkg/tracing"
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 
-	"github.com/signadot/hotrod/pkg/delay"
-	"github.com/signadot/hotrod/pkg/httperr"
 	"github.com/signadot/hotrod/pkg/log"
-	"github.com/signadot/hotrod/pkg/tracing"
-	"github.com/signadot/hotrod/services/config"
 )
 
-// Server implements Route service
+// Server implements jaeger-demo-frontend service
 type Server struct {
-	hostPort string
-	tracer   trace.TracerProvider
-	logger   log.Factory
+	UnimplementedRoutesServiceServer
+	hostPort       string
+	tracerProvider trace.TracerProvider
+	logger         log.Factory
+	server         *grpc.Server
+	notification   notifications.Interface
 }
+
+var _ RoutesServiceServer = (*Server)(nil)
 
 // NewServer creates a new route.Server
-func NewServer(hostPort string, tracer trace.TracerProvider, logger log.Factory) *Server {
+func NewServer(hostPort string, logger log.Factory) *Server {
+	// get a tracer provider for the route service
+	tracerProvider := tracing.InitOTEL("route", config.GetOtelExporterType(),
+		config.GetMetricsFactory(), logger)
+
+	server := grpc.NewServer(
+		grpc.StatsHandler(otelgrpc.NewServerHandler(otelgrpc.WithTracerProvider(tracerProvider))),
+	)
+
 	return &Server{
-		hostPort: hostPort,
-		tracer:   tracer,
-		logger:   logger,
+		hostPort:       hostPort,
+		tracerProvider: tracerProvider,
+		logger:         logger,
+		server:         server,
+		notification:   notifications.NewNotificationHandler(tracerProvider, logger),
 	}
 }
 
-// Run starts the Route server
+// Run starts the Driver server
 func (s *Server) Run() error {
-	mux := s.createServeMux()
-	s.logger.Bg().Info("Starting", zap.String("address", "http://"+s.hostPort))
-	server := &http.Server{
-		Addr:              s.hostPort,
-		Handler:           mux,
-		ReadHeaderTimeout: 3 * time.Second,
+	lis, err := net.Listen("tcp", s.hostPort)
+	if err != nil {
+		s.logger.Bg().Fatal("Unable to create http listener", zap.Error(err))
 	}
-	return server.ListenAndServe()
+	RegisterRoutesServiceServer(s.server, s)
+	err = s.server.Serve(lis)
+	if err != nil {
+		s.logger.Bg().Fatal("Unable to start gRPC server", zap.Error(err))
+	}
+	return err
 }
 
-func (s *Server) createServeMux() http.Handler {
-	mux := tracing.NewServeMux(false, s.tracer, s.logger)
-	mux.Handle("/route", http.HandlerFunc(s.route))
-	mux.Handle("/debug/vars", http.HandlerFunc(movedToFrontend))
-	mux.Handle("/metrics", http.HandlerFunc(movedToFrontend))
-	return mux
-}
-
-func movedToFrontend(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "endpoint moved to the frontend service", http.StatusNotFound)
-}
-
-func (s *Server) route(w http.ResponseWriter, r *http.Request) {
-	ctx := r.Context()
-	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
-	if err := r.ParseForm(); httperr.HandleError(w, err, http.StatusBadRequest) {
-		s.logger.For(ctx).Error("bad request", zap.Error(err))
-		return
-	}
-
-	pickup := r.Form.Get("pickup")
-	if pickup == "" {
-		http.Error(w, "Missing required 'pickup' parameter", http.StatusBadRequest)
-		return
-	}
-
-	dropoff := r.Form.Get("dropoff")
-	if dropoff == "" {
-		http.Error(w, "Missing required 'dropoff' parameter", http.StatusBadRequest)
-		return
-	}
-
-	response := computeRoute(ctx, pickup, dropoff)
-
-	data, err := json.Marshal(response)
-	if httperr.HandleError(w, err, http.StatusInternalServerError) {
-		s.logger.For(ctx).Error("cannot marshal response", zap.Error(err))
-		return
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	w.Write(data)
-}
-
-func computeRoute(ctx context.Context, pickup, dropoff string) *Route {
-	start := time.Now()
-	defer func() {
-		updateCalcStats(ctx, time.Since(start))
-	}()
+// FindNearest implements gRPC driver interface
+func (s *Server) FindRoute(ctx context.Context, req *FindRouteRequest) (*FindRouteResponse, error) {
+	s.logger.For(ctx).Info("Finding route", zap.String("from", req.From), zap.String("to", req.To))
 
 	// Simulate expensive calculation
-	delay.Sleep(config.RouteCalcDelay, config.RouteCalcDelayStdDev)
+	delay.Sleep(config.GetRouteCalcDelay(), config.GetRouteCalcStdDev())
 
-	eta := math.Max(2, rand.NormFloat64()*3+5)
-	return &Route{
-		Pickup:  pickup,
-		Dropoff: dropoff,
-		ETA:     time.Duration(eta) * time.Minute,
+	// Generate a random number between 3 and 45 with decimals
+	eta := time.Duration((rand.Float64()*(45-3) + 3) * float64(time.Minute))
+	// Round to the second
+	eta = eta.Round(time.Second)
+
+	// extract the request context
+	reqContext, err := baggageutils.ExtractRequestContext(ctx)
+	if err != nil {
+		s.logger.For(ctx).Error("cannot extract request context from baggage", zap.Error(err))
+		return nil, err
 	}
+	if reqContext != nil {
+		// send a notification
+		s.notification.Store(ctx, &notifications.Notification{
+			ID:        fmt.Sprintf("req-%d-route-resolve", reqContext.ID),
+			Timestamp: time.Now(),
+			Context:   s.notification.NotificationContext(reqContext, baggageutils.GetRoutingKey(ctx)),
+			Body:      "Resolving routes",
+		})
+	}
+
+	return &FindRouteResponse{
+		EtaSeconds: uint32(time.Duration(eta) / time.Second),
+	}, nil
 }

@@ -3,48 +3,30 @@ kind: Deployment
 metadata:
   labels:
     app: hotrod
-    component: frontend
-  name: frontend
+    component: driver
+  name: driver
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: hotrod
-      component: frontend
+      component: driver
   template:
     metadata:
       labels:
         app: hotrod
-        component: frontend
+        component: driver
     spec:
       containers:
         - name: hotrod
           args:
-            - frontend
+            - driver
             - --verbose
           env:
             - name: BASELINE_NAME
-              value: "frontend"
+              value: "driver"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://jaeger:4318"
           image: signadot/hotrod:latest
           imagePullPolicy: Always
-          ports:
-            - containerPort: 8080
-              name: http-web
       restartPolicy: Always
----
-apiVersion: v1
-kind: Service
-metadata:
-  labels:
-    app: hotrod
-    component: frontend
-  name: frontend
-spec:
-  ports:
-    - name: http-web
-      port: 8080
-  selector:
-    app: hotrod
-    component: frontend

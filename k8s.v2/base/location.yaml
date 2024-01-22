@@ -38,8 +38,6 @@ spec:
             - containerPort: 8081
               name: http-api
       restartPolicy: Always
-      imagePullSecrets:
-      - name: signadot-registry
 ---
 apiVersion: v1
 kind: Service

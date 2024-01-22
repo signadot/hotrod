@@ -79,7 +79,9 @@ var seed = []Location{
 	},
 }
 
-func newDatabase(tracer trace.Tracer, logger log.Factory) *database {
+func newDatabase(logger log.Factory) *database {
+	logger = logger.With(zap.String("component", "database"))
+
 	db, err := sqlx.ConnectContext(context.TODO(), "mysql", driverConfig().FormatDSN())
 	if err != nil {
 		panic(err)
@@ -111,7 +113,8 @@ func newDatabase(tracer trace.Tracer, logger log.Factory) *database {
 	}
 
 	return &database{
-		tracer: tracer,
+		tracer: tracing.InitOTEL("mysql", config.GetOtelExporterType(),
+			config.GetMetricsFactory(), logger).Tracer("mysql"),
 		logger: logger,
 		lock: &tracing.Mutex{
 			SessionBaggageKey: "request",

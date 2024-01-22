@@ -19,3 +19,25 @@ spec:
       containers:
       - name: hotrod
         imagePullPolicy: Never
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: driver
+spec:
+  template:
+    spec:
+      containers:
+      - name: hotrod
+        imagePullPolicy: Never
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: route
+spec:
+  template:
+    spec:
+      containers:
+      - name: hotrod
+        imagePullPolicy: Never

@@ -16,9 +16,6 @@
 package cmd
 
 import (
-	"net"
-	"strconv"
-
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
@@ -34,13 +31,10 @@ var driverCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		zapLogger := logger.With(zap.String("service", "driver"))
 		logger := log.NewFactory(zapLogger)
-		server := driver.NewServer(
-			net.JoinHostPort("0.0.0.0", strconv.Itoa(driverPort)),
-			otelExporter,
-			metricsFactory,
+		processor := driver.NewProcessor(
 			logger,
 		)
-		return logError(zapLogger, server.Run())
+		return logError(zapLogger, processor.Run())
 	},
 }
 

@@ -3,35 +3,34 @@ kind: Deployment
 metadata:
   labels:
     app: hotrod
-    component: frontend
-  name: frontend
+    component: route
+  name: route
 spec:
   replicas: 1
   selector:
     matchLabels:
       app: hotrod
-      component: frontend
+      component: route
   template:
     metadata:
       labels:
         app: hotrod
-        component: frontend
+        component: route
     spec:
       containers:
         - name: hotrod
           args:
-            - frontend
-            - --verbose
+            - route
           env:
             - name: BASELINE_NAME
-              value: "frontend"
+              value: "route"
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: "http://jaeger:4318"
           image: signadot/hotrod:latest
           imagePullPolicy: Always
           ports:
-            - containerPort: 8080
-              name: http-web
+            - containerPort: 8083
+              name: grpc
       restartPolicy: Always
 ---
 apiVersion: v1
@@ -39,12 +38,12 @@ kind: Service
 metadata:
   labels:
     app: hotrod
-    component: frontend
-  name: frontend
+    component: route
+  name: route
 spec:
   ports:
-    - name: http-web
-      port: 8080
+    - name: grpc
+      port: 8083
   selector:
     app: hotrod
-    component: frontend
+    component: route

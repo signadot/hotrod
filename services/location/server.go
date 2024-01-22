@@ -25,8 +25,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
-	"github.com/jaegertracing/jaeger/pkg/metrics"
 	"github.com/signadot/hotrod/pkg/baggageutils"
+	"github.com/signadot/hotrod/pkg/config"
 	"github.com/signadot/hotrod/pkg/httperr"
 	"github.com/signadot/hotrod/pkg/log"
 	"github.com/signadot/hotrod/pkg/notifications"
@@ -35,27 +35,25 @@ import (
 
 // Server implements Location service
 type Server struct {
-	hostPort     string
-	tracer       trace.TracerProvider
-	logger       log.Factory
-	notification notifications.Interface
-	database     *database
+	hostPort       string
+	tracerProvider trace.TracerProvider
+	logger         log.Factory
+	notification   notifications.Interface
+	database       *database
 }
 
 // NewServer creates a new location.Server
-func NewServer(hostPort string, otelExporter string, metricsFactory metrics.Factory, logger log.Factory) *Server {
+func NewServer(hostPort string, logger log.Factory) *Server {
+	// get a tracer provider for the location
+	tracerProvider := tracing.InitOTEL("location", config.GetOtelExporterType(),
+		config.GetMetricsFactory(), logger)
+
 	return &Server{
-		hostPort: hostPort,
-		tracer:   tracing.InitOTEL("location", otelExporter, metricsFactory, logger),
-		logger:   logger,
-		database: newDatabase(
-			tracing.InitOTEL("mysql", otelExporter, metricsFactory, logger).Tracer("mysql"),
-			logger.With(zap.String("component", "mysql")),
-		),
-		notification: notifications.NewNotificationHandler(
-			tracing.InitOTEL("redis", otelExporter, metricsFactory, logger),
-			logger,
-		),
+		hostPort:       hostPort,
+		tracerProvider: tracerProvider,
+		logger:         logger,
+		database:       newDatabase(logger),
+		notification:   notifications.NewNotificationHandler(tracerProvider, logger),
 	}
 }
 
@@ -72,7 +70,7 @@ func (s *Server) Run() error {
 }
 
 func (s *Server) createServeMux() http.Handler {
-	mux := tracing.NewServeMux(false, s.tracer, s.logger)
+	mux := tracing.NewServeMux(false, s.tracerProvider, s.logger)
 	mux.Handle("/locations", http.HandlerFunc(s.locations))
 	mux.Handle("/location", http.HandlerFunc(s.location))
 	return mux

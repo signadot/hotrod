@@ -39,10 +39,10 @@ type Client struct {
 }
 
 // NewClient creates a new location.Client
-func NewClient(tracer trace.TracerProvider, logger log.Factory, hostPort string) *Client {
+func NewClient(tracerProvider trace.TracerProvider, logger log.Factory, hostPort string) *Client {
 	return &Client{
 		logger:   logger,
-		client:   tracing.NewHTTPClient(tracer),
+		client:   tracing.NewHTTPClient(tracerProvider),
 		hostPort: hostPort,
 	}
 }

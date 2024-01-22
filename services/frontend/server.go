@@ -33,8 +33,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
-	"github.com/jaegertracing/jaeger/pkg/metrics"
 	"github.com/signadot/hotrod/pkg/baggageutils"
+	"github.com/signadot/hotrod/pkg/config"
 	"github.com/signadot/hotrod/pkg/httperr"
 	"github.com/signadot/hotrod/pkg/log"
 	"github.com/signadot/hotrod/pkg/notifications"
@@ -74,7 +74,7 @@ type ConfigOptions struct {
 }
 
 // NewServer creates a new frontend.Server
-func NewServer(options ConfigOptions, otelExporter string, metricsFactory metrics.Factory, logger log.Factory) *Server {
+func NewServer(options ConfigOptions, logger log.Factory) *Server {
 	// load templates
 	tplFS, err := fs.Sub(tplFS, "templates")
 	_ = tplFS
@@ -82,27 +82,25 @@ func NewServer(options ConfigOptions, otelExporter string, metricsFactory metric
 		panic(err)
 	}
 
-	// get a tracer
-	tracer := tracing.InitOTEL("frontend", otelExporter, metricsFactory, logger)
+	// get a tracer provider for the frontend
+	tracerProvider := tracing.InitOTEL("frontend", config.GetOtelExporterType(),
+		config.GetMetricsFactory(), logger)
 
 	// get a location client
-	locationClient := location.NewClient(tracer, logger, options.LocationHostPort)
+	locationClient := location.NewClient(tracerProvider, logger, options.LocationHostPort)
 
 	// get a notification handler
-	notificationHandler := notifications.NewNotificationHandler(
-		tracing.InitOTEL("redis", otelExporter, metricsFactory, logger),
-		logger,
-	)
+	notificationHandler := notifications.NewNotificationHandler(tracerProvider, logger)
 
 	// get a dispatcher
-	dispatcher := newDispatcher(logger, locationClient)
+	dispatcher := newDispatcher(tracerProvider, logger, locationClient)
 
 	return &Server{
 		hostPort: options.FrontendHostPort,
 		basepath: options.Basepath,
 		jaegerUI: options.JaegerUI,
 
-		tracer:       tracer,
+		tracer:       tracerProvider,
 		logger:       logger,
 		tplFS:        tplFS,
 		location:     locationClient,
@@ -212,10 +210,17 @@ func (s *Server) dispatch(w http.ResponseWriter, r *http.Request) {
 		Body:      "Processing dispatch driver request",
 	})
 
-	// dispatch a driver request
-	err = s.dispatcher.DispatchDriver(ctx, &dispatchReq)
+	// resolve locations
+	pickupLoc, dropoffLoc, err := s.dispatcher.ResolveLocations(ctx, &dispatchReq)
 	if httperr.HandleError(w, err, http.StatusInternalServerError) {
-		s.logger.For(ctx).Error("request failed", zap.Error(err))
+		s.logger.For(ctx).Error("couldn't resolve locations", zap.Error(err))
+		return
+	}
+
+	// dispatch a driver request
+	err = s.dispatcher.DispatchDriver(ctx, &dispatchReq, pickupLoc, dropoffLoc)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("couldn't trigger dispatch request", zap.Error(err))
 		return
 	}
 	s.writeResponse(map[string]interface{}{}, w, r)

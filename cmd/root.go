@@ -28,12 +28,11 @@ import (
 
 	"github.com/jaegertracing/jaeger/pkg/metrics"
 
-	"github.com/signadot/hotrod/services/config"
+	"github.com/signadot/hotrod/pkg/config"
 )
 
 var (
-	logger         *zap.Logger
-	metricsFactory metrics.Factory
+	logger *zap.Logger
 )
 
 // RootCmd represents the base command when called without any subcommands
@@ -74,10 +73,10 @@ func onInitialize() {
 
 	switch metricsBackend {
 	case "expvar":
-		metricsFactory = expvar.NewFactory(10) // 10 buckets for histograms
+		config.SetMetricsFactory(expvar.NewFactory(10)) // 10 buckets for histograms
 		logger.Info("*** Using expvar as metrics backend " + expvarDepr)
 	case "prometheus":
-		metricsFactory = prometheus.New().Namespace(metrics.NSOptions{Name: "hotrod", Tags: nil})
+		config.SetMetricsFactory(prometheus.New().Namespace(metrics.NSOptions{Name: "hotrod", Tags: nil}))
 		logger.Info("Using Prometheus as metrics backend")
 	default:
 		logger.Fatal("unsupported metrics backend " + metricsBackend)
@@ -90,10 +89,11 @@ func onInitialize() {
 		logger.Info("fix: disabling db connection mutex")
 		config.MySQLMutexDisabled = true
 	}
-	if config.RouteWorkerPoolSize != fixRouteWorkerPoolSize {
-		logger.Info("fix: overriding route worker pool size", zap.Int("old", config.RouteWorkerPoolSize), zap.Int("new", fixRouteWorkerPoolSize))
-		config.RouteWorkerPoolSize = fixRouteWorkerPoolSize
-	}
+	// TODO
+	// if config.RouteWorkerPoolSize != fixRouteWorkerPoolSize {
+	// 	logger.Info("fix: overriding route worker pool size", zap.Int("old", config.RouteWorkerPoolSize), zap.Int("new", fixRouteWorkerPoolSize))
+	// 	config.RouteWorkerPoolSize = fixRouteWorkerPoolSize
+	// }
 
 	if locationPort != 8081 {
 		logger.Info("changing location service port", zap.Int("old", 8081), zap.Int("new", locationPort))

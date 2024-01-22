@@ -36,8 +36,6 @@ var locationCmd = &cobra.Command{
 		logger := log.NewFactory(zapLogger)
 		server := location.NewServer(
 			net.JoinHostPort("0.0.0.0", strconv.Itoa(locationPort)),
-			otelExporter,
-			metricsFactory,
 			logger,
 		)
 		return logError(zapLogger, server.Run())

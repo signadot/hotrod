@@ -10,6 +10,7 @@ import (
 	"github.com/redis/go-redis/v9"
 	"github.com/signadot/hotrod/pkg/config"
 	"github.com/signadot/hotrod/pkg/log"
+	"github.com/signadot/hotrod/pkg/tracing"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -21,19 +22,25 @@ type notificationHandler struct {
 	rdb    *redis.Client
 }
 
-func NewNotificationHandler(tracer trace.TracerProvider, logger log.Factory) Interface {
+func NewNotificationHandler(tracerProvider trace.TracerProvider, logger log.Factory) Interface {
+	logger = logger.With(zap.String("component", "notifications"))
+
 	rdb := redis.NewClient(&redis.Options{
 		Addr:     config.GetRedisAddr(),
 		Password: config.GetRedisPassword(),
 		DB:       0, // use default DB
 	})
-	if err := redisotel.InstrumentTracing(rdb, redisotel.WithTracerProvider(tracer)); err != nil {
+	// create a new tracer provider for redis
+	redisTracerProvider := tracing.InitOTEL("redis", config.GetOtelExporterType(),
+		config.GetMetricsFactory(), logger)
+	if err := redisotel.InstrumentTracing(rdb,
+		redisotel.WithTracerProvider(redisTracerProvider)); err != nil {
 		panic(err)
 	}
 
 	return &notificationHandler{
-		tracer: tracer.Tracer("notifications"),
-		logger: logger.With(zap.String("component", "notifications")),
+		tracer: tracerProvider.Tracer("notifications"),
+		logger: logger,
 		rdb:    rdb,
 	}
 }
@@ -44,7 +51,7 @@ func (h *notificationHandler) NotificationContext(reqCtx *RequestContext,
 		Request:          reqCtx,
 		RoutingKey:       routingKey,
 		BaselineWorkload: config.EnvDefault("BASELINE_NAME", ""),
-		SandboxName:      config.EnvDefault("SIGNADOT_SANDBOX_NAME", ""),
+		SandboxName:      config.SignadotSandboxName(),
 	}
 }
 

@@ -1,59 +1,54 @@
-// Copyright (c) 2019 The Jaeger Authors.
-// Copyright (c) 2017 Uber Technologies, Inc.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-
 package route
 
 import (
 	"context"
-	"net/url"
+	"time"
 
+	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
+	"github.com/signadot/hotrod/pkg/config"
 	"github.com/signadot/hotrod/pkg/log"
-	"github.com/signadot/hotrod/pkg/tracing"
 )
 
-// Client is a remote client that implements route.Interface
+// Client is a remote client that implements routes gRPC API
 type Client struct {
-	logger   log.Factory
-	client   *tracing.HTTPClient
-	hostPort string
+	logger log.Factory
+	client RoutesServiceClient
 }
 
-// NewClient creates a new route.Client
-func NewClient(tracer trace.TracerProvider, logger log.Factory, hostPort string) *Client {
+func NewClient(tracerProvider trace.TracerProvider, logger log.Factory) *Client {
+	conn, err := grpc.Dial(
+		config.GetRouteAddr(),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+		grpc.WithStatsHandler(otelgrpc.NewClientHandler(otelgrpc.WithTracerProvider(tracerProvider))),
+	)
+	if err != nil {
+		logger.Bg().Fatal("Cannot create gRPC connection", zap.Error(err))
+	}
+
+	client := NewRoutesServiceClient(conn)
 	return &Client{
-		logger:   logger,
-		client:   tracing.NewHTTPClient(tracer),
-		hostPort: hostPort,
+		logger: logger,
+		client: client,
 	}
 }
 
-// FindRoute implements route.Interface#FindRoute as an RPC
-func (c *Client) FindRoute(ctx context.Context, pickup, dropoff string) (*Route, error) {
-	c.logger.For(ctx).Info("Finding route", zap.String("pickup", pickup), zap.String("dropoff", dropoff))
-
-	v := url.Values{}
-	v.Set("pickup", pickup)
-	v.Set("dropoff", dropoff)
-	url := "http://" + c.hostPort + "/route?" + v.Encode()
-	var route Route
-	if err := c.client.GetJSON(ctx, "/route", url, &route); err != nil {
-		c.logger.For(ctx).Error("Error getting route", zap.Error(err))
+func (c *Client) FindRoute(ctx context.Context, from, to string) (*Route, error) {
+	c.logger.For(ctx).Info("Resolving route", zap.String("from", from), zap.String("to", from))
+	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
+	defer cancel()
+	response, err := c.client.FindRoute(ctx, &FindRouteRequest{
+		From: from,
+		To:   to,
+	})
+	if err != nil {
 		return nil, err
 	}
-	return &route, nil
+	return &Route{
+		ETA: time.Duration(response.EtaSeconds) * time.Second,
+	}, nil
 }

@@ -23,7 +23,6 @@ import (
 	"go.uber.org/zap"
 
 	"github.com/signadot/hotrod/pkg/log"
-	"github.com/signadot/hotrod/pkg/tracing"
 	"github.com/signadot/hotrod/services/route"
 )
 
@@ -37,7 +36,6 @@ var routeCmd = &cobra.Command{
 		logger := log.NewFactory(zapLogger)
 		server := route.NewServer(
 			net.JoinHostPort("0.0.0.0", strconv.Itoa(routePort)),
-			tracing.InitOTEL("route", otelExporter, metricsFactory, logger),
 			logger,
 		)
 		return logError(zapLogger, server.Run())

@@ -22,7 +22,6 @@ import (
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/signadot/hotrod/internal/jaegerclientenv2otel"
 	"github.com/signadot/hotrod/internal/metrics/expvar"
 	"github.com/signadot/hotrod/internal/metrics/prometheus"
 
@@ -69,8 +68,6 @@ func onInitialize() {
 	}
 	logger, _ = zap.NewDevelopment(zapOptions...)
 
-	jaegerclientenv2otel.MapJaegerToOtelEnvVars(logger)
-
 	switch metricsBackend {
 	case "expvar":
 		config.SetMetricsFactory(expvar.NewFactory(10)) // 10 buckets for histograms
@@ -81,26 +78,9 @@ func onInitialize() {
 	default:
 		logger.Fatal("unsupported metrics backend " + metricsBackend)
 	}
-	if config.MySQLGetDelay != fixDBConnDelay {
-		logger.Info("fix: overriding MySQL query delay", zap.Duration("old", config.MySQLGetDelay), zap.Duration("new", fixDBConnDelay))
-		config.MySQLGetDelay = fixDBConnDelay
-	}
-	if fixDBConnDisableMutex {
-		logger.Info("fix: disabling db connection mutex")
-		config.MySQLMutexDisabled = true
-	}
-	// TODO
-	// if config.RouteWorkerPoolSize != fixRouteWorkerPoolSize {
-	// 	logger.Info("fix: overriding route worker pool size", zap.Int("old", config.RouteWorkerPoolSize), zap.Int("new", fixRouteWorkerPoolSize))
-	// 	config.RouteWorkerPoolSize = fixRouteWorkerPoolSize
-	// }
 
 	if locationPort != 8081 {
 		logger.Info("changing location service port", zap.Int("old", 8081), zap.Int("new", locationPort))
-	}
-
-	if driverPort != 8082 {
-		logger.Info("changing driver service port", zap.Int("old", 8082), zap.Int("new", driverPort))
 	}
 
 	if frontendPort != 8080 {

@@ -66,11 +66,9 @@ type Server struct {
 // can find correct server ports
 type ConfigOptions struct {
 	FrontendHostPort string
-	DriverHostPort   string
 	LocationHostPort string
 	RouteHostPort    string
 	Basepath         string
-	JaegerUI         string
 }
 
 // NewServer creates a new frontend.Server
@@ -98,7 +96,6 @@ func NewServer(options ConfigOptions, logger log.Factory) *Server {
 	return &Server{
 		hostPort: options.FrontendHostPort,
 		basepath: options.Basepath,
-		jaegerUI: options.JaegerUI,
 
 		tracer:       tracerProvider,
 		logger:       logger,
@@ -128,7 +125,6 @@ func (s *Server) createServeMux() http.Handler {
 		http.StripPrefix(s.basepath, http.FileServer(http.FS(assetFS))))
 	mux.Handle(path.Join(p, "/dispatch"), http.HandlerFunc(s.dispatch))
 	mux.Handle(path.Join(p, "/notifications"), http.HandlerFunc(s.notifications))
-	mux.Handle(path.Join(p, "/config"), http.HandlerFunc(s.config))
 	mux.Handle(path.Join(p, "/debug/vars"), expvar.Handler()) // expvar
 	mux.Handle(path.Join(p, "/metrics"), promhttp.Handler())  // Prometheus
 	mux.Handle(p, http.HandlerFunc(s.splash))
@@ -164,13 +160,6 @@ func (s *Server) splash(w http.ResponseWriter, r *http.Request) {
 		httperr.HandleError(w, err, http.StatusInternalServerError)
 		return
 	}
-}
-
-func (s *Server) config(w http.ResponseWriter, r *http.Request) {
-	config := map[string]string{
-		"jaeger": s.jaegerUI,
-	}
-	s.writeResponse(config, w, r)
 }
 
 func (s *Server) dispatch(w http.ResponseWriter, r *http.Request) {

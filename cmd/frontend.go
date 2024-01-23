@@ -38,26 +38,18 @@ var frontendCmd = &cobra.Command{
 		options.Basepath = basePath
 
 		// Resolve services addresses
-		var driverHost, locationHost, routeHost string
+		var locationHost, routeHost string
 		if baseDomain == "" {
-			driverHost = "driver"
 			locationHost = "location"
 			routeHost = "route"
 		} else {
 			if baseDomain == "localhost" || net.ParseIP(baseDomain) != nil {
-				driverHost = baseDomain
 				locationHost = baseDomain
 				routeHost = baseDomain
 			} else {
-				driverHost = "driver." + baseDomain
 				locationHost = "location." + baseDomain
 				routeHost = "route." + baseDomain
 			}
-		}
-		if val := os.Getenv("FRONTEND_DRIVER_ADDR"); val != "" {
-			options.DriverHostPort = val
-		} else {
-			options.DriverHostPort = net.JoinHostPort(driverHost, strconv.Itoa(driverPort))
 		}
 		if val := os.Getenv("FRONTEND_LOCATION_ADDR"); val != "" {
 			options.LocationHostPort = val
@@ -69,8 +61,6 @@ var frontendCmd = &cobra.Command{
 		} else {
 			options.RouteHostPort = net.JoinHostPort(routeHost, strconv.Itoa(routePort))
 		}
-
-		options.JaegerUI = jaegerUI
 
 		zapLogger := logger.With(zap.String("service", "frontend"))
 		logger := log.NewFactory(zapLogger)

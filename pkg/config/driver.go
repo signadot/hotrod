@@ -68,3 +68,18 @@ func GetDriverStoreErrorFreq() int {
 	}
 	return val
 }
+
+// the size of the worker pool used to query `route` service.
+func GetDriverWorkerPoolSize() int {
+	defaultValue := 3
+
+	e := os.Getenv("DRIVER_WORKER_POOL_SIZE")
+	if e == "" {
+		return defaultValue
+	}
+	val, err := strconv.Atoi(e)
+	if err != nil {
+		return defaultValue
+	}
+	return val
+}

@@ -208,7 +208,7 @@ func (d *database) Get(ctx context.Context, locationID int) (*Location, error) {
 	// }
 
 	// simulate RPC delay
-	delay.Sleep(config.MySQLGetDelay, config.MySQLGetDelayStdDev)
+	delay.Sleep(config.GetMySQLGetDelay(), config.GetMySQLGetDelayStdDev())
 	var c Location
 	if err := d.db.QueryRow("SELECT id, name, coordinates from locations where id = ?", locationID).
 		Scan(&c.ID, &c.Name, &c.Coordinates); err != nil {

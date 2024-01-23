@@ -1,6 +1,9 @@
 package config
 
-import "time"
+import (
+	"os"
+	"time"
+)
 
 func GetMySQLAddress() string {
 	return EnvDefault("MYSQL_HOST", "location-db") +
@@ -19,15 +22,22 @@ func GetMySQLDatabaseName() string {
 	return EnvDefault("MYSQL_DBNAME", "location")
 }
 
-var (
-	// MySQLGetDelay is how long retrieving a location record takes.
-	// Using large value mostly because I cannot click the button fast enough to cause a queue.
-	MySQLGetDelay = 300 * time.Millisecond
+// how long retrieving a location record takes.
+func GetMySQLGetDelay() time.Duration {
+	defaultDuration := 300 * time.Millisecond
 
-	// MySQLGetDelayStdDev is standard deviation
-	MySQLGetDelayStdDev = MySQLGetDelay / 10
+	e := os.Getenv("MYSQL_GET_DELAY")
+	if e == "" {
+		return defaultDuration
+	}
+	dur, err := time.ParseDuration(e)
+	if err != nil {
+		return defaultDuration
+	}
+	return dur
+}
 
-	// MySQLMutexDisabled controls whether there is a mutex guarding db query execution.
-	// When not disabled it simulates a misconfigured connection pool of size 1.
-	MySQLMutexDisabled = false
-)
+// the standard deviation
+func GetMySQLGetDelayStdDev() time.Duration {
+	return GetMySQLGetDelay() / 10
+}

@@ -12,9 +12,9 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
+	"github.com/signadot/hotrod/pkg/config"
 	"github.com/signadot/hotrod/pkg/log"
 	"github.com/signadot/hotrod/pkg/pool"
-	"github.com/signadot/hotrod/services/config"
 	"github.com/signadot/hotrod/services/route"
 )
 
@@ -35,7 +35,7 @@ func newBestETA(tracerProvider trace.TracerProvider, tracer trace.Tracer, logger
 	return &bestETA{
 		tracer: tracer,
 		route:  route.NewClient(tracerProvider, logger),
-		pool:   pool.New(config.RouteWorkerPoolSize),
+		pool:   pool.New(config.GetDriverWorkerPoolSize()),
 		logger: logger,
 	}
 }

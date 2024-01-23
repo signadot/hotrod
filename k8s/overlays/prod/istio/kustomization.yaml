@@ -1,0 +1,7 @@
+
+resources:
+- ../../../base
+- virtual-service.yaml
+
+patches:
+- path: istio-label.yaml

@@ -4,12 +4,17 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
+	"os"
 	"time"
 
 	"github.com/dnwe/otelsarama"
 	"github.com/signadot/hotrod/pkg/baggageutils"
+	"github.com/signadot/hotrod/pkg/config"
 	"github.com/signadot/hotrod/pkg/log"
 	"github.com/signadot/hotrod/pkg/notifications"
+	"github.com/signadot/routesapi/go-routesapi"
+	"github.com/signadot/routesapi/go-routesapi/watched"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
@@ -24,17 +29,41 @@ import (
 type Consumer struct {
 	tracer       trace.Tracer
 	logger       log.Factory
+	routing      watched.BaselineWatched
 	driverStore  *driverStore
 	bestETA      *bestETA
 	notification notifications.Interface
 	ready        chan bool
 }
 
-func newConsumer(tracerProvider trace.TracerProvider, logger log.Factory) *Consumer {
+func newConsumer(ctx context.Context, tracerProvider trace.TracerProvider,
+	logger log.Factory) *Consumer {
+	// create a routesapi baseline watched instance
+	baseline, err := watched.BaselineFromEnv()
+	if err != nil {
+		panic(err)
+	}
+	routing, err := watched.NewBaselineWatched(ctx,
+		&watched.Config{
+			Log: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
+				Level: slog.LevelInfo,
+			})),
+			Addr: watched.GetRouteServerAddr(),
+		},
+		&routesapi.BaselineWorkload{
+			Kind:      baseline.Kind,
+			Namespace: baseline.Namespace,
+			Name:      baseline.Name,
+		})
+	if err != nil {
+		panic(err)
+	}
+
 	tracer := tracerProvider.Tracer("driver")
 	return &Consumer{
 		tracer:       tracer,
 		logger:       logger,
+		routing:      routing,
 		driverStore:  newDriverStore(tracer, logger),
 		bestETA:      newBestETA(tracerProvider, tracer, logger),
 		notification: notifications.NewNotificationHandler(tracerProvider, logger),
@@ -64,9 +93,24 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 	return nil
 }
 
+func (consumer *Consumer) shouldProcess(routingKey string) bool {
+	if sbName := config.SignadotSandboxName(); sbName != "" {
+		return consumer.routing.RoutesTo(routingKey, sbName)
+	}
+	return consumer.routing.Get(routingKey) == nil
+}
+
 func (consumer *Consumer) processDispatchRequest(msg *sarama.ConsumerMessage) {
 	// Extract tracing info from message
 	ctx := otel.GetTextMapPropagator().Extract(context.Background(), otelsarama.NewConsumerMessageCarrier(msg))
+
+	// should we process this message?
+	routingKey := baggageutils.GetRoutingKey(ctx)
+
+	if !consumer.shouldProcess(routingKey) {
+		// this message is not intended for us
+		return
+	}
 
 	// extract the request context
 	reqContext, err := baggageutils.ExtractRequestContext(ctx)

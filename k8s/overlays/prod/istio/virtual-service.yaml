@@ -1,32 +1,6 @@
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
 metadata:
-  name: customer
-spec:
-  hosts:
-  - customer
-  http:
-  - route:
-    - destination:
-        host: customer
-        subset: v1
----
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
-  name: driver
-spec:
-  hosts:
-  - driver
-  http:
-  - route:
-    - destination:
-        host: driver
-        subset: v1
----
-apiVersion: networking.istio.io/v1alpha3
-kind: VirtualService
-metadata:
   name: frontend
 spec:
   hosts:
@@ -35,7 +9,18 @@ spec:
   - route:
     - destination:
         host: frontend
-        subset: v1
+---
+apiVersion: networking.istio.io/v1alpha3
+kind: VirtualService
+metadata:
+  name: location
+spec:
+  hosts:
+  - location
+  http:
+  - route:
+    - destination:
+        host: location
 ---
 apiVersion: networking.istio.io/v1alpha3
 kind: VirtualService
@@ -48,4 +33,3 @@ spec:
   - route:
     - destination:
         host: route
-        subset: v1

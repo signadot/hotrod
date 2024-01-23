@@ -1,0 +1,6 @@
+
+resources:
+- ../../../base
+
+patches:
+- path: devmesh-annotation.yaml

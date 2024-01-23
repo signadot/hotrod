@@ -1,0 +1,29 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+spec:
+  template:
+    metadata:
+      annotations:
+        sidecar.signadot.com/inject: "true"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: location
+spec:
+  template:
+    metadata:
+      annotations:
+        sidecar.signadot.com/inject: "true"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: route
+spec:
+  template:
+    metadata:
+      annotations:
+        sidecar.signadot.com/inject: "true"

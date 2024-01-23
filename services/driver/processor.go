@@ -42,14 +42,16 @@ func NewProcessor(logger log.Factory) *Processor {
 
 // Run starts the Driver server
 func (p *Processor) Run() error {
-	p.logger.Bg().Info("Starting a new consumer")
+	ctx, cancel := context.WithCancel(context.Background())
+
+	p.logger.For(ctx).Info("Starting a new consumer")
 
 	// get a tracer provider for the driver
 	tracerProvider := tracing.InitOTEL("driver", config.GetOtelExporterType(),
 		config.GetMetricsFactory(), p.logger)
 
 	// create a consumer handler
-	consumer := newConsumer(tracerProvider, p.logger)
+	consumer := newConsumer(ctx, tracerProvider, p.logger)
 
 	// create a new tracer provider for kafka
 	kafkaTracerProvider := tracing.InitOTEL("kafka", config.GetOtelExporterType(),
@@ -59,10 +61,10 @@ func (p *Processor) Run() error {
 	consumerGroup, handler, err := kafka.GetConsumerGroup(
 		"hotrod-driver", "driver", kafkaTracerProvider, consumer)
 	if err != nil {
+		cancel()
 		return fmt.Errorf("error creating consumer group client: %v", err)
 	}
 
-	ctx, cancel := context.WithCancel(context.Background())
 	wg := &sync.WaitGroup{}
 	wg.Add(1)
 	go func() {

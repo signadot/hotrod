@@ -50,7 +50,7 @@ func (h *notificationHandler) NotificationContext(reqCtx *RequestContext,
 	return &NotificationContext{
 		Request:          reqCtx,
 		RoutingKey:       routingKey,
-		BaselineWorkload: config.EnvDefault("BASELINE_NAME", ""),
+		BaselineWorkload: config.SignadotBaselineName(),
 		SandboxName:      config.SignadotSandboxName(),
 	}
 }
@@ -80,9 +80,7 @@ func (h *notificationHandler) Store(ctx context.Context, notification *Notificat
 
 		// parse notifications
 		var notifications []Notification
-		if r.Err() == redis.Nil {
-			notifications = make([]Notification, 0)
-		} else {
+		if r.Err() != redis.Nil {
 			err := json.Unmarshal([]byte(r.Val()), &notifications)
 			if err != nil {
 				return err

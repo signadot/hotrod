@@ -3,4 +3,6 @@ resources:
 - ../../../base
 
 patches:
-- path: devmesh-annotation.yaml
+- path: frontend-devmesh-annotation.yaml
+- path: route-devmesh-annotation.yaml
+- path: location-devmesh-annotation.yaml

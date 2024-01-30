@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"net"
+	"os"
 	"time"
 
 	"github.com/signadot/hotrod/pkg/baggageutils"
@@ -74,6 +75,9 @@ func (s *Server) FindRoute(ctx context.Context, req *FindRouteRequest) (*FindRou
 
 	// Generate a random number between 3 and 45 with decimals
 	eta := time.Duration((rand.Float64()*(45-3) + 3) * float64(time.Minute))
+	if os.Getenv("FAST_ROUTE") != "" {
+		eta = time.Second
+	}
 	// Round to the second
 	eta = eta.Round(time.Second)
 

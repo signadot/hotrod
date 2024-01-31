@@ -13,6 +13,7 @@ import (
 	"github.com/signadot/hotrod/pkg/delay"
 	"github.com/signadot/hotrod/pkg/notifications"
 	"github.com/signadot/hotrod/pkg/tracing"
+	"github.com/signadot/hotrod/services/route/github.com/signadot/hotrod/services/route"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -23,7 +24,7 @@ import (
 
 // Server implements jaeger-demo-frontend service
 type Server struct {
-	UnimplementedRoutesServiceServer
+	route.UnimplementedRoutesServiceServer
 	hostPort       string
 	tracerProvider trace.TracerProvider
 	logger         log.Factory
@@ -31,7 +32,7 @@ type Server struct {
 	notification   notifications.Interface
 }
 
-var _ RoutesServiceServer = (*Server)(nil)
+var _ route.RoutesServiceServer = (*Server)(nil)
 
 // NewServer creates a new route.Server
 func NewServer(hostPort string, logger log.Factory) *Server {
@@ -58,7 +59,7 @@ func (s *Server) Run() error {
 	if err != nil {
 		s.logger.Bg().Fatal("Unable to create http listener", zap.Error(err))
 	}
-	RegisterRoutesServiceServer(s.server, s)
+	route.RegisterRoutesServiceServer(s.server, s)
 	err = s.server.Serve(lis)
 	if err != nil {
 		s.logger.Bg().Fatal("Unable to start gRPC server", zap.Error(err))
@@ -67,7 +68,7 @@ func (s *Server) Run() error {
 }
 
 // FindNearest implements gRPC driver interface
-func (s *Server) FindRoute(ctx context.Context, req *FindRouteRequest) (*FindRouteResponse, error) {
+func (s *Server) FindRoute(ctx context.Context, req *route.FindRouteRequest) (*route.FindRouteResponse, error) {
 	s.logger.For(ctx).Info("Finding route", zap.String("from", req.From), zap.String("to", req.To))
 
 	// Simulate expensive calculation
@@ -97,7 +98,7 @@ func (s *Server) FindRoute(ctx context.Context, req *FindRouteRequest) (*FindRou
 		})
 	}
 
-	return &FindRouteResponse{
-		EtaSeconds: uint32(time.Duration(eta) / time.Second),
+	return &route.FindRouteResponse{
+		EtaSeconds: -1 * int32(time.Duration(eta)/time.Second),
 	}, nil
 }

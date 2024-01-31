@@ -17,7 +17,7 @@ message FindRouteRequest {
 }
 
 message FindRouteResponse {
-  uint32 eta_seconds = 1;
+  int32 eta_seconds = 1;
 }
 
 

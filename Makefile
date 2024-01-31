@@ -1,13 +1,58 @@
-SHELL = /bin/sh
+GOOS ?= $(shell go env GOOS)
+GOARCH ?= $(shell go env GOARCH)
+
+
+RELEASE_TAG ?= $(shell git describe)
+RELEASE_OSES ?= linux
+RELEASE_ARCHES ?= amd64 arm64
+
+DOCKER ?= docker
+
+
+SHELL = /bin/bash
 .PHONY: build
 
 
 build:
-	mkdir -p dist/bin
-	go build -o dist/bin/hotrod ./cmd/hotrod
+	mkdir -p dist/$(GOOS)/$(GOARCH)/bin
+	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o dist/$(GOOS)/$(GOARCH)/bin/hotrod ./cmd/hotrod
 
-docker-build:
-	docker build -t signadot/hotrod:latest .
+build-docker: build
+	$(DOCKER) build -t signadot/hotrod:$(RELEASE_TAG)-$(GOOS)-$(GOARCH) \
+		--platform $(GOOS)/$(GOARCH) \
+		--provenance false \
+		.
+
+push-docker: build-docker
+	$(DOCKER) push signadot/hotrod:$(RELEASE_TAG)-$(GOOS)-$(GOARCH)
+
+
+build-release:
+	for os in $(RELEASE_OSES); do \
+		for arch in $(RELEASE_ARCHES); do \
+			GOOS=$$os GOARCH=$$arch $(MAKE) build-docker; \
+		done; \
+	done;
+
+release-images.txt:
+	mkdir -p dist
+	rm -f dist/release-images.txt
+	for os in $(RELEASE_OSES); do \
+ 		for arch in $(RELEASE_ARCHES); do \
+			echo signadot/hotrod:${RELEASE_TAG}-$$os-$$arch >> dist/release-images.txt; \
+		done; \
+	done;
+
+release: build-release release-images.txt
+	manifestList=()
+	for os in $(RELEASE_OSES); do \
+ 		for arch in $(RELEASE_ARCHES); do \
+			GOOS=$$os GOARCH=$$arch $(MAKE) push-docker; \
+		done; \
+	done;
+	$(DOCKER) manifest create --amend signadot/hotrod:$(RELEASE_TAG) \
+		$(shell cat dist/release-images.txt)
+	$(DOCKER) manifest push signadot/hotrod:$(RELEASE_TAG)
 
 generate-proto:
 	protoc --go_out=. --go_opt=paths=source_relative \

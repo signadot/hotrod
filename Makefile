@@ -43,8 +43,14 @@ release-images.txt:
 		done; \
 	done;
 
-release: build-release release-images.txt
-	manifestList=()
+tag-release:
+	(cd k8s/base && kustomize edit set signadot/hotrod:$(RELEASE_TAG))
+	git commit -m tag-release-$(RELEASE_TAG) k8s/base
+	git tag -a -m release-$(RELEASE_TAG) $(RELEASE_TAG)
+	git push origin $(RELEASE_TAG)
+
+release: build-release release-images.txt tag-release
+
 	for os in $(RELEASE_OSES); do \
  		for arch in $(RELEASE_ARCHES); do \
 			GOOS=$$os GOARCH=$$arch $(MAKE) push-docker; \

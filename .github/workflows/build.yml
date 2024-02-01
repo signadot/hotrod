@@ -7,7 +7,7 @@ on:
   pull_request:
     branches: [ main ]
 env:
-  GO_VERSION: "1.20"
+  GO_VERSION: "1.21"
 
 jobs:
 
@@ -87,11 +87,10 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Build and Push Docker Image
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          push: true
-          tags: signadot/hotrod:${{ github.sha }}
+        env:
+          RELEASE_TAG: ${{ github.sha }}
+        run: |
+          make release
   
   sandbox-route:
     runs-on: ubuntu-latest

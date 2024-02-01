@@ -12,7 +12,6 @@ DOCKER ?= docker
 SHELL = /bin/bash
 .PHONY: build
 
-
 build:
 	mkdir -p dist/$(GOOS)/$(GOARCH)/bin
 	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o dist/$(GOOS)/$(GOARCH)/bin/hotrod ./cmd/hotrod

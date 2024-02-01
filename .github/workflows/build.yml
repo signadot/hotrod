@@ -90,7 +90,7 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.sha }}
         run: |
-          make release
+          make push-docker
   
   sandbox-route:
     runs-on: ubuntu-latest

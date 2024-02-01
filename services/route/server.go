@@ -18,6 +18,8 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/reflection"
+	_ "google.golang.org/grpc/reflection"
 
 	"github.com/signadot/hotrod/pkg/log"
 )
@@ -60,6 +62,8 @@ func (s *Server) Run() error {
 		s.logger.Bg().Fatal("Unable to create http listener", zap.Error(err))
 	}
 	route.RegisterRoutesServiceServer(s.server, s)
+	reflection.Register(s.server)
+
 	err = s.server.Serve(lis)
 	if err != nil {
 		s.logger.Bg().Fatal("Unable to start gRPC server", zap.Error(err))

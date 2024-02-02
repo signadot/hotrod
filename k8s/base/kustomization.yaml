@@ -11,4 +11,4 @@ resources:
 
 images:
 - name: signadot/hotrod
-  newTag: e2e-v2.0.0-rc.3
+  newTag: new-hotrod-2.1

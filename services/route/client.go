@@ -4,7 +4,6 @@ import (
 	"context"
 	"time"
 
-	"github.com/signadot/hotrod/services/route/github.com/signadot/hotrod/services/route"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -18,7 +17,7 @@ import (
 // Client is a remote client that implements routes gRPC API
 type Client struct {
 	logger log.Factory
-	client route.RoutesServiceClient
+	client RoutesServiceClient
 }
 
 func NewClient(tracerProvider trace.TracerProvider, logger log.Factory) *Client {
@@ -31,7 +30,7 @@ func NewClient(tracerProvider trace.TracerProvider, logger log.Factory) *Client 
 		logger.Bg().Fatal("Cannot create gRPC connection", zap.Error(err))
 	}
 
-	client := route.NewRoutesServiceClient(conn)
+	client := NewRoutesServiceClient(conn)
 	return &Client{
 		logger: logger,
 		client: client,
@@ -42,7 +41,7 @@ func (c *Client) FindRoute(ctx context.Context, from, to string) (*Route, error)
 	c.logger.For(ctx).Info("Resolving route", zap.String("from", from), zap.String("to", from))
 	ctx, cancel := context.WithTimeout(ctx, 1*time.Second)
 	defer cancel()
-	response, err := c.client.FindRoute(ctx, &route.FindRouteRequest{
+	response, err := c.client.FindRoute(ctx, &FindRouteRequest{
 		From: from,
 		To:   to,
 	})

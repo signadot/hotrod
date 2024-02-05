@@ -13,7 +13,6 @@ import (
 	"github.com/signadot/hotrod/pkg/delay"
 	"github.com/signadot/hotrod/pkg/notifications"
 	"github.com/signadot/hotrod/pkg/tracing"
-	"github.com/signadot/hotrod/services/route/github.com/signadot/hotrod/services/route"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -25,7 +24,7 @@ import (
 
 // Server implements jaeger-demo-frontend service
 type Server struct {
-	route.UnimplementedRoutesServiceServer
+	UnimplementedRoutesServiceServer
 	hostPort       string
 	tracerProvider trace.TracerProvider
 	logger         log.Factory
@@ -33,9 +32,9 @@ type Server struct {
 	notification   notifications.Interface
 }
 
-var _ route.RoutesServiceServer = (*Server)(nil)
+var _ RoutesServiceServer = (*Server)(nil)
 
-// NewServer creates a new route.Server
+// NewServer creates a new Server
 func NewServer(hostPort string, logger log.Factory) *Server {
 	// get a tracer provider for the route service
 	tracerProvider := tracing.InitOTEL("route", config.GetOtelExporterType(),
@@ -60,7 +59,7 @@ func (s *Server) Run() error {
 	if err != nil {
 		s.logger.Bg().Fatal("Unable to create http listener", zap.Error(err))
 	}
-	route.RegisterRoutesServiceServer(s.server, s)
+	RegisterRoutesServiceServer(s.server, s)
 	reflection.Register(s.server)
 
 	err = s.server.Serve(lis)
@@ -71,7 +70,7 @@ func (s *Server) Run() error {
 }
 
 // FindNearest implements gRPC driver interface
-func (s *Server) FindRoute(ctx context.Context, req *route.FindRouteRequest) (*route.FindRouteResponse, error) {
+func (s *Server) FindRoute(ctx context.Context, req *FindRouteRequest) (*FindRouteResponse, error) {
 	s.logger.For(ctx).Info("Finding route", zap.String("from", req.From), zap.String("to", req.To))
 
 	// Simulate expensive calculation
@@ -101,7 +100,7 @@ func (s *Server) FindRoute(ctx context.Context, req *route.FindRouteRequest) (*r
 		})
 	}
 
-	return &route.FindRouteResponse{
+	return &FindRouteResponse{
 		EtaSeconds: int32(time.Duration(eta) / time.Second),
 	}, nil
 }

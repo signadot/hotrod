@@ -10,14 +10,8 @@ spec:
   - forkOf:
       kind: Deployment
       name: location
-      namespace: hotrod
+      namespace: hotrod-devmesh
     customizations:
       images:
       - container: hotrod
         image: "@{image}"
-  defaultRouteGroup:
-    endpoints:
-    - name: ep1-location
-      target: http://location.hotrod.svc:8081
-    - name: ep2-frontend
-      target: http://frontend.hotrod.svc:8080

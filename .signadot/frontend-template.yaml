@@ -10,12 +10,8 @@ spec:
   - forkOf:
       kind: Deployment
       name: frontend
-      namespace: hotrod
+      namespace: hotrod-devmesh
     customizations:
       images:
       - container: hotrod
         image: "@{image}"
-  defaultRouteGroup:
-    endpoints:
-    - name: frontend-endpoint
-      target: http://frontend.hotrod.svc:8080

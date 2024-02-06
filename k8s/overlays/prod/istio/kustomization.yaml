@@ -1,0 +1,10 @@
+
+resources:
+- ../../../base
+- virtual-service.yaml
+
+patches:
+- path: frontend-istio-label.yaml
+- path: location-istio-label.yaml
+- path: driver-istio-label.yaml
+- path: route-istio-label.yaml

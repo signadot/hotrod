@@ -1,0 +1,23 @@
+
+syntax="proto3";
+package route;
+
+option go_package = "github.com/signadot/hotrod/services/route";
+
+service RoutesService {
+  rpc FindRoute(FindRouteRequest) returns (FindRouteResponse);
+}
+
+// FindRoute
+// ----------------------------------------------------------------------------
+
+message FindRouteRequest {
+  string from = 1;
+  string to = 2;
+}
+
+message FindRouteResponse {
+  int32 eta_seconds = 1;
+}
+
+

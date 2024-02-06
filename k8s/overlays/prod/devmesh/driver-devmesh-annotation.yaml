@@ -1,0 +1,9 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: driver
+spec:
+  template:
+    metadata:
+      annotations:
+        sidecar.signadot.com/inject: "true"

@@ -1,0 +1,6 @@
+resources:
+- ../devmesh
+
+images:
+- name: signadot/hotrod
+  newTag: quickstart-v2

@@ -23,9 +23,8 @@ import (
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
-	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/tracing"
-	"github.com/jaegertracing/jaeger/examples/hotrod/services/frontend"
+	"github.com/signadot/hotrod/pkg/log"
+	"github.com/signadot/hotrod/services/frontend"
 )
 
 // frontendCmd represents the frontend command
@@ -35,34 +34,27 @@ var frontendCmd = &cobra.Command{
 	Long:  `Starts Frontend service.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		options.FrontendHostPort = net.JoinHostPort("0.0.0.0", strconv.Itoa(frontendPort))
+
 		options.Basepath = basePath
 
 		// Resolve services addresses
-		var driverHost, customerHost, routeHost string
+		var locationHost, routeHost string
 		if baseDomain == "" {
-			driverHost = "driver"
-			customerHost = "customer"
+			locationHost = "location"
 			routeHost = "route"
 		} else {
 			if baseDomain == "localhost" || net.ParseIP(baseDomain) != nil {
-				driverHost = baseDomain
-				customerHost = baseDomain
+				locationHost = baseDomain
 				routeHost = baseDomain
 			} else {
-				driverHost = "driver." + baseDomain
-				customerHost = "customer." + baseDomain
+				locationHost = "location." + baseDomain
 				routeHost = "route." + baseDomain
 			}
 		}
-		if val := os.Getenv("FRONTEND_DRIVER_ADDR"); val != "" {
-			options.DriverHostPort = val
+		if val := os.Getenv("FRONTEND_LOCATION_ADDR"); val != "" {
+			options.LocationHostPort = val
 		} else {
-			options.DriverHostPort = net.JoinHostPort(driverHost, strconv.Itoa(driverPort))
-		}
-		if val := os.Getenv("FRONTEND_CUSTOMER_ADDR"); val != "" {
-			options.CustomerHostPort = val
-		} else {
-			options.CustomerHostPort = net.JoinHostPort(customerHost, strconv.Itoa(customerPort))
+			options.LocationHostPort = net.JoinHostPort(locationHost, strconv.Itoa(locationPort))
 		}
 		if val := os.Getenv("FRONTEND_ROUTE_ADDR"); val != "" {
 			options.RouteHostPort = val
@@ -72,11 +64,7 @@ var frontendCmd = &cobra.Command{
 
 		zapLogger := logger.With(zap.String("service", "frontend"))
 		logger := log.NewFactory(zapLogger)
-		server := frontend.NewServer(
-			options,
-			tracing.Init("frontend", metricsFactory, logger),
-			logger,
-		)
+		server := frontend.NewServer(options, logger)
 		return logError(zapLogger, server.Run())
 	},
 }
@@ -85,5 +73,4 @@ var options frontend.ConfigOptions
 
 func init() {
 	RootCmd.AddCommand(frontendCmd)
-
 }

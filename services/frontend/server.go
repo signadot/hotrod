@@ -18,64 +18,91 @@ package frontend
 import (
 	"embed"
 	"encoding/json"
+	"expvar"
+	"fmt"
 	"io/fs"
 	"net/http"
 	"os"
 	"path"
+	"strconv"
 	"text/template"
+	"time"
 
-	"github.com/opentracing/opentracing-go"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"go.opentelemetry.io/otel/baggage"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
-	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/httperr"
-	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
-	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/tracing"
-	"github.com/jaegertracing/jaeger/examples/hotrod/services/customer"
+	"github.com/signadot/hotrod/pkg/baggageutils"
+	"github.com/signadot/hotrod/pkg/config"
+	"github.com/signadot/hotrod/pkg/httperr"
+	"github.com/signadot/hotrod/pkg/log"
+	"github.com/signadot/hotrod/pkg/notifications"
+	"github.com/signadot/hotrod/pkg/tracing"
+	"github.com/signadot/hotrod/services/location"
 )
 
 //go:embed web_assets/*
-var webAssetsFS embed.FS
+var assetFS embed.FS
 
 //go:embed templates/*
 var tplFS embed.FS
 
-// Server implements jaeger-demo-frontend service
+// Server implements hotrod-frontend service
 type Server struct {
-	hostPort   string
-	tracer     opentracing.Tracer
-	logger     log.Factory
-	bestETA    *bestETA
-	tplFS      fs.FS
-	basepath   string
-	custClient *customer.Client
+	hostPort string
+	basepath string
+	jaegerUI string
+
+	tracer       trace.TracerProvider
+	logger       log.Factory
+	tplFS        fs.FS
+	location     location.Interface
+	notification notifications.Interface
+	dispatcher   *dispatcher
 }
 
 // ConfigOptions used to make sure service clients
 // can find correct server ports
 type ConfigOptions struct {
 	FrontendHostPort string
-	DriverHostPort   string
-	CustomerHostPort string
+	LocationHostPort string
 	RouteHostPort    string
 	Basepath         string
 }
 
 // NewServer creates a new frontend.Server
-func NewServer(options ConfigOptions, tracer opentracing.Tracer, logger log.Factory) *Server {
+func NewServer(options ConfigOptions, logger log.Factory) *Server {
+	// load templates
 	tplFS, err := fs.Sub(tplFS, "templates")
 	_ = tplFS
 	if err != nil {
 		panic(err)
 	}
-	custClient := customer.NewClient(tracer, logger, options.CustomerHostPort)
+
+	// get a tracer provider for the frontend
+	tracerProvider := tracing.InitOTEL("frontend", config.GetOtelExporterType(),
+		config.GetMetricsFactory(), logger)
+
+	// get a location client
+	locationClient := location.NewClient(tracerProvider, logger, options.LocationHostPort)
+
+	// get a notification handler
+	notificationHandler := notifications.NewNotificationHandler(tracerProvider, logger)
+
+	// get a dispatcher
+	dispatcher := newDispatcher(tracerProvider, logger, locationClient)
+
 	return &Server{
-		hostPort:   options.FrontendHostPort,
-		tracer:     tracer,
-		logger:     logger,
-		bestETA:    newBestETA(tracer, logger, options),
-		tplFS:      tplFS,
-		basepath:   options.Basepath,
-		custClient: custClient,
+		hostPort: options.FrontendHostPort,
+		basepath: options.Basepath,
+
+		tracer:       tracerProvider,
+		logger:       logger,
+		tplFS:        tplFS,
+		location:     locationClient,
+		notification: notificationHandler,
+		dispatcher:   dispatcher,
 	}
 }
 
@@ -83,16 +110,23 @@ func NewServer(options ConfigOptions, tracer opentracing.Tracer, logger log.Fact
 func (s *Server) Run() error {
 	mux := s.createServeMux()
 	s.logger.Bg().Info("Starting", zap.String("address", "http://"+path.Join(s.hostPort, s.basepath)))
-	return http.ListenAndServe(s.hostPort, mux)
+	server := &http.Server{
+		Addr:              s.hostPort,
+		Handler:           mux,
+		ReadHeaderTimeout: 3 * time.Second,
+	}
+	return server.ListenAndServe()
 }
 
 func (s *Server) createServeMux() http.Handler {
-	mux := tracing.NewServeMux(s.tracer)
+	mux := tracing.NewServeMux(true, s.tracer, s.logger)
 	p := path.Join("/", s.basepath)
-	ap := path.Join(p, "/web_assets")
-	mux.Handle(ap+"/", http.StripPrefix(s.basepath, http.FileServer(http.FS(webAssetsFS))))
-	dp := path.Join(p, "/dispatch")
-	mux.Handle(dp, http.HandlerFunc(s.dispatch))
+	mux.Handle(path.Join(p, "/web_assets")+"/",
+		http.StripPrefix(s.basepath, http.FileServer(http.FS(assetFS))))
+	mux.Handle(path.Join(p, "/dispatch"), http.HandlerFunc(s.dispatch))
+	mux.Handle(path.Join(p, "/notifications"), http.HandlerFunc(s.notifications))
+	mux.Handle(path.Join(p, "/debug/vars"), expvar.Handler()) // expvar
+	mux.Handle(path.Join(p, "/metrics"), promhttp.Handler())  // Prometheus
 	mux.Handle(p, http.HandlerFunc(s.splash))
 	return mux
 }
@@ -100,31 +134,28 @@ func (s *Server) createServeMux() http.Handler {
 func (s *Server) splash(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
+
+	// parse templates
 	t, err := template.ParseFS(s.tplFS, "*")
 	if err != nil {
 		httperr.HandleError(w, err, http.StatusInternalServerError)
 		return
 	}
-	cs, err := s.custClient.List(ctx)
+
+	// get all stored locations
+	locations, err := s.location.List(ctx)
 	if err != nil {
 		httperr.HandleError(w, err, http.StatusInternalServerError)
 		return
 	}
-	var rows [][]customer.Customer
-	mod := 3
-	for i, cust := range cs {
-		if i%mod == 0 {
-			rows = append(rows, []customer.Customer{})
-		}
-		ri := len(rows) - 1
-		rows[ri] = append(rows[ri], cust)
-	}
 
+	// load data for the template
 	data := struct {
-		Rows        [][]customer.Customer
+		Locations   []location.Location
 		TitleSuffix string
-	}{rows, os.Getenv("FRONTEND_TITLE_SUFFIX")}
+	}{locations, os.Getenv("FRONTEND_TITLE_SUFFIX")}
 
+	// render the template
 	if err := t.Execute(w, data); err != nil {
 		httperr.HandleError(w, err, http.StatusInternalServerError)
 		return
@@ -134,26 +165,99 @@ func (s *Server) splash(w http.ResponseWriter, r *http.Request) {
 func (s *Server) dispatch(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
+
+	// decode request body
+	var dispatchReq DispatchRequest
+	err := json.NewDecoder(r.Body).Decode(&dispatchReq)
+	if httperr.HandleError(w, err, http.StatusBadRequest) {
+		s.logger.For(ctx).Error("error parsing request body", zap.Error(err))
+		return
+	}
+
+	// get request context
+	reqContext := &notifications.RequestContext{
+		ID:                dispatchReq.RequestID,
+		SessionID:         dispatchReq.SessionID,
+		PickupLocationID:  dispatchReq.PickupLocationID,
+		DropoffLocationID: dispatchReq.DropoffLocationID,
+	}
+
+	// inject the request context into baggage and update the current context
+	bag, err := baggageutils.InjectRequestContext(ctx, reqContext)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("cannot inject request context into baggage", zap.Error(err))
+		return
+	}
+	ctx = baggage.ContextWithBaggage(ctx, *bag)
+
+	// send frontend-dispatching-driver notification
+	s.logger.For(ctx).Info("Dispatching driver", zap.Any("request", dispatchReq))
+	s.notification.Store(ctx, &notifications.Notification{
+		ID:        fmt.Sprintf("req-%d-frontend-dispatching-driver", dispatchReq.RequestID),
+		Timestamp: time.Now(),
+		Context:   s.notification.NotificationContext(reqContext, baggageutils.GetRoutingKey(ctx)),
+		Body:      "Processing dispatch driver request",
+	})
+
+	// resolve locations
+	pickupLoc, dropoffLoc, err := s.dispatcher.ResolveLocations(ctx, &dispatchReq)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("couldn't resolve locations", zap.Error(err))
+		return
+	}
+
+	// dispatch a driver request
+	err = s.dispatcher.DispatchDriver(ctx, &dispatchReq, pickupLoc, dropoffLoc)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("couldn't trigger dispatch request", zap.Error(err))
+		return
+	}
+	s.writeResponse(map[string]interface{}{}, w, r)
+}
+
+func (s *Server) notifications(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
 	if err := r.ParseForm(); httperr.HandleError(w, err, http.StatusBadRequest) {
 		s.logger.For(ctx).Error("bad request", zap.Error(err))
 		return
 	}
 
-	customerID := r.Form.Get("customer")
-	if customerID == "" {
-		http.Error(w, "Missing required 'customer' parameter", http.StatusBadRequest)
+	sessionIDStr := r.Form.Get("sessionID")
+	if sessionIDStr == "" {
+		http.Error(w, "Missing required 'sessionID' parameter", http.StatusBadRequest)
 		return
 	}
-	// TODO distinguish between user errors (such as invalid customer ID) and server failures
-	response, err := s.bestETA.Get(ctx, customerID)
+	sessionID, err := strconv.Atoi(sessionIDStr)
+	if err != nil {
+		http.Error(w, "Parameter 'sessionID' is not an integer", http.StatusBadRequest)
+		return
+	}
+
+	cursorStr := r.Form.Get("cursor")
+	if cursorStr == "" {
+		http.Error(w, "Missing required 'cursor' parameter", http.StatusBadRequest)
+		return
+	}
+	cursor, err := strconv.Atoi(cursorStr)
+	if err != nil {
+		http.Error(w, "Parameter 'cursor' is not an integer", http.StatusBadRequest)
+		return
+	}
+
+	data, err := s.notification.List(ctx, uint(sessionID), cursor)
 	if httperr.HandleError(w, err, http.StatusInternalServerError) {
 		s.logger.For(ctx).Error("request failed", zap.Error(err))
 		return
 	}
 
+	s.writeResponse(data, w, r)
+}
+
+func (s *Server) writeResponse(response interface{}, w http.ResponseWriter, r *http.Request) {
 	data, err := json.Marshal(response)
 	if httperr.HandleError(w, err, http.StatusInternalServerError) {
-		s.logger.For(ctx).Error("cannot marshal response", zap.Error(err))
+		s.logger.For(r.Context()).Error("cannot marshal response", zap.Error(err))
 		return
 	}
 

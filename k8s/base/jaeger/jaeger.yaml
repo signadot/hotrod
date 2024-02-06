@@ -1,0 +1,48 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+  labels:
+    app: jaeger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jaeger
+  template:
+    metadata:
+      labels:
+        app: jaeger
+    spec:
+      containers:
+      - name: jaeger
+        image: jaegertracing/all-in-one:1.53
+        ports:
+          - containerPort: 4318
+            name: http-otlp
+          - containerPort: 16686
+            name: http-frontend
+        resources:
+          limits:
+            cpu: 100m
+            memory: 100M
+          requests:
+            cpu: 100m
+            memory: 100M
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger
+  labels:
+    app: jaeger
+spec:
+  ports:
+  - name: "http-otlp"
+    port: 4318
+    protocol: TCP
+  - name: "http-frontend"
+    port: 16686
+    protocol: TCP
+  selector:
+    app: jaeger

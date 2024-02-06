@@ -7,7 +7,7 @@ on:
   pull_request:
     branches: [ main ]
 env:
-  GO_VERSION: "1.20"
+  GO_VERSION: "1.21"
 
 jobs:
 
@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     # Set job outputs to values from filter step
     outputs:
-      customer: ${{ steps.filter.outputs.customer }}
+      location: ${{ steps.filter.outputs.location }}
       driver: ${{ steps.filter.outputs.driver }}
       frontend: ${{ steps.filter.outputs.frontend }}
       route: ${{ steps.filter.outputs.route }}
@@ -29,9 +29,9 @@ jobs:
         id: filter
         with:
           filters: |
-            customer:
-              - 'services/customer/**'
-              - 'cmd/customer.go'
+            location:
+              - 'services/location/**'
+              - 'cmd/location.go'
               - 'pkg/**'
             driver:
               - 'services/driver/**'
@@ -54,7 +54,6 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          # Goreleaser needs to see git history and tags.
           fetch-depth: 0
 
       - name: Set up Go
@@ -87,20 +86,11 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USER }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Tag
+      - name: Build and Push Docker Image
         env:
-          GIT_SHA: ${{ github.sha }}
+          RELEASE_TAG: ${{ github.sha }}
         run: |
-          # Make a fake tag so goreleaser will actually push images.
-          git tag v0.0.1-snapshot.${GIT_SHA}
-
-      - name: GoReleaser
-        uses: goreleaser/goreleaser-action@v2
-        with:
-          version: latest
-          args: release --rm-dist
-        env:
-          GIT_SHA: ${{ github.sha }}
+          make push-docker
   
   sandbox-route:
     runs-on: ubuntu-latest
@@ -257,9 +247,9 @@ jobs:
           edit-mode: replace
 
 
-  sandbox-customer:
+  sandbox-location:
     runs-on: ubuntu-latest
-    if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.customer == 'true' }}
+    if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.location == 'true' }}
     needs: [ build, changes ]
     steps:
       - uses: actions/checkout@v3
@@ -287,10 +277,10 @@ jobs:
             --set github-pr=${{ github.event.number }} \
             --set image=signadot/hotrod:${IMAGE_TAG} \
             --set branch=${{ github.head_ref }} \
-            --set name=pr-${{ github.event.number }}-customer \
+            --set name=pr-${{ github.event.number }}-location \
             -f - \
             -o yaml \
-            < ${GITHUB_WORKSPACE}/.signadot/customer-template.yaml \
+            < ${GITHUB_WORKSPACE}/.signadot/location-template.yaml \
             > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
           go install github.com/mikefarah/yq/v4@latest
       

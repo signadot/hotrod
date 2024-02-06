@@ -9,9 +9,6 @@ import (
 //go:embed web_assets/*
 var testWebAssetsFS embed.FS
 
-//go:embed templates/*
-var testTplFS embed.FS
-
 func TestServer(t *testing.T) {
 	m := http.NewServeMux()
 	m.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {

@@ -16,41 +16,27 @@
 package cmd
 
 import (
-	"math/rand"
 	"os"
-	"time"
 
 	"github.com/spf13/cobra"
-	"github.com/uber/jaeger-lib/metrics"
-	jexpvar "github.com/uber/jaeger-lib/metrics/expvar"
-	jprom "github.com/uber/jaeger-lib/metrics/prometheus"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 
-	"github.com/jaegertracing/jaeger/examples/hotrod/services/config"
+	"github.com/signadot/hotrod/internal/metrics/expvar"
+	"github.com/signadot/hotrod/internal/metrics/prometheus"
+
+	"github.com/jaegertracing/jaeger/pkg/metrics"
+
+	"github.com/signadot/hotrod/pkg/config"
 )
 
 var (
-	metricsBackend string
-	logger         *zap.Logger
-	metricsFactory metrics.Factory
-
-	fixDBConnDelay         time.Duration
-	fixDBConnDisableMutex  bool
-	fixRouteWorkerPoolSize int
-
-	customerPort int
-	driverPort   int
-	frontendPort int
-	routePort    int
-
-	basePath   string
-	baseDomain string
+	logger *zap.Logger
 )
 
 // RootCmd represents the base command when called without any subcommands
 var RootCmd = &cobra.Command{
-	Use:   "examples-hotrod",
+	Use:   "hotrod",
 	Short: "HotR.O.D. - A tracing demo application",
 	Long:  `HotR.O.D. - A tracing demo application.`,
 }
@@ -65,60 +51,36 @@ func Execute() {
 }
 
 func init() {
-	RootCmd.PersistentFlags().StringVarP(&metricsBackend, "metrics", "m", "expvar", "Metrics backend (expvar|prometheus)")
-	RootCmd.PersistentFlags().DurationVarP(&fixDBConnDelay, "fix-db-query-delay", "D", 300*time.Millisecond, "Average latency of MySQL DB query")
-	RootCmd.PersistentFlags().BoolVarP(&fixDBConnDisableMutex, "fix-disable-db-conn-mutex", "M", false, "Disables the mutex guarding db connection")
-	RootCmd.PersistentFlags().IntVarP(&fixRouteWorkerPoolSize, "fix-route-worker-pool-size", "W", 3, "Default worker pool size")
-
-	// Add flags to choose ports for services
-	RootCmd.PersistentFlags().IntVarP(&customerPort, "customer-service-port", "c", 8081, "Port for customer service")
-	RootCmd.PersistentFlags().IntVarP(&driverPort, "driver-service-port", "d", 8082, "Port for driver service")
-	RootCmd.PersistentFlags().IntVarP(&frontendPort, "frontend-service-port", "f", 8080, "Port for frontend service")
-	RootCmd.PersistentFlags().IntVarP(&routePort, "route-service-port", "r", 8083, "Port for routing service")
-
-	// Extra flags
-	RootCmd.PersistentFlags().StringVarP(&basePath, "basepath", "b", "", `Base path for frontend service (default "/")`)
-	RootCmd.PersistentFlags().StringVarP(&baseDomain, "basedomain", "B", "", `Base domain for accessing hotrod services`)
-
-	rand.Seed(int64(time.Now().Nanosecond()))
-	logger, _ = zap.NewDevelopment(
-		zap.AddStacktrace(zapcore.FatalLevel),
-		zap.AddCallerSkip(1),
-	)
+	addFlags(RootCmd)
 	cobra.OnInitialize(onInitialize)
 }
 
 // onInitialize is called before the command is executed.
 func onInitialize() {
+	zapOptions := []zap.Option{
+		zap.AddStacktrace(zapcore.FatalLevel),
+		zap.AddCallerSkip(1),
+	}
+	if !verbose {
+		zapOptions = append(zapOptions,
+			zap.IncreaseLevel(zap.LevelEnablerFunc(func(l zapcore.Level) bool { return l != zapcore.DebugLevel })),
+		)
+	}
+	logger, _ = zap.NewDevelopment(zapOptions...)
+
 	switch metricsBackend {
 	case "expvar":
-		metricsFactory = jexpvar.NewFactory(10) // 10 buckets for histograms
-		logger.Info("Using expvar as metrics backend")
+		config.SetMetricsFactory(expvar.NewFactory(10)) // 10 buckets for histograms
+		logger.Info("*** Using expvar as metrics backend " + expvarDepr)
 	case "prometheus":
-		metricsFactory = jprom.New().Namespace(metrics.NSOptions{Name: "hotrod", Tags: nil})
+		config.SetMetricsFactory(prometheus.New().Namespace(metrics.NSOptions{Name: "hotrod", Tags: nil}))
 		logger.Info("Using Prometheus as metrics backend")
 	default:
 		logger.Fatal("unsupported metrics backend " + metricsBackend)
 	}
-	if config.MySQLGetDelay != fixDBConnDelay {
-		logger.Info("fix: overriding MySQL query delay", zap.Duration("old", config.MySQLGetDelay), zap.Duration("new", fixDBConnDelay))
-		config.MySQLGetDelay = fixDBConnDelay
-	}
-	if fixDBConnDisableMutex {
-		logger.Info("fix: disabling db connection mutex")
-		config.MySQLMutexDisabled = true
-	}
-	if config.RouteWorkerPoolSize != fixRouteWorkerPoolSize {
-		logger.Info("fix: overriding route worker pool size", zap.Int("old", config.RouteWorkerPoolSize), zap.Int("new", fixRouteWorkerPoolSize))
-		config.RouteWorkerPoolSize = fixRouteWorkerPoolSize
-	}
 
-	if customerPort != 8081 {
-		logger.Info("changing customer service port", zap.Int("old", 8081), zap.Int("new", customerPort))
-	}
-
-	if driverPort != 8082 {
-		logger.Info("changing driver service port", zap.Int("old", 8082), zap.Int("new", driverPort))
+	if locationPort != 8081 {
+		logger.Info("changing location service port", zap.Int("old", 8081), zap.Int("new", locationPort))
 	}
 
 	if frontendPort != 8080 {

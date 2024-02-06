@@ -1,0 +1,10 @@
+
+resources:
+- ../../prod/istio
+- ../../../base/jaeger
+
+patches:
+- path: frontend-image-pull-config.yaml
+- path: location-image-pull-config.yaml
+- path: driver-image-pull-config.yaml
+- path: route-image-pull-config.yaml

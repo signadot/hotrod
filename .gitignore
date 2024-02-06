@@ -1,4 +1,7 @@
 .idea/
 /hotrod
-/dist/
+dist/
 node_modules/
+hotrod
+.idea/
+.nocover

@@ -16,15 +16,11 @@
 package cmd
 
 import (
-	"net"
-	"strconv"
-
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
-	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/log"
-	"github.com/jaegertracing/jaeger/examples/hotrod/pkg/tracing"
-	"github.com/jaegertracing/jaeger/examples/hotrod/services/driver"
+	"github.com/signadot/hotrod/pkg/log"
+	"github.com/signadot/hotrod/services/driver"
 )
 
 // driverCmd represents the driver command
@@ -35,17 +31,13 @@ var driverCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		zapLogger := logger.With(zap.String("service", "driver"))
 		logger := log.NewFactory(zapLogger)
-		server := driver.NewServer(
-			net.JoinHostPort("0.0.0.0", strconv.Itoa(driverPort)),
-			tracing.Init("driver", metricsFactory, logger),
-			metricsFactory,
+		processor := driver.NewProcessor(
 			logger,
 		)
-		return logError(zapLogger, server.Run())
+		return logError(zapLogger, processor.Run())
 	},
 }
 
 func init() {
 	RootCmd.AddCommand(driverCmd)
-
 }

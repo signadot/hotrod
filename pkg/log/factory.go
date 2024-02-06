@@ -18,8 +18,7 @@ package log
 import (
 	"context"
 
-	"github.com/opentracing/opentracing-go"
-	"github.com/uber/jaeger-client-go"
+	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
 )
@@ -37,23 +36,19 @@ func NewFactory(logger *zap.Logger) Factory {
 
 // Bg creates a context-unaware logger.
 func (b Factory) Bg() Logger {
-	return logger(b)
+	return wrapper(b)
 }
 
 // For returns a context-aware Logger. If the context
-// contains an OpenTracing span, all logging calls are also
+// contains a span, all logging calls are also
 // echo-ed into the span.
 func (b Factory) For(ctx context.Context) Logger {
-	if span := opentracing.SpanFromContext(ctx); span != nil {
+	if span := trace.SpanFromContext(ctx); span != nil {
 		logger := spanLogger{span: span, logger: b.logger}
-
-		if jaegerCtx, ok := span.Context().(jaeger.SpanContext); ok {
-			logger.spanFields = []zapcore.Field{
-				zap.String("trace_id", jaegerCtx.TraceID().String()),
-				zap.String("span_id", jaegerCtx.SpanID().String()),
-			}
+		logger.spanFields = []zapcore.Field{
+			zap.String("trace_id", span.SpanContext().TraceID().String()),
+			zap.String("span_id", span.SpanContext().SpanID().String()),
 		}
-
 		return logger
 	}
 	return b.Bg()

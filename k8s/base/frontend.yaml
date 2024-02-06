@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: hotrod
+    component: frontend
+  name: frontend
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: hotrod
+      component: frontend
+  template:
+    metadata:
+      labels:
+        app: hotrod
+        component: frontend
+    spec:
+      containers:
+        - name: hotrod
+          args:
+            - frontend
+            - --verbose
+          env:
+            - name: SIGNADOT_BASELINE_KIND
+              value: Deployment
+            - name: SIGNADOT_BASELINE_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: SIGNADOT_BASELINE_NAME
+              value: "frontend"
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: "http://jaeger:4318"
+          image: signadot/hotrod:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8080
+              name: http-web
+      restartPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: hotrod
+    component: frontend
+  name: frontend
+spec:
+  ports:
+    - name: http-web
+      port: 8080
+  selector:
+    app: hotrod
+    component: frontend

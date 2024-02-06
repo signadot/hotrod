@@ -4,4 +4,7 @@ resources:
 - ../../../base/jaeger
 
 patches:
-- path: image-pull-config.yaml
+- path: frontend-image-pull-config.yaml
+- path: location-image-pull-config.yaml
+- path: driver-image-pull-config.yaml
+- path: route-image-pull-config.yaml

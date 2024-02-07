@@ -46,25 +46,6 @@ jobs:
               - 'cmd/route.go'
               - 'pkg/**'
 
-  istio:
-    runs-on: ubuntu-latest
-    if: github.event_name == 'pull_request'
-    steps:
-      - name: Check for devmesh or istio labels
-        id: istio
-        run: |
-          echo "Checking for labels..."
-          LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
-          echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"istio"* ]]; then
-            echo "Found istio label"
-            echo "found=true" >> $GITHUB_OUTPUT
-          else
-            echo "istio label not found"
-            echo "found=false" >> $GITHUB_OUTPUT
-          fi
-        shell: bash
-
   build:
     runs-on: ubuntu-latest
     needs: [ changes ]
@@ -114,11 +95,8 @@ jobs:
   sandbox-route:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.route == 'true' }}
-    needs: [ build, changes, istio ]
+    needs: [ build, changes ]
     steps:
-      - name: Debug output
-        run: echo "The output is ${{ needs.istio.outputs.found }}"
-
       - uses: actions/checkout@v3
 
       - name: Set up Go
@@ -132,8 +110,18 @@ jobs:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
           IMAGE_TAG: ${{ github.sha }}-linux-amd64
-          NAMESPACE: ${{ needs.istio.outputs.found == 'true' && 'hotrod-istio' || 'hotrod-devmesh' }}
         run: |
+          echo "Checking for labels..."
+          LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
+          echo "Labels on PR: $LABELS"
+          if [[ "$LABELS" == *"istio"* ]]; then
+            echo "Found istio label"
+            NAMESPACE="hotrod-istio"
+          else
+            echo "istio label not found"
+            NAMESPACE="hotrod-devmesh"
+          fi
+
           # run the cli
           # setting the gitsha to a short version to respect the name
           # limit (30 chars)
@@ -207,7 +195,7 @@ jobs:
   sandbox-frontend:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.frontend == 'true' }}
-    needs: [ build, changes, istio ]
+    needs: [ build, changes ]
     steps:
       - uses: actions/checkout@v3
 
@@ -278,7 +266,7 @@ jobs:
   sandbox-location:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.location == 'true' }}
-    needs: [ build, changes, istio ]
+    needs: [ build, changes ]
     steps:
       - uses: actions/checkout@v3
 
@@ -348,7 +336,7 @@ jobs:
   sandbox-driver:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.driver == 'true' }}
-    needs: [ build, changes, istio ]
+    needs: [ build, changes ]
     steps:
       - uses: actions/checkout@v3
 

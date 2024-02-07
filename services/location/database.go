@@ -55,31 +55,31 @@ CREATE TABLE IF NOT EXISTS locations
 var seed = []Location{
 	{
 		ID:          1,
-		Name:        "My Home",
+		Name:        "My Home (see description)",
 		Description: "home",
 		Coordinates: "231,773",
 	},
 	{
 		ID:          123,
-		Name:        "Rachel's Floral Designs",
+		Name:        "Rachel's Floral Designs (see description)",
 		Description: "Rachel's",
 		Coordinates: "115,277",
 	},
 	{
 		ID:          567,
-		Name:        "Amazing Coffee Roasters",
+		Name:        "Amazing Coffee Roasters (see description)",
 		Description: "Coffee",
 		Coordinates: "211,653",
 	},
 	{
 		ID:          392,
-		Name:        "Trom Chocolatier",
+		Name:        "Trom Chocolatier (see description)",
 		Description: "Chocolate",
 		Coordinates: "577,322",
 	},
 	{
 		ID:          731,
-		Name:        "Japanese Desserts",
+		Name:        "Japanese Desserts (see description)",
 		Description: "Dessert",
 		Coordinates: "728,326",
 	},

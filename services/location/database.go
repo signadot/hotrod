@@ -167,7 +167,7 @@ func (d *database) List(ctx context.Context) ([]Location, error) {
 	var cs []Location
 	for rows.Next() {
 		c := Location{}
-		if err := rows.Scan(&c.ID, &c.Name, &c.Coordinates); err != nil {
+		if err := rows.Scan(&c.ID, &c.Name, &c.Description, &c.Coordinates); err != nil {
 			return nil, err
 		}
 		cs = append(cs, c)
@@ -217,7 +217,7 @@ func (d *database) Get(ctx context.Context, locationID int) (*Location, error) {
 	delay.Sleep(config.GetMySQLGetDelay(), config.GetMySQLGetDelayStdDev())
 	var c Location
 	if err := d.db.QueryRow("SELECT id, name, description, coordinates from locations where id = ?", locationID).
-		Scan(&c.ID, &c.Name, &c.Coordinates); err != nil {
+		Scan(&c.ID, &c.Name, &c.Description, &c.Coordinates); err != nil {
 		return nil, err
 	}
 	return &c, nil

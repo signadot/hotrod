@@ -103,13 +103,13 @@ func newDatabase(logger log.Factory) *database {
 	}
 	if count == 0 {
 		fmt.Println("seeding database")
-		stmt, err := db.Prepare("INSERT into locations (id, name, coordinates) values (?, ?, ?)")
+		stmt, err := db.Prepare("INSERT into locations (id, name, description, coordinates) values (?, ?, ?, ?)")
 		if err != nil {
 			panic(err)
 		}
 		for i := range seed {
 			c := &seed[i]
-			if _, err := stmt.Exec(c.ID, c.Name, c.Coordinates); err != nil {
+			if _, err := stmt.Exec(c.ID, c.Name, c.Description, c.Coordinates); err != nil {
 				panic(err)
 			}
 		}
@@ -155,11 +155,11 @@ func (d *database) List(ctx context.Context) ([]Location, error) {
 		semconv.PeerServiceKey.String("mysql"),
 		attribute.
 			Key("sql.query").
-			String("SELECT id, name, coordinates FROM locations"),
+			String("SELECT id, name, description, coordinates FROM locations"),
 	)
 	defer span.End()
 
-	rows, err := d.db.Query("SELECT id, name, coordinates FROM locations")
+	rows, err := d.db.Query("SELECT id, name, description, coordinates FROM locations")
 	if err != nil {
 		return nil, err
 	}
@@ -180,8 +180,8 @@ func (d *database) List(ctx context.Context) ([]Location, error) {
 }
 
 func (d *database) Put(ctx context.Context, location *Location) error {
-	res, err := d.db.Exec("UPDATE locations set name = ?, coordinates = ? WHERE id = ?",
-		location.Name, location.Coordinates, location.ID)
+	res, err := d.db.Exec("UPDATE locations set name = ?, description = ?, coordinates = ? WHERE id = ?",
+		location.Name, location.Description, location.Coordinates, location.ID)
 	if err != nil {
 		return err
 	}
@@ -203,7 +203,7 @@ func (d *database) Get(ctx context.Context, locationID int) (*Location, error) {
 		semconv.PeerServiceKey.String("mysql"),
 		attribute.
 			Key("sql.query").
-			String(fmt.Sprintf("SELECT id, name, coordinates from locations where id = %d", locationID)),
+			String(fmt.Sprintf("SELECT id, name, description, coordinates from locations where id = %d", locationID)),
 	)
 	defer span.End()
 
@@ -216,7 +216,7 @@ func (d *database) Get(ctx context.Context, locationID int) (*Location, error) {
 	// simulate RPC delay
 	delay.Sleep(config.GetMySQLGetDelay(), config.GetMySQLGetDelayStdDev())
 	var c Location
-	if err := d.db.QueryRow("SELECT id, name, coordinates from locations where id = ?", locationID).
+	if err := d.db.QueryRow("SELECT id, name, description, coordinates from locations where id = ?", locationID).
 		Scan(&c.ID, &c.Name, &c.Coordinates); err != nil {
 		return nil, err
 	}

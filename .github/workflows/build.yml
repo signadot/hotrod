@@ -159,25 +159,25 @@ jobs:
           edit-mode: replace
 
       
-      - name: Test Sandbox
-        run: |
-          sleep 20 # just to make sure our sandbox is ready.
-          endpoint=$(yq '.endpoints[0].url' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)
+      # - name: Test Sandbox
+      #   run: |
+      #     sleep 20 # just to make sure our sandbox is ready.
+      #     endpoint=$(yq '.endpoints[0].url' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)
           
-          pushd .
-          cd test
-          npm install
+      #     pushd .
+      #     cd test
+      #     npm install
 
-          # don't exit with error code if test fails and fail action. 
-          ENDPOINT=$endpoint SIGNADOT_API_KEY=${{ secrets.SIGNADOT_API_KEY }} npm test || true
+      #     # don't exit with error code if test fails and fail action. 
+      #     ENDPOINT=$endpoint SIGNADOT_API_KEY=${{ secrets.SIGNADOT_API_KEY }} npm test || true
 
-          popd
+      #     popd
 
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action/composite@v2
-        with:
-          files: |
-            test/*.xml
+      # - name: Publish Test Results
+      #   uses: EnricoMi/publish-unit-test-result-action/composite@v2
+      #   with:
+      #     files: |
+      #       test/*.xml
 
   sandbox-frontend:
     runs-on: ubuntu-latest

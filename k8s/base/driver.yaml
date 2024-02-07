@@ -37,4 +37,9 @@ spec:
               value: "http://jaeger:4318"
           image: signadot/hotrod:latest
           imagePullPolicy: Always
+          readinessProbe:
+            tcpSocket:
+              port: 8082
+            initialDelaySeconds: 3
+            periodSeconds: 3
       restartPolicy: Always

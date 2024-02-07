@@ -16,6 +16,11 @@ build:
 	mkdir -p dist/$(GOOS)/$(GOARCH)/bin
 	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o dist/$(GOOS)/$(GOARCH)/bin/hotrod ./cmd/hotrod
 
+dev-build-docker: build
+	$(DOCKER) build -t signadot/hotrod:latest \
+		--platform $(GOOS)/$(GOARCH) \
+		.
+
 build-docker: build
 	$(DOCKER) build -t signadot/hotrod:$(RELEASE_TAG)-$(GOOS)-$(GOARCH) \
 		--platform $(GOOS)/$(GOARCH) \

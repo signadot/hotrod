@@ -82,9 +82,19 @@ var seed = []Location{
 func newDatabase(logger log.Factory) *database {
 	logger = logger.With(zap.String("component", "database"))
 
-	db, err := sqlx.ConnectContext(context.TODO(), "mysql", driverConfig().FormatDSN())
-	if err != nil {
-		panic(err)
+	var (
+		db  *sqlx.DB
+		err error
+	)
+	ticker := time.NewTicker(time.Second / 3)
+	defer ticker.Stop()
+	for {
+		db, err = sqlx.ConnectContext(context.TODO(), "mysql", driverConfig().FormatDSN())
+		if err == nil {
+			break
+		}
+		logger.Bg().Error("error connecting to db", zap.Error(err))
+		<-ticker.C
 	}
 	// Create the table if it doesn't already exist.
 	_, err = db.Exec(tableSchema)

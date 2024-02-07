@@ -4,6 +4,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"time"
 
 	"github.com/IBM/sarama"
 	"github.com/dnwe/otelsarama"
@@ -28,15 +29,27 @@ type dispatcher struct {
 
 func newDispatcher(tracerProvider trace.TracerProvider, logger log.Factory,
 	location location.Interface) *dispatcher {
+
 	logger = logger.With(zap.String("component", "dispatcher"))
 
 	// create a new tracer provider for kafka
 	kafkaTracerProvider := tracing.InitOTEL("kafka", config.GetOtelExporterType(),
 		config.GetMetricsFactory(), logger)
-	// get a kafka producer
-	producer, err := kafka.GetSyncProducer("hotrod-frontend", kafkaTracerProvider)
-	if err != nil {
-		panic(err)
+	producerTicker := time.NewTicker(100 * time.Millisecond)
+	defer producerTicker.Stop()
+	var (
+		producer sarama.SyncProducer
+		err      error
+	)
+	for {
+		// get a kafka producer
+		producer, err = kafka.GetSyncProducer("hotrod-frontend", kafkaTracerProvider)
+		if err != nil {
+			logger.Bg().Error("error getting kafka producer (will retry)")
+			<-producerTicker.C
+		} else {
+			break
+		}
 	}
 
 	return &dispatcher{

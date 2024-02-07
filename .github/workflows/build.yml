@@ -46,12 +46,12 @@ jobs:
               - 'cmd/route.go'
               - 'pkg/**'
 
-  check-istio:
+  istio:
     runs-on: ubuntu-latest
     if: github.event_name == 'pull_request'
     steps:
       - name: Check for devmesh or istio labels
-        id: check-istio
+        id: istio
         run: |
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
@@ -114,10 +114,10 @@ jobs:
   sandbox-route:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.route == 'true' }}
-    needs: [ build, changes, check-istio ]
+    needs: [ build, changes, istio ]
     steps:
       - name: Debug output
-        run: echo "The output is ${{ needs.check-istio.outputs.found }}"
+        run: echo "The output is ${{ needs.istio.outputs.found }}"
 
       - uses: actions/checkout@v3
 
@@ -132,7 +132,7 @@ jobs:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
           IMAGE_TAG: ${{ github.sha }}-linux-amd64
-          NAMESPACE: ${{ needs.check-istio.outputs.found == 'true' && 'hotrod-istio' || 'hotrod-devmesh' }}
+          NAMESPACE: ${{ needs.istio.outputs.found == 'true' && 'hotrod-istio' || 'hotrod-devmesh' }}
         run: |
           # run the cli
           # setting the gitsha to a short version to respect the name
@@ -207,7 +207,7 @@ jobs:
   sandbox-frontend:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.frontend == 'true' }}
-    needs: [ build, changes, check-istio ]
+    needs: [ build, changes, istio ]
     steps:
       - uses: actions/checkout@v3
 
@@ -222,7 +222,7 @@ jobs:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
           IMAGE_TAG: ${{ github.sha }}-linux-amd64
-          NAMESPACE: ${{ needs.check-istio.outputs.found == 'true' && 'hotrod-istio' || 'hotrod-devmesh' }}
+          NAMESPACE: ${{ needs.istio.outputs.found == 'true' && 'hotrod-istio' || 'hotrod-devmesh' }}
         run: |
           # run the cli
           # setting the gitsha to a short version to respect the name
@@ -278,7 +278,7 @@ jobs:
   sandbox-location:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.location == 'true' }}
-    needs: [ build, changes, check-istio ]
+    needs: [ build, changes, istio ]
     steps:
       - uses: actions/checkout@v3
 
@@ -293,7 +293,7 @@ jobs:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
           IMAGE_TAG: ${{ github.sha }}-linux-amd64
-          NAMESPACE: ${{ needs.check-istio.outputs.found == 'true' && 'hotrod-istio' || 'hotrod-devmesh' }}
+          NAMESPACE: ${{ needs.istio.outputs.found == 'true' && 'hotrod-istio' || 'hotrod-devmesh' }}
         run: |
           # run the cli
           # setting the gitsha to a short version to respect the name
@@ -348,7 +348,7 @@ jobs:
   sandbox-driver:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.driver == 'true' }}
-    needs: [ build, changes, check-istio ]
+    needs: [ build, changes, istio ]
     steps:
       - uses: actions/checkout@v3
 
@@ -363,7 +363,7 @@ jobs:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
           IMAGE_TAG: ${{ github.sha }}-linux-amd64
-          NAMESPACE: ${{ needs.check-istio.outputs.found == 'true' && 'hotrod-istio' || 'hotrod-devmesh' }}
+          NAMESPACE: ${{ needs.istio.outputs.found == 'true' && 'hotrod-istio' || 'hotrod-devmesh' }}
         run: |
           # run the cli
           # setting the gitsha to a short version to respect the name

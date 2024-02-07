@@ -1,6 +1,6 @@
 name: "@{name}"
 spec:
-  description: sandbox for route service
+  description: sandbox for "@{service}" service
   cluster: demo
   labels:
     github-repo: "signadot/hotrod"
@@ -9,15 +9,9 @@ spec:
   forks:
   - forkOf:
       kind: Deployment
-      name: route
-      namespace: hotrod
+      name: "@{service}"
+      namespace: "@{namespace}"
     customizations:
       images:
       - container: hotrod
         image: "@{image}"
-  defaultRouteGroup:
-    endpoints:
-    - name: ep1-route
-      target: http://route.hotrod.svc:8083
-    - name: ep2-frontend
-      target: http://frontend.hotrod.svc:8080

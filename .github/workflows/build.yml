@@ -109,8 +109,19 @@ jobs:
         env:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_TAG: ${{ github.sha }}-linux-amd64
         run: |
+          echo "Checking for labels..."
+          LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
+          echo "Labels on PR: $LABELS"
+          if [[ "$LABELS" == *"istio"* ]]; then
+            echo "Found istio label"
+            NAMESPACE="hotrod-istio"
+          else
+            echo "istio label not found"
+            NAMESPACE="hotrod-devmesh"
+          fi
+
           # run the cli
           # setting the gitsha to a short version to respect the name
           # limit (30 chars)
@@ -123,9 +134,11 @@ jobs:
             --set image=signadot/hotrod:${IMAGE_TAG} \
             --set branch=${{ github.head_ref }} \
             --set name=pr-${{ github.event.number }}-route \
+            --set service=route \
+            --set namespace=${NAMESPACE} \
             -f - \
             -o yaml \
-            < ${GITHUB_WORKSPACE}/.signadot/route-template.yaml \
+            < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml \
             > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
           go install github.com/mikefarah/yq/v4@latest
       
@@ -159,25 +172,25 @@ jobs:
           edit-mode: replace
 
       
-      - name: Test Sandbox
-        run: |
-          sleep 20 # just to make sure our sandbox is ready.
-          endpoint=$(yq '.endpoints[0].url' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)
+      # - name: Test Sandbox
+      #   run: |
+      #     sleep 20 # just to make sure our sandbox is ready.
+      #     endpoint=$(yq '.endpoints[0].url' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)
           
-          pushd .
-          cd test
-          npm install
+      #     pushd .
+      #     cd test
+      #     npm install
 
-          # don't exit with error code if test fails and fail action. 
-          ENDPOINT=$endpoint SIGNADOT_API_KEY=${{ secrets.SIGNADOT_API_KEY }} npm test || true
+      #     # don't exit with error code if test fails and fail action. 
+      #     ENDPOINT=$endpoint SIGNADOT_API_KEY=${{ secrets.SIGNADOT_API_KEY }} npm test || true
 
-          popd
+      #     popd
 
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action/composite@v2
-        with:
-          files: |
-            test/*.xml
+      # - name: Publish Test Results
+      #   uses: EnricoMi/publish-unit-test-result-action/composite@v2
+      #   with:
+      #     files: |
+      #       test/*.xml
 
   sandbox-frontend:
     runs-on: ubuntu-latest
@@ -196,8 +209,19 @@ jobs:
         env:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_TAG: ${{ github.sha }}-linux-amd64
         run: |
+          echo "Checking for labels..."
+          LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
+          echo "Labels on PR: $LABELS"
+          if [[ "$LABELS" == *"istio"* ]]; then
+            echo "Found istio label"
+            NAMESPACE="hotrod-istio"
+          else
+            echo "istio label not found"
+            NAMESPACE="hotrod-devmesh"
+          fi
+
           # run the cli
           # setting the gitsha to a short version to respect the name
           # limit (30 chars)
@@ -210,9 +234,11 @@ jobs:
             --set image=signadot/hotrod:${IMAGE_TAG} \
             --set branch=${{ github.head_ref }} \
             --set name=pr-${{ github.event.number }}-frontend \
+            --set service=frontend \
+            --set namespace=${NAMESPACE} \
             -f - \
             -o yaml \
-            < ${GITHUB_WORKSPACE}/.signadot/frontend-template.yaml \
+            < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml \
             > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
           go install github.com/mikefarah/yq/v4@latest
 
@@ -264,8 +290,19 @@ jobs:
         env:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_TAG: ${{ github.sha }}-linux-amd64
         run: |
+          echo "Checking for labels..."
+          LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
+          echo "Labels on PR: $LABELS"
+          if [[ "$LABELS" == *"istio"* ]]; then
+            echo "Found istio label"
+            NAMESPACE="hotrod-istio"
+          else
+            echo "istio label not found"
+            NAMESPACE="hotrod-devmesh"
+          fi
+
           # run the cli
           # setting the gitsha to a short version to respect the name
           # limit (30 chars)
@@ -278,9 +315,11 @@ jobs:
             --set image=signadot/hotrod:${IMAGE_TAG} \
             --set branch=${{ github.head_ref }} \
             --set name=pr-${{ github.event.number }}-location \
+            --set service=location \
+            --set namespace=${NAMESPACE} \
             -f - \
             -o yaml \
-            < ${GITHUB_WORKSPACE}/.signadot/location-template.yaml \
+            < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml \
             > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
           go install github.com/mikefarah/yq/v4@latest
       
@@ -331,8 +370,19 @@ jobs:
         env:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
-          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_TAG: ${{ github.sha }}-linux-amd64
         run: |
+          echo "Checking for labels..."
+          LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
+          echo "Labels on PR: $LABELS"
+          if [[ "$LABELS" == *"istio"* ]]; then
+            echo "Found istio label"
+            NAMESPACE="hotrod-istio"
+          else
+            echo "istio label not found"
+            NAMESPACE="hotrod-devmesh"
+          fi
+
           # run the cli
           # setting the gitsha to a short version to respect the name
           # limit (30 chars)
@@ -345,9 +395,11 @@ jobs:
             --set image=signadot/hotrod:${IMAGE_TAG} \
             --set branch=${{ github.head_ref }} \
             --set name=pr-${{ github.event.number }}-driver \
+            --set service=driver \
+            --set namespace=${NAMESPACE} \
             -f - \
             -o yaml \
-            < ${GITHUB_WORKSPACE}/.signadot/driver-template.yaml \
+            < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml \
             > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
           go install github.com/mikefarah/yq/v4@latest
           

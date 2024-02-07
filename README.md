@@ -1,9 +1,9 @@
 # Hot R.O.D. - Rides on Demand
 
-This demo is based on the Jaeger Hotrod demo [hotrod-tutorial]
+This demo is based on the Jaeger HotROD demo but has 
+been modified considerably to showcase Signadot & Sandboxes.
 
-![image](https://user-images.githubusercontent.com/906471/151587572-56d39bc2-c20f-4d87-85b8-7bc7859ac52f.png)
-
+![image](/docs/graph.png)
 
 ## Running
 
@@ -16,11 +16,11 @@ Decide on a namespace in which to install HotROD and then run:
 
 ```sh
 kubectl create ns "${NAMESPACE}"
-kubectl -n "${NAMESPACE}" apply -f k8s/pieces
+kubectl -n "${NAMESPACE}" apply -k k8s/overlays/prod/<devmesh | istio>
 ```
 
 To uninstall:
 
-```sh
-kubectl -n "${NAMESPACE}" delete -f k8s/pieces
+```bash
+kubectl delete ns "${NAMESPACE}"
 ```

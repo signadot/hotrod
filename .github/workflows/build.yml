@@ -60,7 +60,7 @@ jobs:
             echo "Found istio label"
             echo "::set-output name=found::true"
           else
-            echo "devmesh or istio label not found"
+            echo "istio label not found"
             echo "::set-output name=found::false"
           fi
         shell: bash
@@ -116,6 +116,9 @@ jobs:
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.route == 'true' }}
     needs: [ build, changes, check-istio ]
     steps:
+      - name: Debug output
+        run: echo "The output is ${{ needs.check-istio.outputs.found }}"
+
       - uses: actions/checkout@v3
 
       - name: Set up Go
@@ -134,7 +137,6 @@ jobs:
           # run the cli
           # setting the gitsha to a short version to respect the name
           # limit (30 chars)
-          echo ${{ needs.check-istio.outputs.found }}
           docker run -i \
             -e SIGNADOT_ORG=${SIGNADOT_ORG} \
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \

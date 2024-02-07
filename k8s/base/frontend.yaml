@@ -38,6 +38,10 @@ spec:
           ports:
             - containerPort: 8080
               name: http-web
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
       restartPolicy: Always
 ---
 apiVersion: v1

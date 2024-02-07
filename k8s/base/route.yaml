@@ -37,6 +37,11 @@ spec:
           ports:
             - containerPort: 8083
               name: grpc
+          readinessProbe:
+            tcpSocket:
+              port: 8083
+            initialDelaySeconds: 3
+            periodSeconds: 3
       restartPolicy: Always
 ---
 apiVersion: v1

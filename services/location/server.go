@@ -73,6 +73,10 @@ func (s *Server) createServeMux() http.Handler {
 	mux := tracing.NewServeMux(false, s.tracerProvider, s.logger)
 	mux.Handle("/locations", http.HandlerFunc(s.locations))
 	mux.Handle("/location", http.HandlerFunc(s.location))
+	mux.Handle("/healthz", http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+		s.logger.For(req.Context()).Info("/healthz")
+		resp.Write([]byte("ok"))
+	}))
 	return mux
 }
 

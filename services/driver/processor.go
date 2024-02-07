@@ -18,11 +18,14 @@ package driver
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
 	"syscall"
+	"time"
 
+	"github.com/IBM/sarama"
 	"github.com/signadot/hotrod/pkg/config"
 	"github.com/signadot/hotrod/pkg/kafka"
 	"github.com/signadot/hotrod/pkg/log"
@@ -57,12 +60,28 @@ func (p *Processor) Run() error {
 	kafkaTracerProvider := tracing.InitOTEL("kafka", config.GetOtelExporterType(),
 		config.GetMetricsFactory(), p.logger)
 
-	// create a consumer group
-	consumerGroup, handler, err := kafka.GetConsumerGroup(
-		"hotrod-driver", "driver", kafkaTracerProvider, consumer)
-	if err != nil {
-		cancel()
-		return fmt.Errorf("error creating consumer group client: %v", err)
+	var (
+		consumerGroup sarama.ConsumerGroup
+		handler       sarama.ConsumerGroupHandler
+		err           error
+	)
+	ticker := time.NewTicker(time.Second / 2)
+	defer ticker.Stop()
+	for {
+		// create a consumer group
+		consumerGroup, handler, err = kafka.GetConsumerGroup(
+			"hotrod-driver", "driver", kafkaTracerProvider, consumer)
+		if err == nil {
+			break
+		}
+		select {
+		case <-ctx.Done():
+			cancel()
+			return fmt.Errorf("error creating consumer group client: %v", err)
+		case <-ticker.C:
+			p.logger.For(ctx).Error("error creating consumer group client", zap.Error(err))
+			p.logger.For(ctx).Info("retrying")
+		}
 	}
 
 	wg := &sync.WaitGroup{}
@@ -87,6 +106,11 @@ func (p *Processor) Run() error {
 
 	<-consumer.ready // Await till the consumer has been set up
 	p.logger.For(ctx).Info("Consumer up and running!")
+	http.Handle("/healthz", http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+		p.logger.For(ctx).Info("handling /healthz")
+		resp.Write([]byte("ok"))
+	}))
+	http.ListenAndServe(":8082", http.DefaultServeMux)
 
 	sigterm := make(chan os.Signal, 1)
 	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM)

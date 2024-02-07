@@ -6,11 +6,10 @@ require (
 	github.com/IBM/sarama v1.42.1
 	github.com/dnwe/otelsarama v0.0.0-20231212173111-631a0a53d5d4
 	github.com/jaegertracing/jaeger v1.53.0
-	github.com/opentracing/opentracing-go v1.2.0
 	github.com/prometheus/client_golang v1.18.0
 	github.com/redis/go-redis/extra/redisotel/v9 v9.0.5
 	github.com/redis/go-redis/v9 v9.4.0
-	github.com/signadot/routesapi/go-routesapi v0.0.0-20240110192923-d8598a020267
+	github.com/signadot/routesapi/go-routesapi v0.0.0-20240202080216-ff62bea925c3
 	github.com/spf13/cobra v1.8.0
 	github.com/stretchr/testify v1.8.4
 	go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc v0.46.1

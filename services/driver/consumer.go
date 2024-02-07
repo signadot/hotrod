@@ -4,8 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
-	"os"
 	"time"
 
 	"github.com/dnwe/otelsarama"
@@ -13,7 +11,6 @@ import (
 	"github.com/signadot/hotrod/pkg/config"
 	"github.com/signadot/hotrod/pkg/log"
 	"github.com/signadot/hotrod/pkg/notifications"
-	"github.com/signadot/routesapi/go-routesapi"
 	"github.com/signadot/routesapi/go-routesapi/watched"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -39,22 +36,7 @@ type Consumer struct {
 func newConsumer(ctx context.Context, tracerProvider trace.TracerProvider,
 	logger log.Factory) *Consumer {
 	// create a routesapi baseline watched instance
-	baseline, err := watched.BaselineFromEnv()
-	if err != nil {
-		panic(err)
-	}
-	routing, err := watched.NewBaselineWatched(ctx,
-		&watched.Config{
-			Log: slog.New(slog.NewJSONHandler(os.Stdout, &slog.HandlerOptions{
-				Level: slog.LevelInfo,
-			})),
-			Addr: watched.GetRouteServerAddr(),
-		},
-		&routesapi.BaselineWorkload{
-			Kind:      baseline.Kind,
-			Namespace: baseline.Namespace,
-			Name:      baseline.Name,
-		})
+	routing, err := watched.BaselineWatchedFromEnv()
 	if err != nil {
 		panic(err)
 	}

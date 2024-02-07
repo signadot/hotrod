@@ -46,6 +46,25 @@ jobs:
               - 'cmd/route.go'
               - 'pkg/**'
 
+  check-istio:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - name: Check for devmesh or istio labels
+        id: check-istio
+        run: |
+          echo "Checking for labels..."
+          LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
+          echo "Labels on PR: $LABELS"
+          if [[ "$LABELS" == *"istio"* ]]; then
+            echo "Found istio label"
+            echo "::set-output name=found::true"
+          else
+            echo "devmesh or istio label not found"
+            echo "::set-output name=found::false"
+          fi
+        shell: bash
+
   build:
     runs-on: ubuntu-latest
     needs: [ changes ]
@@ -95,7 +114,7 @@ jobs:
   sandbox-route:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.route == 'true' }}
-    needs: [ build, changes ]
+    needs: [ build, changes, check-istio ]
     steps:
       - uses: actions/checkout@v3
 
@@ -110,6 +129,7 @@ jobs:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
           IMAGE_TAG: ${{ github.sha }}-linux-amd64
+          NAMESPACE: ${{ needs.check-istio.outputs.found == && 'istio' || 'devmesh' }}
         run: |
           # run the cli
           # setting the gitsha to a short version to respect the name
@@ -123,9 +143,11 @@ jobs:
             --set image=signadot/hotrod:${IMAGE_TAG} \
             --set branch=${{ github.head_ref }} \
             --set name=pr-${{ github.event.number }}-route \
+            --set service=route \
+            --set namespace=${NAMESPACE} \
             -f - \
             -o yaml \
-            < ${GITHUB_WORKSPACE}/.signadot/route-template.yaml \
+            < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml \
             > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
           go install github.com/mikefarah/yq/v4@latest
       
@@ -182,7 +204,7 @@ jobs:
   sandbox-frontend:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.frontend == 'true' }}
-    needs: [ build, changes ]
+    needs: [ build, changes, check-istio ]
     steps:
       - uses: actions/checkout@v3
 
@@ -197,6 +219,7 @@ jobs:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
           IMAGE_TAG: ${{ github.sha }}-linux-amd64
+          NAMESPACE: ${{ needs.check-istio.outputs.found == && 'istio' || 'devmesh' }}
         run: |
           # run the cli
           # setting the gitsha to a short version to respect the name
@@ -210,9 +233,11 @@ jobs:
             --set image=signadot/hotrod:${IMAGE_TAG} \
             --set branch=${{ github.head_ref }} \
             --set name=pr-${{ github.event.number }}-frontend \
+            --set service=frontend \
+            --set namespace=${NAMESPACE} \
             -f - \
             -o yaml \
-            < ${GITHUB_WORKSPACE}/.signadot/frontend-template.yaml \
+            < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml \
             > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
           go install github.com/mikefarah/yq/v4@latest
 
@@ -250,7 +275,7 @@ jobs:
   sandbox-location:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.location == 'true' }}
-    needs: [ build, changes ]
+    needs: [ build, changes, check-istio ]
     steps:
       - uses: actions/checkout@v3
 
@@ -265,6 +290,7 @@ jobs:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
           IMAGE_TAG: ${{ github.sha }}-linux-amd64
+          NAMESPACE: ${{ needs.check-istio.outputs.found == && 'istio' || 'devmesh' }}
         run: |
           # run the cli
           # setting the gitsha to a short version to respect the name
@@ -278,9 +304,11 @@ jobs:
             --set image=signadot/hotrod:${IMAGE_TAG} \
             --set branch=${{ github.head_ref }} \
             --set name=pr-${{ github.event.number }}-location \
+            --set service=location \
+            --set namespace=${NAMESPACE} \
             -f - \
             -o yaml \
-            < ${GITHUB_WORKSPACE}/.signadot/location-template.yaml \
+            < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml \
             > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
           go install github.com/mikefarah/yq/v4@latest
       
@@ -317,7 +345,7 @@ jobs:
   sandbox-driver:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.driver == 'true' }}
-    needs: [ build, changes ]
+    needs: [ build, changes, check-istio ]
     steps:
       - uses: actions/checkout@v3
 
@@ -332,6 +360,7 @@ jobs:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
           IMAGE_TAG: ${{ github.sha }}-linux-amd64
+          NAMESPACE: ${{ needs.check-istio.outputs.found == && 'istio' || 'devmesh' }}
         run: |
           # run the cli
           # setting the gitsha to a short version to respect the name
@@ -345,9 +374,11 @@ jobs:
             --set image=signadot/hotrod:${IMAGE_TAG} \
             --set branch=${{ github.head_ref }} \
             --set name=pr-${{ github.event.number }}-driver \
+            --set service=driver \
+            --set namespace=${NAMESPACE} \
             -f - \
             -o yaml \
-            < ${GITHUB_WORKSPACE}/.signadot/driver-template.yaml \
+            < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml \
             > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
           go install github.com/mikefarah/yq/v4@latest
           

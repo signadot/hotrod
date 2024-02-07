@@ -1,6 +1,6 @@
 name: "@{name}"
 spec:
-  description: sandbox for driver service
+  description: sandbox for "@{service}" service
   cluster: demo
   labels:
     github-repo: "signadot/hotrod"
@@ -9,8 +9,8 @@ spec:
   forks:
   - forkOf:
       kind: Deployment
-      name: driver
-      namespace: hotrod-devmesh
+      name: "@{service}"
+      namespace: "@{namespace}"
     customizations:
       images:
       - container: hotrod

@@ -18,6 +18,7 @@ package driver
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
 	"sync"
@@ -105,6 +106,11 @@ func (p *Processor) Run() error {
 
 	<-consumer.ready // Await till the consumer has been set up
 	p.logger.For(ctx).Info("Consumer up and running!")
+	http.Handle("/healthz", http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+		p.logger.For(ctx).Info("handling /healthz")
+		resp.Write([]byte("ok"))
+	}))
+	http.ListenAndServe(":8082", http.DefaultServeMux)
 
 	sigterm := make(chan os.Signal, 1)
 	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM)

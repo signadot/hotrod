@@ -39,10 +39,9 @@ spec:
             - containerPort: 8080
               name: http-web
           readinessProbe:
-            tcpSocket:
+            httpGet:
+              path: /healthz
               port: 8080
-            initialDelaySeconds: 3
-            periodSeconds: 3
       restartPolicy: Always
 ---
 apiVersion: v1

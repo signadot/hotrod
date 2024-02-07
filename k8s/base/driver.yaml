@@ -37,4 +37,9 @@ spec:
               value: "http://jaeger:4318"
           image: signadot/hotrod:latest
           imagePullPolicy: Always
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8082
+
       restartPolicy: Always

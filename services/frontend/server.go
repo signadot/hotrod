@@ -128,6 +128,10 @@ func (s *Server) createServeMux() http.Handler {
 	mux.Handle(path.Join(p, "/debug/vars"), expvar.Handler()) // expvar
 	mux.Handle(path.Join(p, "/metrics"), promhttp.Handler())  // Prometheus
 	mux.Handle(p, http.HandlerFunc(s.splash))
+	mux.Handle(path.Join(p, "/healthz"), http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+		s.logger.For(req.Context()).Info("/healthz")
+		resp.Write([]byte("ok"))
+	}))
 	return mux
 }
 

@@ -134,6 +134,7 @@ jobs:
           # run the cli
           # setting the gitsha to a short version to respect the name
           # limit (30 chars)
+          echo ${{ needs.check-istio.outputs.found }}
           docker run -i \
             -e SIGNADOT_ORG=${SIGNADOT_ORG} \
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \

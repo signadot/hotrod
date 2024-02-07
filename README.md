@@ -1,8 +1,13 @@
 # Hot R.O.D. - Rides on Demand
 
-This demo is based on the Jaeger Hotrod demo [hotrod-tutorial]
+A simple ride-sharing application that allows the end users to request rides to
+one of 4 locations and have a nearby driver assigned along with an ETA.
 
-![image](https://user-images.githubusercontent.com/906471/151587572-56d39bc2-c20f-4d87-85b8-7bc7859ac52f.png)
+It consists of 4 services: `frontend`, `location`, `driver` and `route`, as well as some
+stateful components like `Kafka`, `Redis` and `MySQL`.
+
+
+![image](https://www.signadot.com/docs/img/hotrod-arch.png)
 
 
 ## Running
@@ -16,11 +21,11 @@ Decide on a namespace in which to install HotROD and then run:
 
 ```sh
 kubectl create ns "${NAMESPACE}"
-kubectl -n "${NAMESPACE}" apply -f k8s/pieces
+kubectl -n "${NAMESPACE}" apply -k https://github.com/signadot/hotrod/k8s/overlays/prod/devmesh
 ```
 
 To uninstall:
 
 ```sh
-kubectl -n "${NAMESPACE}" delete -f k8s/pieces
+kubectl -n "${NAMESPACE}" delete -k https://github.com/signadot/hotrod/k8s/overlays/prod/devmesh
 ```

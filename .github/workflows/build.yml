@@ -129,7 +129,7 @@ jobs:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
           IMAGE_TAG: ${{ github.sha }}-linux-amd64
-          NAMESPACE: ${{ needs.check-istio.outputs.found == 'true' && 'hotrod-istio' || 'hotrod-devmesh' }}
+          NAMESPACE: ${{ needs.check-istio.outputs.found == 'true' ? 'hotrod-istio' : 'hotrod-devmesh' }}
         run: |
           # run the cli
           # setting the gitsha to a short version to respect the name
@@ -219,7 +219,7 @@ jobs:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
           IMAGE_TAG: ${{ github.sha }}-linux-amd64
-          NAMESPACE: ${{ needs.check-istio.outputs.found == 'true' && 'hotrod-istio' || 'hotrod-devmesh' }}
+          NAMESPACE: ${{ needs.check-istio.outputs.found == 'true' ? 'hotrod-istio' : 'hotrod-devmesh' }}
         run: |
           # run the cli
           # setting the gitsha to a short version to respect the name
@@ -290,7 +290,7 @@ jobs:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
           IMAGE_TAG: ${{ github.sha }}-linux-amd64
-          NAMESPACE: ${{ needs.check-istio.outputs.found == 'true' && 'hotrod-istio' || 'hotrod-devmesh' }}
+          NAMESPACE: ${{ needs.check-istio.outputs.found == 'true' ? 'hotrod-istio' : 'hotrod-devmesh' }}
         run: |
           # run the cli
           # setting the gitsha to a short version to respect the name
@@ -360,7 +360,7 @@ jobs:
           SIGNADOT_ORG: signadot
           SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
           IMAGE_TAG: ${{ github.sha }}-linux-amd64
-          NAMESPACE: ${{ needs.check-istio.outputs.found == 'true' && 'hotrod-istio' || 'hotrod-devmesh' }}
+          NAMESPACE: ${{ needs.check-istio.outputs.found == 'true' ? 'hotrod-istio' : 'hotrod-devmesh' }}
         run: |
           # run the cli
           # setting the gitsha to a short version to respect the name

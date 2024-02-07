@@ -58,10 +58,10 @@ jobs:
           echo "Labels on PR: $LABELS"
           if [[ "$LABELS" == *"istio"* ]]; then
             echo "Found istio label"
-            echo "::set-output name=found::true"
+            echo "found=true" >> $GITHUB_OUTPUT
           else
             echo "istio label not found"
-            echo "::set-output name=found::false"
+            echo "found=false" >> $GITHUB_OUTPUT
           fi
         shell: bash
 

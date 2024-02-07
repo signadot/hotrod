@@ -46,6 +46,7 @@ CREATE TABLE IF NOT EXISTS locations
 (
     id bigint unsigned NOT NULL,
     name varchar(255) NOT NULL,
+    description varchar(255),
     coordinates varchar(255) NOT NULL,
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
@@ -55,26 +56,31 @@ var seed = []Location{
 	{
 		ID:          1,
 		Name:        "My Home",
+		Description: "home",
 		Coordinates: "231,773",
 	},
 	{
 		ID:          123,
 		Name:        "Rachel's Floral Designs",
+		Description: "Rachel's",
 		Coordinates: "115,277",
 	},
 	{
 		ID:          567,
 		Name:        "Amazing Coffee Roasters",
+		Description: "Coffee",
 		Coordinates: "211,653",
 	},
 	{
 		ID:          392,
 		Name:        "Trom Chocolatier",
+		Description: "Chocolate",
 		Coordinates: "577,322",
 	},
 	{
 		ID:          731,
 		Name:        "Japanese Desserts",
+		Description: "Dessert",
 		Coordinates: "728,326",
 	},
 }

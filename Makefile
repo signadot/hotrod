@@ -48,8 +48,6 @@ release-images.txt:
 	done;
 
 tag-release:
-	(cd k8s/base && kustomize edit set image signadot/hotrod:$(RELEASE_TAG))
-	git commit -m tag-release-$(RELEASE_TAG) k8s/base
 	git tag -a -m release-$(RELEASE_TAG) $(RELEASE_TAG)
 	git push origin $(RELEASE_TAG)
 

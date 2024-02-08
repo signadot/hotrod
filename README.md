@@ -24,3 +24,12 @@ To uninstall:
 ```bash
 kubectl delete ns "${NAMESPACE}"
 ```
+
+### Release
+
+If you want to set a newly pushed set of images as the default for the application, you can
+run the following:
+
+```bash
+cd k8s/base && kustomize edit set image signadot/hotrod:$(RELEASE_TAG)
+```

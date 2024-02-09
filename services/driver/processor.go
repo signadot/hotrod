@@ -110,7 +110,7 @@ func (p *Processor) Run() error {
 		p.logger.For(ctx).Info("handling /healthz")
 		resp.Write([]byte("ok"))
 	}))
-	http.ListenAndServe(":8082", http.DefaultServeMux)
+	go http.ListenAndServe(":8082", http.DefaultServeMux)
 
 	sigterm := make(chan os.Signal, 1)
 	signal.Notify(sigterm, syscall.SIGINT, syscall.SIGTERM)

@@ -109,8 +109,14 @@
                 <div id="locationDescription" class="mt-2"></div>
                 <script>
                     function showDescription(locationId) {
-                        var locations = JSON.parse('{{ js $.Locations | json }}');
-                        var description = locations.find(location => location.ID == locationId).Description;
+                        var locations = {{ js $.Locations }};
+                        var description = '';
+                        for (var i = 0; i < locations.length; i++) {
+                            if (locations[i].ID == locationId) {
+                                description = locations[i].Description;
+                                break;
+                            }
+                        }
                         document.getElementById('locationDescription').innerText = description || 'No description available';
                     }
                 </script>

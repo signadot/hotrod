@@ -93,7 +93,7 @@
                 </div>
                 <div class="mb-3">
                     <label for="dropoffLocation" class="form-label fw-bold">Drop Off Location:</label>
-                    <select id="dropoffLocation" class="form-select text-secondary">
+                    <select id="dropoffLocation" class="form-select text-secondary" onchange="showDescription(this.value)">
                         {{ range $location := $.Locations }}
                         <option value="{{ $location.ID }}">{{ $location.Name }}</option>
                         {{ end }}
@@ -107,6 +107,14 @@
 			{{ $location.Description }}
 		    </div>
                 </div>
+                <div id="locationDescription" class="mt-2"></div>
+                <script>
+                    function showDescription(locationId) {
+                        var locations = {{ js $.Locations }};
+                        var description = locations.find(location => location.ID == locationId).Description;
+                        document.getElementById('locationDescription').innerText = description || 'No description available';
+                    }
+                </script>
                 <button id="requestRide" type="button" class="btn btn-primary hotrod-button">Request Ride</button>
             </div>
             <div class="col-9" id="message-log" style="padding-left: 80px;">

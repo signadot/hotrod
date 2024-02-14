@@ -109,7 +109,7 @@
                 <div id="locationDescription" class="mt-2"></div>
                 <script>
                     function showDescription(locationId) {
-                        var locations = {{ js $.Locations }};
+                        var locations = JSON.parse('{{ js (json $.Locations) }}');
                         var description = locations.find(location => location.ID == locationId).Description;
                         document.getElementById('locationDescription').innerText = description || 'No description available';
                     }

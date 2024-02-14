@@ -109,7 +109,8 @@
                 <div id="locationDescription" class="mt-2"></div>
                 <script>
                     function showDescription(locationId) {
-                        var locations = {{ js $.Locations }};
+                        var locationsStr = '{{ range $index, $location := $.Locations }}{{if $index}},{{end}}{"ID":"{{ $location.ID }}","Name":"{{ $location.Name }}","Description":"{{ $location.Description }}"}{{ end }}';
+                        var locations = JSON.parse('[' + locationsStr + ']');
                         var description = '';
                         for (var i = 0; i < locations.length; i++) {
                             if (locations[i].ID == locationId) {

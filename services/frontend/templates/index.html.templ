@@ -88,6 +88,14 @@
                     <select id="pickupLocation" class="form-select text-secondary">
                         {{ range $location := $.Locations }}
                         <option value="{{ $location.ID }}">{{ $location.Name }}</option>
+			<div style="border: 2px solid #007BFF; /* Solid border with a nice color */
+				    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+				    margin: 20px 0; /* Ensure it's on its own line with some space */
+				    padding: 10px; /* Add some space inside the div */
+				    display: block; /* This is the default for div but added for clarity */
+				    ">
+			    {{ $location.Description }}
+			</div>
                         {{ end }}
                     </select>
                 </div>

@@ -54,8 +54,8 @@ spec:
             - |
               export CLUSTER_ID="2dd8oDpjQRGlRWObUIROyQ" && \
               export KAFKA_NODE_ID=${HOSTNAME##*-} 
-              export KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${POD_NAME}.kafka-headless:9092
-              export KAFKA_CONTROLLER_QUORUM_VOTERS="0@kafka-0.kafka-headless:29093" 
+              export KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${POD_NAME}.kafka-headless.${POD_NAMESPACE}.svc:9092
+              export KAFKA_CONTROLLER_QUORUM_VOTERS="0@kafka-0.kafka-headless.${POD_NAMESPACE}.svc:29093" 
 
               exec /etc/confluent/docker/run
           env:
@@ -68,6 +68,11 @@ spec:
                 fieldRef:
                   apiVersion: v1
                   fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  apiVersion: v1
+                  fieldPath: metadata.namespace
           name: kafka
           image: docker.io/confluentinc/confluent-local:7.5.0
           imagePullPolicy: IfNotPresent

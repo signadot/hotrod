@@ -52,7 +52,7 @@ spec:
             - sh
             - -exc
             - |
-              export CLUSTER_ID="2dd8oDpjQRGlRWObUIROyQ" && \
+              export CLUSTER_ID="2dd8oDpjQRGlRWObUIROyQ"
               export KAFKA_NODE_ID=${HOSTNAME##*-} 
               export KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${POD_NAME}.kafka-headless.${POD_NAMESPACE}.svc:9092
               export KAFKA_CONTROLLER_QUORUM_VOTERS="0@kafka-0.kafka-headless.${POD_NAMESPACE}.svc:29093" 

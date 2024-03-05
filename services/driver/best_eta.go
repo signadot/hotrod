@@ -34,7 +34,7 @@ type Response struct {
 func newBestETA(tracerProvider trace.TracerProvider, tracer trace.Tracer, logger log.Factory) *bestETA {
 	return &bestETA{
 		tracer: tracer,
-		route:  route.NewClient(tracerProvider, logger),
+		route:  route.NewClient(tracerProvider, logger, config.GetRouteAddr()),
 		pool:   pool.New(config.GetDriverWorkerPoolSize()),
 		logger: logger,
 	}

@@ -96,6 +96,11 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.route == 'true' }}
     needs: [ build, changes ]
+    env:
+      SIGNADOT_ORG: signadot
+      SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
+      SANDBOX_IMAGE_TAG: ${{ github.sha }}-linux-amd64
+      SANDBOX_NAME: pr-${{ github.event.number }}-route
     steps:
       - uses: actions/checkout@v3
 
@@ -104,12 +109,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Create Sandbox
-        id: create-sandbox
-        env:
-          SIGNADOT_ORG: signadot
-          SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
-          IMAGE_TAG: ${{ github.sha }}-linux-amd64
+      - name: Define Namespace
         run: |
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
@@ -121,31 +121,30 @@ jobs:
             echo "istio label not found"
             NAMESPACE="hotrod-devmesh"
           fi
+          echo "Using namespace=${NAMESPACE}"
+          echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
 
-          # run the cli
-          # setting the gitsha to a short version to respect the name
-          # limit (30 chars)
+      - name: Create Sandbox
+        run: |
+          echo "Creating sandbox..."
           docker run -i \
             -e SIGNADOT_ORG=${SIGNADOT_ORG} \
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
             signadot/signadot-cli \
-            /signadot sandbox apply \
-            --set github-pr=${{ github.event.number }} \
-            --set image=signadot/hotrod:${IMAGE_TAG} \
-            --set branch=${{ github.head_ref }} \
-            --set name=pr-${{ github.event.number }}-route \
-            --set service=route \
-            --set namespace=${NAMESPACE} \
-            -f - \
-            -o yaml \
-            < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml \
-            > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
-          go install github.com/mikefarah/yq/v4@latest
-      
+              /signadot sandbox apply \
+              --set name=${SANDBOX_NAME} \
+              --set github-pr=${{ github.event.number }} \
+              --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
+              --set branch=${{ github.head_ref }} \
+              --set service=route \
+              --set namespace=${NAMESPACE} \
+              -f - \
+              < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml
+
       - id: get-comment-body
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
         run: |
-          body="https://app.signadot.com/sandbox/name/$(yq -r '.name' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)"
+          body="https://app.signadot.com/sandbox/name/${SANDBOX_NAME}"
           body="${body//'%'/'%25'}"
           body="${body//$'\n'/'%0A'}"
           body="${body//$'\r'/'%0D'}"
@@ -157,8 +156,8 @@ jobs:
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
-          body-includes: Sandbox
-      
+          body-includes: Route Sandbox
+
       - name: Create or update comment
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
         uses: peter-evans/create-or-update-comment@v3
@@ -167,15 +166,48 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
           body: |
-            Sandbox Ready!
+            Route Sandbox Ready!
             ${{ steps.get-comment-body.outputs.body }}
           edit-mode: replace
+
+      - name: Test Service
+        run: |
+          # Run the proxy
+          PROXY_CONTAINER_ID=$(
+            docker run --network=host -d \
+            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
+            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
+            signadot/signadot-cli \
+              /signadot proxy --sandbox ${SANDBOX_NAME} \
+                --map "grpc://route.${NAMESPACE}:8083|localhost:38083"
+          )
+
+          # Run tests
+          go install github.com/jstemmer/go-junit-report/v2@latest
+          TEST_ROUTE_ADDR=localhost:38083 go test -v \
+            ${GITHUB_WORKSPACE}/services/route/ | go-junit-report -set-exit-code -out report.xml
+
+          # Stop the proxy
+          docker logs $PROXY_CONTAINER_ID
+          docker stop $PROXY_CONTAINER_ID
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
+            report.xml
 
 
   sandbox-frontend:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.frontend == 'true' }}
     needs: [ build, changes ]
+    env:
+      SIGNADOT_ORG: signadot
+      SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
+      SANDBOX_IMAGE_TAG: ${{ github.sha }}-linux-amd64
+      SANDBOX_NAME: pr-${{ github.event.number }}-frontend
     steps:
       - uses: actions/checkout@v3
 
@@ -184,12 +216,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Create Sandbox
-        id: create-sandbox
-        env:
-          SIGNADOT_ORG: signadot
-          SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
-          IMAGE_TAG: ${{ github.sha }}-linux-amd64
+      - name: Define Namespace
         run: |
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
@@ -201,36 +228,34 @@ jobs:
             echo "istio label not found"
             NAMESPACE="hotrod-devmesh"
           fi
+          echo "Using namespace=${NAMESPACE}"
+          echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
 
-          # run the cli
-          # setting the gitsha to a short version to respect the name
-          # limit (30 chars)
+      - name: Create Sandbox
+        run: |
+          echo "Creating sandbox..."
           docker run -i \
             -e SIGNADOT_ORG=${SIGNADOT_ORG} \
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
             signadot/signadot-cli \
-            /signadot sandbox apply \
-            --set github-pr=${{ github.event.number }} \
-            --set image=signadot/hotrod:${IMAGE_TAG} \
-            --set branch=${{ github.head_ref }} \
-            --set name=pr-${{ github.event.number }}-frontend \
-            --set service=frontend \
-            --set namespace=${NAMESPACE} \
-            -f - \
-            -o yaml \
-            < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml \
-            > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
-          go install github.com/mikefarah/yq/v4@latest
+              /signadot sandbox apply \
+              --set name=${SANDBOX_NAME} \
+              --set github-pr=${{ github.event.number }} \
+              --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
+              --set branch=${{ github.head_ref }} \
+              --set service=frontend \
+              --set namespace=${NAMESPACE} \
+              -f - \
+              < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml
 
       - id: get-comment-body
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
         run: |
-          body="https://app.signadot.com/sandbox/name/$(yq -r '.name' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)"
+          body="https://app.signadot.com/sandbox/name/${SANDBOX_NAME}"
           body="${body//'%'/'%25'}"
           body="${body//$'\n'/'%0A'}"
           body="${body//$'\r'/'%0D'}"
           echo "::set-output name=body::$body"
-      
       - name: Find Comment
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
         uses: peter-evans/find-comment@v2
@@ -238,8 +263,8 @@ jobs:
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
-          body-includes: Sandbox
-      
+          body-includes: Frontend Sandbox
+
       - name: Create or update comment
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
         uses: peter-evans/create-or-update-comment@v3
@@ -248,7 +273,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
           body: |
-            Sandbox Ready!
+            Frontend Sandbox Ready!
             ${{ steps.get-comment-body.outputs.body }}
           edit-mode: replace
 
@@ -292,16 +317,16 @@ jobs:
             -e SIGNADOT_ORG=${SIGNADOT_ORG} \
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
             signadot/signadot-cli \
-            /signadot sandbox apply \
-            --set name=${SANDBOX_NAME} \
-            --set github-pr=${{ github.event.number }} \
-            --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
-            --set branch=${{ github.head_ref }} \
-            --set service=location \
-            --set namespace=${NAMESPACE} \
-            -f - \
-            < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml
-      
+              /signadot sandbox apply \
+              --set name=${SANDBOX_NAME} \
+              --set github-pr=${{ github.event.number }} \
+              --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
+              --set branch=${{ github.head_ref }} \
+              --set service=location \
+              --set namespace=${NAMESPACE} \
+              -f - \
+              < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml
+
       - id: get-comment-body
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
         run: |
@@ -317,8 +342,8 @@ jobs:
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
-          body-includes: Sandbox
-      
+          body-includes: Location Sandbox
+
       - name: Create or update comment
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
         uses: peter-evans/create-or-update-comment@v3
@@ -327,7 +352,7 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
           body: |
-            Sandbox Ready!
+            Location Sandbox Ready!
             ${{ steps.get-comment-body.outputs.body }}
           edit-mode: replace
 
@@ -340,15 +365,16 @@ jobs:
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
             signadot/signadot-cli \
               /signadot proxy --sandbox ${SANDBOX_NAME} \
-                --map "http://location.${NAMESPACE}:8081|localhost:34500"
+                --map "http://location.${NAMESPACE}:8081|localhost:38081"
           )
 
           # Run tests
           go install github.com/jstemmer/go-junit-report/v2@latest
-          TEST_LOCATION_ADDR=localhost:34500 go test -v \
+          TEST_LOCATION_ADDR=localhost:38081 go test -v \
             ${GITHUB_WORKSPACE}/services/location/ | go-junit-report -set-exit-code -out report.xml
 
           # Stop the proxy
+          docker logs $PROXY_CONTAINER_ID
           docker stop $PROXY_CONTAINER_ID
 
       - name: Publish Test Results
@@ -363,6 +389,11 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.driver == 'true' }}
     needs: [ build, changes ]
+    env:
+      SIGNADOT_ORG: signadot
+      SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
+      SANDBOX_IMAGE_TAG: ${{ github.sha }}-linux-amd64
+      SANDBOX_NAME: pr-${{ github.event.number }}-driver
     steps:
       - uses: actions/checkout@v3
 
@@ -371,12 +402,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Create Sandbox
-        id: create-sandbox
-        env:
-          SIGNADOT_ORG: signadot
-          SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
-          IMAGE_TAG: ${{ github.sha }}-linux-amd64
+      - name: Define Namespace
         run: |
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
@@ -388,31 +414,30 @@ jobs:
             echo "istio label not found"
             NAMESPACE="hotrod-devmesh"
           fi
+          echo "Using namespace=${NAMESPACE}"
+          echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
 
-          # run the cli
-          # setting the gitsha to a short version to respect the name
-          # limit (30 chars)
+      - name: Create Sandbox
+        run: |
+          echo "Creating sandbox..."
           docker run -i \
             -e SIGNADOT_ORG=${SIGNADOT_ORG} \
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
             signadot/signadot-cli \
-            /signadot sandbox apply \
-            --set github-pr=${{ github.event.number }} \
-            --set image=signadot/hotrod:${IMAGE_TAG} \
-            --set branch=${{ github.head_ref }} \
-            --set name=pr-${{ github.event.number }}-driver \
-            --set service=driver \
-            --set namespace=${NAMESPACE} \
-            -f - \
-            -o yaml \
-            < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml \
-            > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
-          go install github.com/mikefarah/yq/v4@latest
-          
+              /signadot sandbox apply \
+              --set name=${SANDBOX_NAME} \
+              --set github-pr=${{ github.event.number }} \
+              --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
+              --set branch=${{ github.head_ref }} \
+              --set service=driver \
+              --set namespace=${NAMESPACE} \
+              -f - \
+              < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml
+
       - id: get-comment-body
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
         run: |
-          body="https://app.signadot.com/sandbox/name/$(yq -r '.name' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)"
+          body="https://app.signadot.com/sandbox/name/${SANDBOX_NAME}"
           body="${body//'%'/'%25'}"
           body="${body//$'\n'/'%0A'}"
           body="${body//$'\r'/'%0D'}"
@@ -424,8 +449,8 @@ jobs:
         with:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
-          body-includes: Sandbox
-      
+          body-includes: Driver Sandbox
+
       - name: Create or update comment
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
         uses: peter-evans/create-or-update-comment@v3
@@ -434,6 +459,6 @@ jobs:
           issue-number: ${{ github.event.pull_request.number }}
           comment-author: 'github-actions[bot]'
           body: |
-            Sandbox Ready!
+            Driver Sandbox Ready!
             ${{ steps.get-comment-body.outputs.body }}
           edit-mode: replace

@@ -171,26 +171,6 @@ jobs:
             ${{ steps.get-comment-body.outputs.body }}
           edit-mode: replace
 
-      
-      # - name: Test Sandbox
-      #   run: |
-      #     sleep 20 # just to make sure our sandbox is ready.
-      #     endpoint=$(yq '.endpoints[0].url' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)
-          
-      #     pushd .
-      #     cd test
-      #     npm install
-
-      #     # don't exit with error code if test fails and fail action. 
-      #     ENDPOINT=$endpoint SIGNADOT_API_KEY=${{ secrets.SIGNADOT_API_KEY }} npm test || true
-
-      #     popd
-
-      # - name: Publish Test Results
-      #   uses: EnricoMi/publish-unit-test-result-action/composite@v2
-      #   with:
-      #     files: |
-      #       test/*.xml
 
   sandbox-frontend:
     runs-on: ubuntu-latest
@@ -277,6 +257,11 @@ jobs:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.location == 'true' }}
     needs: [ build, changes ]
+    env:
+      SIGNADOT_ORG: signadot
+      SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
+      SANDBOX_IMAGE_TAG: ${{ github.sha }}-linux-amd64
+      SANDBOX_NAME: pr-${{ github.event.number }}-location
     steps:
       - uses: actions/checkout@v3
 
@@ -285,12 +270,7 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Create Sandbox
-        id: create-sandbox
-        env:
-          SIGNADOT_ORG: signadot
-          SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
-          IMAGE_TAG: ${{ github.sha }}-linux-amd64
+      - name: Define Namespace
         run: |
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
@@ -302,31 +282,30 @@ jobs:
             echo "istio label not found"
             NAMESPACE="hotrod-devmesh"
           fi
+          echo "Using namespace=${NAMESPACE}"
+          echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
 
-          # run the cli
-          # setting the gitsha to a short version to respect the name
-          # limit (30 chars)
+      - name: Create Sandbox
+        run: |
+          echo "Creating sandbox..."
           docker run -i \
             -e SIGNADOT_ORG=${SIGNADOT_ORG} \
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
             signadot/signadot-cli \
             /signadot sandbox apply \
+            --set name=${SANDBOX_NAME} \
             --set github-pr=${{ github.event.number }} \
-            --set image=signadot/hotrod:${IMAGE_TAG} \
+            --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
             --set branch=${{ github.head_ref }} \
-            --set name=pr-${{ github.event.number }}-location \
             --set service=location \
             --set namespace=${NAMESPACE} \
-            -f - \
-            -o yaml \
-            < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml \
-            > ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml
-          go install github.com/mikefarah/yq/v4@latest
+            -f -
+            < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml
       
       - id: get-comment-body
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
         run: |
-          body="https://app.signadot.com/sandbox/name/$(yq -r '.name' ${GITHUB_WORKSPACE}/.signadot/sbx-response.yaml)"
+          body="https://app.signadot.com/sandbox/name/${SANDBOX_NAME}"
           body="${body//'%'/'%25'}"
           body="${body//$'\n'/'%0A'}"
           body="${body//$'\r'/'%0D'}"
@@ -351,6 +330,33 @@ jobs:
             Sandbox Ready!
             ${{ steps.get-comment-body.outputs.body }}
           edit-mode: replace
+
+      - name: Test Service
+        run: |
+          # Run the proxy
+          PROXY_CONTAINER_ID=$(
+            docker run -d \
+            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
+            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
+            signadot/signadot-cli \
+              /signadot proxy --sandbox ${SANDBOX_NAME} \
+                --map "http://location.${NAMESPACE}:8081|localhost:34500"
+          )
+
+          # Run tests
+          go install github.com/jstemmer/go-junit-report/v2@latest
+          TEST_LOCATION_ADDR=localhost:34500 go test -v \
+            ${GITHUB_WORKSPACE}/services/location/ | go-junit-report -set-exit-code -out report.xml
+
+          # Stop the proxy
+          docker stop $PROXY_CONTAINER_ID
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          files: |
+            report.xml
 
 
   sandbox-driver:

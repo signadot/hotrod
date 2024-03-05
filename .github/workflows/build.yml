@@ -92,6 +92,7 @@ jobs:
         run: |
           make push-docker
   
+
   sandbox-route:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.route == 'true' }}
@@ -170,7 +171,7 @@ jobs:
             ${{ steps.get-comment-body.outputs.body }}
           edit-mode: replace
 
-      - name: Test Service
+      - name: Run Tests
         run: |
           # Run the proxy
           PROXY_CONTAINER_ID=$(
@@ -179,14 +180,20 @@ jobs:
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
             signadot/daniel-test:cli-0.7.0 \
               /signadot local proxy --sandbox ${SANDBOX_NAME} \
-                --map "grpc://route.${NAMESPACE}:8083|localhost:38083"
+                --map grpc://route.${NAMESPACE}:8083@localhost:38083 \
+                --map http://frontend.${NAMESPACE}:8080@localhost:38080
           )
+          sleep 1
           docker logs $PROXY_CONTAINER_ID
 
-          # Run tests
+          # Run api tests
           go install github.com/jstemmer/go-junit-report/v2@latest
           TEST_ROUTE_ADDR=localhost:38083 go test -v \
-            ${GITHUB_WORKSPACE}/services/route/ | go-junit-report -set-exit-code -out report.xml
+            ${GITHUB_WORKSPACE}/services/route/ | go-junit-report -set-exit-code -out api-report.xml
+
+          # Run integration tests
+          TEST_FRONTEND_ADDR=localhost:38080 TEST_TARGET_WORKLOAD=route TEST_SANDBOX_NAME=${SANDBOX_NAME} go test -v \
+            ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
 
           # Stop the proxy
           docker logs $PROXY_CONTAINER_ID
@@ -198,7 +205,7 @@ jobs:
         with:
           check_name: Route Test Results
           files: |
-            report.xml
+            *report.xml
 
 
   sandbox-frontend:
@@ -279,6 +286,37 @@ jobs:
             ${{ steps.get-comment-body.outputs.body }}
           edit-mode: replace
 
+      - name: Run Tests
+        run: |
+          # Run the proxy
+          PROXY_CONTAINER_ID=$(
+            docker run --network=host -d \
+            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
+            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
+            signadot/daniel-test:cli-0.7.0 \
+              /signadot local proxy --sandbox ${SANDBOX_NAME} \
+                --map http://frontend.${NAMESPACE}:8080@localhost:38080
+          )
+          sleep 1
+          docker logs $PROXY_CONTAINER_ID
+
+          # Run integration tests
+          go install github.com/jstemmer/go-junit-report/v2@latest
+          TEST_FRONTEND_ADDR=localhost:38080 TEST_TARGET_WORKLOAD=frontend TEST_SANDBOX_NAME=${SANDBOX_NAME} go test -v \
+            ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
+
+          # Stop the proxy
+          docker logs $PROXY_CONTAINER_ID
+          docker stop $PROXY_CONTAINER_ID
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          check_name: Frontend Test Results
+          files: |
+            *report.xml
+
 
   sandbox-location:
     runs-on: ubuntu-latest
@@ -358,7 +396,7 @@ jobs:
             ${{ steps.get-comment-body.outputs.body }}
           edit-mode: replace
 
-      - name: Test Service
+      - name: Run Tests
         run: |
           # Run the proxy
           PROXY_CONTAINER_ID=$(
@@ -367,14 +405,20 @@ jobs:
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
             signadot/daniel-test:cli-0.7.0 \
               /signadot local proxy --sandbox ${SANDBOX_NAME} \
-                --map "http://location.${NAMESPACE}:8081|localhost:38081"
+                --map http://location.${NAMESPACE}:8081@localhost:38081 \
+                --map http://frontend.${NAMESPACE}:8080@localhost:38080
           )
+          sleep 1
           docker logs $PROXY_CONTAINER_ID
 
-          # Run tests
+          # Run api tests
           go install github.com/jstemmer/go-junit-report/v2@latest
           TEST_LOCATION_ADDR=localhost:38081 go test -v \
-            ${GITHUB_WORKSPACE}/services/location/ | go-junit-report -set-exit-code -out report.xml
+            ${GITHUB_WORKSPACE}/services/location/ | go-junit-report -set-exit-code -out api-report.xml
+
+          # Run integration tests
+          TEST_FRONTEND_ADDR=localhost:38080 TEST_TARGET_WORKLOAD=location TEST_SANDBOX_NAME=${SANDBOX_NAME} go test -v \
+            ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
 
           # Stop the proxy
           docker logs $PROXY_CONTAINER_ID
@@ -386,7 +430,7 @@ jobs:
         with:
           check_name: Location Test Results
           files: |
-            report.xml
+            *report.xml
 
 
   sandbox-driver:
@@ -466,3 +510,34 @@ jobs:
             Driver Sandbox Ready!
             ${{ steps.get-comment-body.outputs.body }}
           edit-mode: replace
+
+      - name: Run Tests
+        run: |
+          # Run the proxy
+          PROXY_CONTAINER_ID=$(
+            docker run --network=host -d \
+            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
+            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
+            signadot/daniel-test:cli-0.7.0 \
+              /signadot local proxy --sandbox ${SANDBOX_NAME} \
+                --map http://frontend.${NAMESPACE}:8080@localhost:38080
+          )
+          sleep 1
+          docker logs $PROXY_CONTAINER_ID
+
+          # Run integration tests
+          go install github.com/jstemmer/go-junit-report/v2@latest
+          TEST_FRONTEND_ADDR=localhost:38080 TEST_TARGET_WORKLOAD=driver TEST_SANDBOX_NAME=${SANDBOX_NAME} go test -v \
+            ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
+
+          # Stop the proxy
+          docker logs $PROXY_CONTAINER_ID
+          docker stop $PROXY_CONTAINER_ID
+
+      - name: Publish Test Results
+        uses: EnricoMi/publish-unit-test-result-action@v2
+        if: always()
+        with:
+          check_name: Driver Test Results
+          files: |
+            *report.xml

@@ -178,9 +178,10 @@ jobs:
             -e SIGNADOT_ORG=${SIGNADOT_ORG} \
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
             signadot/daniel-test:cli-0.7.0 \
-              /signadot proxy --sandbox ${SANDBOX_NAME} \
+              /signadot local proxy --sandbox ${SANDBOX_NAME} \
                 --map "grpc://route.${NAMESPACE}:8083|localhost:38083"
           )
+          docker logs $PROXY_CONTAINER_ID
 
           # Run tests
           go install github.com/jstemmer/go-junit-report/v2@latest
@@ -365,9 +366,10 @@ jobs:
             -e SIGNADOT_ORG=${SIGNADOT_ORG} \
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
             signadot/daniel-test:cli-0.7.0 \
-              /signadot proxy --sandbox ${SANDBOX_NAME} \
+              /signadot local proxy --sandbox ${SANDBOX_NAME} \
                 --map "http://location.${NAMESPACE}:8081|localhost:38081"
           )
+          docker logs $PROXY_CONTAINER_ID
 
           # Run tests
           go install github.com/jstemmer/go-junit-report/v2@latest

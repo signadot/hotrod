@@ -299,7 +299,7 @@ jobs:
             --set branch=${{ github.head_ref }} \
             --set service=location \
             --set namespace=${NAMESPACE} \
-            -f -
+            -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml
       
       - id: get-comment-body
@@ -335,7 +335,7 @@ jobs:
         run: |
           # Run the proxy
           PROXY_CONTAINER_ID=$(
-            docker run -d \
+            docker run --network=host -d \
             -e SIGNADOT_ORG=${SIGNADOT_ORG} \
             -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
             signadot/signadot-cli \

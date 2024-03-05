@@ -195,6 +195,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
+          check_name: Route Test Results
           files: |
             report.xml
 
@@ -381,6 +382,7 @@ jobs:
         uses: EnricoMi/publish-unit-test-result-action@v2
         if: always()
         with:
+          check_name: Location Test Results
           files: |
             report.xml
 

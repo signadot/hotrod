@@ -12,7 +12,7 @@ import (
 	"go.uber.org/zap/zapcore"
 )
 
-func TestLocationClient(t *testing.T) {
+func TestRouteClient(t *testing.T) {
 	if os.Getenv("TEST_ROUTE_ADDR") == "" {
 		t.Skip()
 		return
@@ -32,7 +32,7 @@ func TestLocationClient(t *testing.T) {
 	tracerProvider := tracing.InitOTEL("route", config.GetOtelExporterType(),
 		config.GetMetricsFactory(), l)
 
-	// get a location client
+	// get a route client
 	routeClient := NewClient(tracerProvider, l, os.Getenv("TEST_ROUTE_ADDR"))
 	route, err := routeClient.FindRoute(ctx, "a", "b")
 	if err != nil {

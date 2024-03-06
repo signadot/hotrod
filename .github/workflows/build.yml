@@ -140,7 +140,7 @@ jobs:
               --set service=route \
               --set namespace=${NAMESPACE} \
               -f - \
-              < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml
+              < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
       - id: get-comment-body
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
@@ -255,7 +255,7 @@ jobs:
               --set service=frontend \
               --set namespace=${NAMESPACE} \
               -f - \
-              < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml
+              < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
       - id: get-comment-body
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
@@ -365,7 +365,7 @@ jobs:
               --set service=location \
               --set namespace=${NAMESPACE} \
               -f - \
-              < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml
+              < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
       - id: get-comment-body
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
@@ -480,7 +480,7 @@ jobs:
               --set service=driver \
               --set namespace=${NAMESPACE} \
               -f - \
-              < ${GITHUB_WORKSPACE}/.signadot/sbx-template.yaml
+              < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
       - id: get-comment-body
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}

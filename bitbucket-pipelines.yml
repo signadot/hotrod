@@ -2,7 +2,7 @@ image: golang
 
 pipelines:
   pull-requests:
-    main:
+    '**':
       - step:
           name: Define Env Vars
           script:

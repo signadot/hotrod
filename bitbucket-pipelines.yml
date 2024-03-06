@@ -7,8 +7,8 @@ pipelines:
           name: Run Tests
           script:
             - |
-              export SANDBOX_NAME=bitbucket-pr-$BITBUCKET_PR_ID
-              export NAMESPACE=hotrod-devmesh
+              export SANDBOX_NAME="bitbucket-pr-${BITBUCKET_PR_ID}"
+              export NAMESPACE="hotrod-devmesh"
 
               # Set up Signadot CLI
               curl -sSLf https://raw.githubusercontent.com/signadot/cli/installation-script/scripts/install.sh | sh 
@@ -16,17 +16,17 @@ pipelines:
               # Create a sandbox
               echo "Creating sandbox..."
               signadot sandbox apply \
-                --set name=$SANDBOX_NAME \
+                --set name=${SANDBOX_NAME} \
                 --set service=driver \
-                --set branch=$BITBUCKET_BRANCH \
-                --set namespace=$NAMESPACE \
+                --set branch=${BITBUCKET_BRANCH} \
+                --set namespace=${NAMESPACE} \
                 -f - \
-                < $BITBUCKET_CLONE_DIR/.signadot/sbx-noop.yaml
+                < ${BITBUCKET_CLONE_DIR}/.signadot/sbx-noop.yaml
 
               # Run the proxy
               echo "Starting signadot proxy..."
-              signadot local proxy --sandbox $SANDBOX_NAME \
-                --map http://frontend.$NAMESPACE:8080@localhost:38080 > /tmp/signadot-proxy.log &
+              signadot local proxy --sandbox ${SANDBOX_NAME} \
+                --map http://frontend.${NAMESPACE}:8080@localhost:38080 > /tmp/signadot-proxy.log &
               PROXY_PID=$!
               sleep 1
               cat /tmp/signadot-proxy.log
@@ -36,12 +36,13 @@ pipelines:
               source bitbucket-pipelines-go.sh
               go install github.com/jstemmer/go-junit-report/v2@latest
               mkdir test-reports
-              TEST_FRONTEND_ADDR=localhost:38080 TEST_TARGET_WORKLOAD=driver TEST_SANDBOX_NAME=$SANDBOX_NAME go test -v \
-                $BITBUCKET_CLONE_DIR/services/frontend/ | go-junit-report -set-exit-code -out test-reports/integration-report.xml
+              TEST_FRONTEND_ADDR=localhost:38080 TEST_TARGET_WORKLOAD=driver TEST_SANDBOX_NAME=${SANDBOX_NAME} go test -v \
+                ${BITBUCKET_CLONE_DIR}/services/frontend/ | go-junit-report -set-exit-code -out test-reports/integration-report.xml
 
               # Stop the proxy
               cat /tmp/signadot-proxy.log
               kill ${PROXY_PID}
 
               echo "Deleting sandbox..."
-              signadot sandbox delete $SANDBOX_NAME
+              signadot sandbox delete ${SANDBOX_NAME}
+

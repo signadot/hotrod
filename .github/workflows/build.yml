@@ -110,6 +110,11 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
+      - name: Set up Signadot CLI
+        run: |
+          # TODO: point this to mian (once merged)
+          curl -sSLf https://raw.githubusercontent.com/signadot/cli/installation-script/scripts/install.sh | sh
+
       - name: Define Namespace
         run: |
           echo "Checking for labels..."
@@ -128,19 +133,15 @@ jobs:
       - name: Create Sandbox
         run: |
           echo "Creating sandbox..."
-          docker run -i \
-            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
-            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
-            signadot/daniel-test:cli-0.7.0 \
-              /signadot sandbox apply \
-              --set name=${SANDBOX_NAME} \
-              --set github-pr=${{ github.event.number }} \
-              --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
-              --set branch=${{ github.head_ref }} \
-              --set service=route \
-              --set namespace=${NAMESPACE} \
-              -f - \
-              < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
+          signadot sandbox apply \
+            --set name=${SANDBOX_NAME} \
+            --set github-pr=${{ github.event.number }} \
+            --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
+            --set branch=${{ github.head_ref }} \
+            --set service=route \
+            --set namespace=${NAMESPACE} \
+            -f - \
+            < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
       - id: get-comment-body
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
@@ -174,17 +175,12 @@ jobs:
       - name: Run Tests
         run: |
           # Run the proxy
-          PROXY_CONTAINER_ID=$(
-            docker run --network=host -d \
-            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
-            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
-            signadot/daniel-test:cli-0.7.0 \
-              /signadot local proxy --sandbox ${SANDBOX_NAME} \
-                --map grpc://route.${NAMESPACE}:8083@localhost:38083 \
-                --map http://frontend.${NAMESPACE}:8080@localhost:38080
-          )
+          signadot local proxy --sandbox ${SANDBOX_NAME} \
+            --map grpc://route.${NAMESPACE}:8083@localhost:38083 \
+            --map http://frontend.${NAMESPACE}:8080@localhost:38080 > /tmp/signadot-proxy.log &
+          PROXY_PID=$!
           sleep 1
-          docker logs $PROXY_CONTAINER_ID
+          cat /tmp/signadot-proxy.log
 
           # Run api tests
           go install github.com/jstemmer/go-junit-report/v2@latest
@@ -196,8 +192,8 @@ jobs:
             ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
 
           # Stop the proxy
-          docker logs $PROXY_CONTAINER_ID
-          docker stop $PROXY_CONTAINER_ID
+          cat /tmp/signadot-proxy.log
+          kill ${PROXY_PID}
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -225,6 +221,11 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
+      - name: Set up Signadot CLI
+        run: |
+          # TODO: point this to mian (once merged)
+          curl -sSLf https://raw.githubusercontent.com/signadot/cli/installation-script/scripts/install.sh | sh
+
       - name: Define Namespace
         run: |
           echo "Checking for labels..."
@@ -243,19 +244,15 @@ jobs:
       - name: Create Sandbox
         run: |
           echo "Creating sandbox..."
-          docker run -i \
-            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
-            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
-            signadot/daniel-test:cli-0.7.0 \
-              /signadot sandbox apply \
-              --set name=${SANDBOX_NAME} \
-              --set github-pr=${{ github.event.number }} \
-              --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
-              --set branch=${{ github.head_ref }} \
-              --set service=frontend \
-              --set namespace=${NAMESPACE} \
-              -f - \
-              < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
+          signadot sandbox apply \
+            --set name=${SANDBOX_NAME} \
+            --set github-pr=${{ github.event.number }} \
+            --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
+            --set branch=${{ github.head_ref }} \
+            --set service=frontend \
+            --set namespace=${NAMESPACE} \
+            -f - \
+            < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
       - id: get-comment-body
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
@@ -289,16 +286,11 @@ jobs:
       - name: Run Tests
         run: |
           # Run the proxy
-          PROXY_CONTAINER_ID=$(
-            docker run --network=host -d \
-            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
-            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
-            signadot/daniel-test:cli-0.7.0 \
-              /signadot local proxy --sandbox ${SANDBOX_NAME} \
-                --map http://frontend.${NAMESPACE}:8080@localhost:38080
-          )
+          signadot local proxy --sandbox ${SANDBOX_NAME} \
+            --map http://frontend.${NAMESPACE}:8080@localhost:38080 > /tmp/signadot-proxy.log &
+          PROXY_PID=$!
           sleep 1
-          docker logs $PROXY_CONTAINER_ID
+          cat /tmp/signadot-proxy.log
 
           # Run integration tests
           go install github.com/jstemmer/go-junit-report/v2@latest
@@ -306,8 +298,8 @@ jobs:
             ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
 
           # Stop the proxy
-          docker logs $PROXY_CONTAINER_ID
-          docker stop $PROXY_CONTAINER_ID
+          cat /tmp/signadot-proxy.log
+          kill ${PROXY_PID}
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -335,6 +327,11 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
+      - name: Set up Signadot CLI
+        run: |
+          # TODO: point this to mian (once merged)
+          curl -sSLf https://raw.githubusercontent.com/signadot/cli/installation-script/scripts/install.sh | sh
+
       - name: Define Namespace
         run: |
           echo "Checking for labels..."
@@ -353,19 +350,15 @@ jobs:
       - name: Create Sandbox
         run: |
           echo "Creating sandbox..."
-          docker run -i \
-            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
-            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
-            signadot/daniel-test:cli-0.7.0 \
-              /signadot sandbox apply \
-              --set name=${SANDBOX_NAME} \
-              --set github-pr=${{ github.event.number }} \
-              --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
-              --set branch=${{ github.head_ref }} \
-              --set service=location \
-              --set namespace=${NAMESPACE} \
-              -f - \
-              < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
+          signadot sandbox apply \
+            --set name=${SANDBOX_NAME} \
+            --set github-pr=${{ github.event.number }} \
+            --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
+            --set branch=${{ github.head_ref }} \
+            --set service=location \
+            --set namespace=${NAMESPACE} \
+            -f - \
+            < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
       - id: get-comment-body
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
@@ -399,17 +392,12 @@ jobs:
       - name: Run Tests
         run: |
           # Run the proxy
-          PROXY_CONTAINER_ID=$(
-            docker run --network=host -d \
-            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
-            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
-            signadot/daniel-test:cli-0.7.0 \
-              /signadot local proxy --sandbox ${SANDBOX_NAME} \
-                --map http://location.${NAMESPACE}:8081@localhost:38081 \
-                --map http://frontend.${NAMESPACE}:8080@localhost:38080
-          )
+          signadot local proxy --sandbox ${SANDBOX_NAME} \
+            --map http://location.${NAMESPACE}:8081@localhost:38081 \
+            --map http://frontend.${NAMESPACE}:8080@localhost:38080 > /tmp/signadot-proxy.log &
+          PROXY_PID=$!
           sleep 1
-          docker logs $PROXY_CONTAINER_ID
+          cat /tmp/signadot-proxy.log
 
           # Run api tests
           go install github.com/jstemmer/go-junit-report/v2@latest
@@ -421,8 +409,8 @@ jobs:
             ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
 
           # Stop the proxy
-          docker logs $PROXY_CONTAINER_ID
-          docker stop $PROXY_CONTAINER_ID
+          cat /tmp/signadot-proxy.log
+          kill ${PROXY_PID}
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2
@@ -450,6 +438,11 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
+      - name: Set up Signadot CLI
+        run: |
+          # TODO: point this to mian (once merged)
+          curl -sSLf https://raw.githubusercontent.com/signadot/cli/installation-script/scripts/install.sh | sh
+
       - name: Define Namespace
         run: |
           echo "Checking for labels..."
@@ -468,19 +461,15 @@ jobs:
       - name: Create Sandbox
         run: |
           echo "Creating sandbox..."
-          docker run -i \
-            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
-            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
-            signadot/daniel-test:cli-0.7.0 \
-              /signadot sandbox apply \
-              --set name=${SANDBOX_NAME} \
-              --set github-pr=${{ github.event.number }} \
-              --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
-              --set branch=${{ github.head_ref }} \
-              --set service=driver \
-              --set namespace=${NAMESPACE} \
-              -f - \
-              < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
+          signadot sandbox apply \
+            --set name=${SANDBOX_NAME} \
+            --set github-pr=${{ github.event.number }} \
+            --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
+            --set branch=${{ github.head_ref }} \
+            --set service=driver \
+            --set namespace=${NAMESPACE} \
+            -f - \
+            < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
       - id: get-comment-body
         if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
@@ -514,16 +503,11 @@ jobs:
       - name: Run Tests
         run: |
           # Run the proxy
-          PROXY_CONTAINER_ID=$(
-            docker run --network=host -d \
-            -e SIGNADOT_ORG=${SIGNADOT_ORG} \
-            -e SIGNADOT_API_KEY=${SIGNADOT_API_KEY} \
-            signadot/daniel-test:cli-0.7.0 \
-              /signadot local proxy --sandbox ${SANDBOX_NAME} \
-                --map http://frontend.${NAMESPACE}:8080@localhost:38080
-          )
+          signadot local proxy --sandbox ${SANDBOX_NAME} \
+            --map http://frontend.${NAMESPACE}:8080@localhost:38080 > /tmp/signadot-proxy.log &
+          PROXY_PID=$!
           sleep 1
-          docker logs $PROXY_CONTAINER_ID
+          cat /tmp/signadot-proxy.log
 
           # Run integration tests
           go install github.com/jstemmer/go-junit-report/v2@latest
@@ -531,8 +515,8 @@ jobs:
             ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
 
           # Stop the proxy
-          docker logs $PROXY_CONTAINER_ID
-          docker stop $PROXY_CONTAINER_ID
+          cat /tmp/signadot-proxy.log
+          kill ${PROXY_PID}
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2

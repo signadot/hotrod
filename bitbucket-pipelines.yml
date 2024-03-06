@@ -1,0 +1,77 @@
+image: golang
+
+pipelines:
+  pull-requests:
+    main:
+      - step:
+          name: Define Env Vars
+          script:
+            - echo "export SIGNADOT_ORG=signadot" >> default.env
+            - echo "export SANDBOX_NAME=bitbucket-pr-$BITBUCKET_PR_ID" >> default.env
+            - echo "export NAMESPACE=hotrod-devmesh" >> default.env
+          artifacts:
+            - default.env
+
+      - step:
+          name: Create Sandbox
+          services:
+            - docker
+          script:
+            - source build.env
+            - |
+              echo "Creating sandbox..."
+              docker run -i \
+                -e SIGNADOT_ORG=$SIGNADOT_ORG \
+                -e SIGNADOT_API_KEY=$SIGNADOT_API_KEY \
+                signadot/daniel-test:cli-0.7.0 \
+                  /signadot sandbox apply \
+                  --set name=$SANDBOX_NAME \
+                  --set service=driver \
+                  --set branch=$BITBUCKET_BRANCH \
+                  --set namespace=$NAMESPACE \
+                  -f - \
+                  < $BITBUCKET_CLONE_DIR/.signadot/sbx-noop.yaml
+
+      - step:
+          name: Test Changes
+          services:
+            - docker
+          script:
+            - source bitbucket-pipelines-go.sh
+            - source build.env
+            - |
+              # Run the proxy
+              PROXY_CONTAINER_ID=$(
+                docker run --network=host -d \
+                -e SIGNADOT_ORG=$SIGNADOT_ORG \
+                -e SIGNADOT_API_KEY=$SIGNADOT_API_KEY \
+                signadot/daniel-test:cli-0.7.0 \
+                  /signadot local proxy --sandbox $SANDBOX_NAME \
+                    --map http://frontend.$NAMESPACE:8080@localhost:38080
+              )
+              sleep 1
+              docker logs $PROXY_CONTAINER_ID
+
+              # Run integration tests
+              mkdir test-reports
+              go install github.com/jstemmer/go-junit-report/v2@latest
+              TEST_FRONTEND_ADDR=localhost:38080 TEST_TARGET_WORKLOAD=driver TEST_SANDBOX_NAME=$SANDBOX_NAME go test -v \
+                $BITBUCKET_CLONE_DIR/services/frontend/ | go-junit-report -set-exit-code -out test-reports/integration-report.xml
+
+              # Stop the proxy
+              docker logs $PROXY_CONTAINER_ID
+              docker stop $PROXY_CONTAINER_ID
+
+      - step:
+          name: Delete Sandbox
+          services:
+            - docker
+          script:
+            - source build.env
+            - |
+              echo "Deleting sandbox..."
+              docker run -i \
+                -e SIGNADOT_ORG=$SIGNADOT_ORG \
+                -e SIGNADOT_API_KEY=$SIGNADOT_API_KEY \
+                signadot/signadot-cli \
+                /signadot sandbox delete $SANDBOX_NAME

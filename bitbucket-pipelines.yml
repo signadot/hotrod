@@ -6,10 +6,12 @@ pipelines:
       - step:
           name: Run Tests
           script:
-            - export SANDBOX_NAME="bitbucket-pr-${BITBUCKET_PR_ID}"
-            - export NAMESPACE="hotrod-devmesh"
             - |
+              export SANDBOX_NAME="bitbucket-pr-${BITBUCKET_PR_ID}"
+              export NAMESPACE="hotrod-devmesh"
+
               # Set up Signadot CLI
+              apt update; apt install -y jq
               curl -sSLf https://raw.githubusercontent.com/signadot/cli/installation-script/scripts/install.sh | sh 
 
               # Create a sandbox
@@ -44,4 +46,3 @@ pipelines:
 
               echo "Deleting sandbox..."
               signadot sandbox delete ${SANDBOX_NAME}
-

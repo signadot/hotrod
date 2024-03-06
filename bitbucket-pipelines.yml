@@ -17,7 +17,7 @@ pipelines:
           services:
             - docker
           script:
-            - source build.env
+            - source default.env
             - |
               echo "Creating sandbox..."
               docker run -i \
@@ -38,7 +38,7 @@ pipelines:
             - docker
           script:
             - source bitbucket-pipelines-go.sh
-            - source build.env
+            - source default.env
             - |
               # Run the proxy
               PROXY_CONTAINER_ID=$(
@@ -67,7 +67,7 @@ pipelines:
           services:
             - docker
           script:
-            - source build.env
+            - source default.env
             - |
               echo "Deleting sandbox..."
               docker run -i \

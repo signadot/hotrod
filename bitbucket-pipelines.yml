@@ -42,7 +42,7 @@ pipelines:
             - |
               # Run the proxy
               PROXY_CONTAINER_ID=$(
-                docker run --network=host -d \
+                docker run -p 38080:38080 -d \
                 -e SIGNADOT_ORG=$SIGNADOT_ORG \
                 -e SIGNADOT_API_KEY=$SIGNADOT_API_KEY \
                 signadot/daniel-test:cli-0.7.0 \

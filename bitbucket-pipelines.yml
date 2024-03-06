@@ -7,7 +7,7 @@ pipelines:
           name: Run Tests
           script:
             - |
-              export SANDBOX_NAME=bitbucket-pr-$BITBUCKET_PR_ID"
+              export SANDBOX_NAME=bitbucket-pr-$BITBUCKET_PR_ID
               export NAMESPACE=hotrod-devmesh
 
               # Set up Signadot CLI

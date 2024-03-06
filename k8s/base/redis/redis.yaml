@@ -17,6 +17,7 @@ spec:
           image: redis:7.2.3
           ports:
             - containerPort: 6379
+              name: tcp
           resources:
             limits:
               cpu: "0.1"
@@ -33,4 +34,4 @@ spec:
     app: redis
   ports:
     - port: 6379
-      name: redis
+      name: tcp

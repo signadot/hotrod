@@ -112,8 +112,7 @@ jobs:
 
       - name: Set up Signadot CLI
         run: |
-          # TODO: point this to mian (once merged)
-          curl -sSLf https://raw.githubusercontent.com/signadot/cli/installation-script/scripts/install.sh | sh
+          curl -sSLf https://raw.githubusercontent.com/signadot/cli/main/scripts/install.sh | sh
 
       - name: Define Namespace
         run: |
@@ -132,7 +131,7 @@ jobs:
 
       - name: Create Sandbox
         run: |
-          echo "Creating sandbox..."
+          echo "Creating sandbox ${SANDBOX_NAME}..."
           signadot sandbox apply \
             --set name=${SANDBOX_NAME} \
             --set github-pr=${{ github.event.number }} \
@@ -175,6 +174,7 @@ jobs:
       - name: Run Tests
         run: |
           # Run the proxy
+          echo "Starting signadot proxy..."
           signadot local proxy --sandbox ${SANDBOX_NAME} \
             --map grpc://route.${NAMESPACE}:8083@localhost:38083 \
             --map http://frontend.${NAMESPACE}:8080@localhost:38080 > /tmp/signadot-proxy.log &
@@ -183,6 +183,7 @@ jobs:
           cat /tmp/signadot-proxy.log
 
           # Run api tests
+          echo "Executing tests..."
           go install github.com/jstemmer/go-junit-report/v2@latest
           TEST_ROUTE_ADDR=localhost:38083 go test -v \
             ${GITHUB_WORKSPACE}/services/route/ | go-junit-report -set-exit-code -out api-report.xml
@@ -192,6 +193,7 @@ jobs:
             ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
 
           # Stop the proxy
+          echo "Stopping signadot proxy..."
           cat /tmp/signadot-proxy.log
           kill ${PROXY_PID}
 
@@ -223,8 +225,7 @@ jobs:
 
       - name: Set up Signadot CLI
         run: |
-          # TODO: point this to mian (once merged)
-          curl -sSLf https://raw.githubusercontent.com/signadot/cli/installation-script/scripts/install.sh | sh
+          curl -sSLf https://raw.githubusercontent.com/signadot/cli/main/scripts/install.sh | sh
 
       - name: Define Namespace
         run: |
@@ -243,7 +244,7 @@ jobs:
 
       - name: Create Sandbox
         run: |
-          echo "Creating sandbox..."
+          echo "Creating sandbox ${SANDBOX_NAME}..."
           signadot sandbox apply \
             --set name=${SANDBOX_NAME} \
             --set github-pr=${{ github.event.number }} \
@@ -286,6 +287,7 @@ jobs:
       - name: Run Tests
         run: |
           # Run the proxy
+          echo "Starting signadot proxy..."
           signadot local proxy --sandbox ${SANDBOX_NAME} \
             --map http://frontend.${NAMESPACE}:8080@localhost:38080 > /tmp/signadot-proxy.log &
           PROXY_PID=$!
@@ -293,11 +295,13 @@ jobs:
           cat /tmp/signadot-proxy.log
 
           # Run integration tests
+          echo "Executing tests..."
           go install github.com/jstemmer/go-junit-report/v2@latest
           TEST_FRONTEND_ADDR=localhost:38080 TEST_TARGET_WORKLOAD=frontend TEST_SANDBOX_NAME=${SANDBOX_NAME} go test -v \
             ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
 
           # Stop the proxy
+          echo "Stopping signadot proxy..."
           cat /tmp/signadot-proxy.log
           kill ${PROXY_PID}
 
@@ -329,8 +333,7 @@ jobs:
 
       - name: Set up Signadot CLI
         run: |
-          # TODO: point this to mian (once merged)
-          curl -sSLf https://raw.githubusercontent.com/signadot/cli/installation-script/scripts/install.sh | sh
+          curl -sSLf https://raw.githubusercontent.com/signadot/cli/main/scripts/install.sh | sh
 
       - name: Define Namespace
         run: |
@@ -349,7 +352,7 @@ jobs:
 
       - name: Create Sandbox
         run: |
-          echo "Creating sandbox..."
+          echo "Creating sandbox ${SANDBOX_NAME}..."
           signadot sandbox apply \
             --set name=${SANDBOX_NAME} \
             --set github-pr=${{ github.event.number }} \
@@ -392,6 +395,7 @@ jobs:
       - name: Run Tests
         run: |
           # Run the proxy
+          echo "Starting signadot proxy..."
           signadot local proxy --sandbox ${SANDBOX_NAME} \
             --map http://location.${NAMESPACE}:8081@localhost:38081 \
             --map http://frontend.${NAMESPACE}:8080@localhost:38080 > /tmp/signadot-proxy.log &
@@ -400,6 +404,7 @@ jobs:
           cat /tmp/signadot-proxy.log
 
           # Run api tests
+          echo "Executing tests..."
           go install github.com/jstemmer/go-junit-report/v2@latest
           TEST_LOCATION_ADDR=localhost:38081 go test -v \
             ${GITHUB_WORKSPACE}/services/location/ | go-junit-report -set-exit-code -out api-report.xml
@@ -409,6 +414,7 @@ jobs:
             ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
 
           # Stop the proxy
+          echo "Stopping signadot proxy..."
           cat /tmp/signadot-proxy.log
           kill ${PROXY_PID}
 
@@ -440,8 +446,7 @@ jobs:
 
       - name: Set up Signadot CLI
         run: |
-          # TODO: point this to mian (once merged)
-          curl -sSLf https://raw.githubusercontent.com/signadot/cli/installation-script/scripts/install.sh | sh
+          curl -sSLf https://raw.githubusercontent.com/signadot/cli/main/scripts/install.sh | sh
 
       - name: Define Namespace
         run: |
@@ -460,7 +465,7 @@ jobs:
 
       - name: Create Sandbox
         run: |
-          echo "Creating sandbox..."
+          echo "Creating sandbox ${SANDBOX_NAME}..."
           signadot sandbox apply \
             --set name=${SANDBOX_NAME} \
             --set github-pr=${{ github.event.number }} \
@@ -503,6 +508,7 @@ jobs:
       - name: Run Tests
         run: |
           # Run the proxy
+          echo "Starting signadot proxy..."
           signadot local proxy --sandbox ${SANDBOX_NAME} \
             --map http://frontend.${NAMESPACE}:8080@localhost:38080 > /tmp/signadot-proxy.log &
           PROXY_PID=$!
@@ -510,11 +516,13 @@ jobs:
           cat /tmp/signadot-proxy.log
 
           # Run integration tests
+          echo "Executing tests..."
           go install github.com/jstemmer/go-junit-report/v2@latest
           TEST_FRONTEND_ADDR=localhost:38080 TEST_TARGET_WORKLOAD=driver TEST_SANDBOX_NAME=${SANDBOX_NAME} go test -v \
             ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
 
           # Stop the proxy
+          echo "Stopping signadot proxy..."
           cat /tmp/signadot-proxy.log
           kill ${PROXY_PID}
 

@@ -12,7 +12,7 @@ pipelines:
 
               # Set up Signadot CLI
               apt update; apt install -y jq
-              curl -sSLf https://raw.githubusercontent.com/signadot/cli/installation-script/scripts/install.sh | sh 
+              curl -sSLf https://raw.githubusercontent.com/signadot/cli/main/scripts/install.sh | sh 
 
               # Create a sandbox
               echo "Creating sandbox ${SANDBOX_NAME}..."
@@ -41,6 +41,7 @@ pipelines:
                 ${BITBUCKET_CLONE_DIR}/services/frontend/ | go-junit-report -set-exit-code -out test-reports/integration-report.xml
 
               # Stop the proxy
+              echo "Stopping signadot proxy..."
               cat /tmp/signadot-proxy.log
               kill ${PROXY_PID}
 

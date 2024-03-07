@@ -102,8 +102,6 @@ jobs:
       SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
       SANDBOX_IMAGE_TAG: ${{ github.sha }}-linux-amd64
       SANDBOX_NAME: pr-${{ github.event.number }}-route
-      TEST: ${SANDBOX_IMAGE_TAG:0:6}
-      TEST2: ${{ github.sha[0:6] }}
     steps:
       - uses: actions/checkout@v3
 
@@ -114,9 +112,6 @@ jobs:
 
       - name: Set up Signadot CLI
         run: |
-          echo $TEST
-          echo $TEST2
-          echo $SANDBOX_IMAGE_TAG
           # TODO: point this to mian (once merged)
           curl -sSLf https://raw.githubusercontent.com/signadot/cli/installation-script/scripts/install.sh | sh
 

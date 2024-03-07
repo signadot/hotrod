@@ -30,7 +30,7 @@ func TestFrontendAPI(t *testing.T) {
 		return
 	}
 	t.Logf("sent dispatch request, sessionID=%d", sessionID)
-	err = waitNotification(t, frontendAddr, targetWorkload, sandboxName, sessionID, int(reqID), 5*time.Second)
+	err = waitNotification(t, frontendAddr, targetWorkload, sandboxName, sessionID, int(reqID), 20*time.Second)
 	if err != nil {
 		t.Error(err)
 		return

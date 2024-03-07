@@ -103,7 +103,7 @@ jobs:
       SANDBOX_IMAGE_TAG: ${{ github.sha }}-linux-amd64
       SANDBOX_NAME: pr-${{ github.event.number }}-route
       TEST: ${SANDBOX_IMAGE_TAG:0:6}
-      TEST2: ${{ github.sha:0:6 }}
+      TEST2: ${GITHUB_SHA::8}
     steps:
       - uses: actions/checkout@v3
 

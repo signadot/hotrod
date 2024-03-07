@@ -13,7 +13,7 @@ run_tests:
     curl -sSLf https://raw.githubusercontent.com/signadot/cli/installation-script/scripts/install.sh | sh
 
     # Create a sandbox
-    echo "Creating sandbox..."
+    echo "Creating sandbox ${SANDBOX_NAME}..."
     signadot sandbox apply \
       --set name=${SANDBOX_NAME} \
       --set service=driver \
@@ -49,3 +49,5 @@ run_tests:
       - integration-report.xml
     reports:
       junit: integration-report.xml
+  rules:
+    - if: $CI_PIPELINE_SOURCE == 'merge_request_event'

@@ -15,7 +15,7 @@ pipelines:
               curl -sSLf https://raw.githubusercontent.com/signadot/cli/installation-script/scripts/install.sh | sh 
 
               # Create a sandbox
-              echo "Creating sandbox..."
+              echo "Creating sandbox ${SANDBOX_NAME}..."
               signadot sandbox apply \
                 --set name=${SANDBOX_NAME} \
                 --set service=driver \

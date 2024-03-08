@@ -1,14 +1,5 @@
 import {MainLayout} from "../components/layouts";
-import {
-    Box, Button,
-    Card,
-    CardBody,
-    CardHeader,
-    Heading,
-    HStack,
-    Stack,
-    StackDivider,
-} from "@chakra-ui/react";
+import {Box, Button, Card, CardBody, CardHeader, Heading, HStack, Stack, StackDivider,} from "@chakra-ui/react";
 
 import {Logs} from "../components/features/logs/logs.tsx";
 import {Map} from "../components/features/map/map.tsx";
@@ -25,8 +16,8 @@ export const HomePage = () => {
     const notificationCursorRef = useRef(-1);
     const [locations, setLocations] = useState<Locations | undefined>();
 
-    const [selectedLocations, setSelectedLocations] = useState({ pickupId: -1, dropoffId: -1});
-    const { logs, addNewLog, addErrorEntry, addInformationEntry } = useLogs();
+    const [selectedLocations, setSelectedLocations] = useState({pickupId: -1, dropoffId: -1});
+    const {logs, addNewLog, addErrorEntry, addInformationEntry} = useLogs();
 
     useEffect(() => {
         const fetchLocations = async () => {
@@ -48,11 +39,11 @@ export const HomePage = () => {
 
             notification.notifications.forEach(notification => {
                 addInformationEntry(notification.context.request.id, {
-                   date: new Date(notification.timestamp),
-                   service: notification.context.baselineWorkload,
-                   status: notification.body,
-                   sandboxName: notification.context.sandboxName,
-               })
+                    date: new Date(notification.timestamp),
+                    service: notification.context.baselineWorkload,
+                    status: notification.body,
+                    sandboxName: notification.context.sandboxName,
+                })
             });
         }
 
@@ -73,7 +64,7 @@ export const HomePage = () => {
     }
 
     const handleRequestDrive = async () => {
-        const { getLastRequestID, sessionID} = session;
+        const {getLastRequestID, sessionID} = session;
         const requestID = getLastRequestID();
 
         const {pickupId, dropoffId} = selectedLocations;
@@ -96,7 +87,7 @@ export const HomePage = () => {
         });
 
         try {
-            await apiPost<{}>('/dispatch', data, { "baggage": `session=${sessionID}, request=${requestID}`});
+            await apiPost<{}>('/dispatch', data, {"baggage": `session=${sessionID}, request=${requestID}`});
         } catch (e) {
             addErrorEntry(requestID, {
                 status: 'Error requesting a ride to frontend API',
@@ -120,12 +111,15 @@ export const HomePage = () => {
                             </Heading>
                         </CardHeader>
                         <CardBody>
-                            <Stack divider={<StackDivider />} spacing='4'>
+                            <Stack divider={<StackDivider/>} spacing='4'>
                                 <Box>
                                     <LocationSelect
                                         placeholder='Pickup location'
                                         locations={locations.Locations}
-                                        onSelect={locationID => setSelectedLocations(prev => ({...prev, pickupId: locationID}))}
+                                        onSelect={locationID => setSelectedLocations(prev => ({
+                                            ...prev,
+                                            pickupId: locationID
+                                        }))}
                                         selectedLocationID={selectedLocations.pickupId}
                                     />
                                 </Box>
@@ -133,7 +127,10 @@ export const HomePage = () => {
                                     <LocationSelect
                                         placeholder='Dropoff location'
                                         locations={locations.Locations}
-                                        onSelect={locationID => setSelectedLocations(prev => ({...prev, dropoffId: locationID}))}
+                                        onSelect={locationID => setSelectedLocations(prev => ({
+                                            ...prev,
+                                            dropoffId: locationID
+                                        }))}
                                         selectedLocationID={selectedLocations.dropoffId}
                                     />
                                 </Box>
@@ -142,7 +139,12 @@ export const HomePage = () => {
                                         variant='solid'
                                         colorScheme='cyan'
                                         onClick={handleRequestDrive}
-                                        isDisabled={selectedLocations.pickupId === -1 || selectedLocations.dropoffId === -1}
+                                        isDisabled={
+                                            selectedLocations.pickupId === -1 ||
+                                            isNaN(selectedLocations.pickupId) ||
+                                            selectedLocations.dropoffId === -1 ||
+                                            isNaN(selectedLocations.dropoffId)
+                                        }
                                     >
                                         Request Drive
                                     </Button>
@@ -153,10 +155,11 @@ export const HomePage = () => {
                     </Card>
                 </Stack>
                 <Stack flexGrow={1} h={650} position='relative' justifyContent='space-between' w='50%'>
-                    <Map />
+                    <Map/>
 
-                    <Stack position='absolute' bottom={0} left={0} w='100%' backgroundColor='white' overflowY='auto' maxH={'60%'}>
-                        <Logs logs={logs} />
+                    <Stack position='absolute' bottom={0} left={0} w='100%' backgroundColor='white' overflowY='auto'
+                           maxH={'60%'}>
+                        <Logs logs={logs}/>
                     </Stack>
                 </Stack>
             </HStack>

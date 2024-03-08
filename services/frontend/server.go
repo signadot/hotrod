@@ -20,7 +20,6 @@ import (
 	"encoding/json"
 	"expvar"
 	"fmt"
-	"io/fs"
 	"net/http"
 	"os"
 	"path"
@@ -44,9 +43,6 @@ import (
 //go:embed web_assets/*
 var assetFS embed.FS
 
-//go:embed templates/*
-var tplFS embed.FS
-
 // Server implements hotrod-frontend service
 type Server struct {
 	hostPort string
@@ -55,7 +51,6 @@ type Server struct {
 
 	tracer       trace.TracerProvider
 	logger       log.Factory
-	tplFS        fs.FS
 	location     location.Interface
 	notification notifications.Interface
 	dispatcher   *dispatcher
@@ -72,13 +67,6 @@ type ConfigOptions struct {
 
 // NewServer creates a new frontend.Server
 func NewServer(options ConfigOptions, logger log.Factory) *Server {
-	// load templates
-	tplFS, err := fs.Sub(tplFS, "templates")
-	_ = tplFS
-	if err != nil {
-		panic(err)
-	}
-
 	// get a tracer provider for the frontend
 	tracerProvider := tracing.InitOTEL("frontend", config.GetOtelExporterType(),
 		config.GetMetricsFactory(), logger)
@@ -98,7 +86,6 @@ func NewServer(options ConfigOptions, logger log.Factory) *Server {
 
 		tracer:       tracerProvider,
 		logger:       logger,
-		tplFS:        tplFS,
 		location:     locationClient,
 		notification: notificationHandler,
 		dispatcher:   dispatcher,

@@ -8,7 +8,6 @@ import {
     HStack,
     Stack,
     StackDivider,
-    Text
 } from "@chakra-ui/react";
 
 import {Logs} from "../components/features/logs/logs.tsx";
@@ -20,8 +19,6 @@ import {Locations} from "../types/location.ts";
 import {LocationSelect} from "../components/common/locationSelect/locationSelect.tsx";
 import {useLogs} from "../hooks/useLogs.tsx";
 import {NotificationResponse} from "../types/notifications.ts";
-
-
 
 export const HomePage = () => {
     const session = useSession();
@@ -38,12 +35,7 @@ export const HomePage = () => {
         }
 
         fetchLocations();
-
     }, []);
-
-    useEffect(() => {
-        console.log('logs changed', logs);
-    }, [logs]);
 
     useEffect(() => {
         const pollNotifications = async () => {
@@ -111,15 +103,6 @@ export const HomePage = () => {
                 service: 'api',
                 date: new Date(),
             })
-
-            // logError(new Date(), 'Error requesting a ride to frontend API', {
-            //     request: {
-            //         id: lastRequestID,
-            //         pickupLocationID: pickupLocationID,
-            //         dropoffLocationID: dropoffLocationID
-            //     },
-            //     error: error,
-            // })
         }
     }
 
@@ -142,7 +125,6 @@ export const HomePage = () => {
                                     <LocationSelect
                                         placeholder='Pickup location'
                                         locations={locations.Locations}
-                                        // locations={[{"ID":1,"Name":"My Home","Coordinates":"231,773"},{"ID":123,"Name":"Rachel's Floral Designs","Coordinates":"115,277"},{"ID":392,"Name":"Trom Chocolatier","Coordinates":"577,322"},{"ID":567,"Name":"Amazing Coffee Roasters","Coordinates":"211,653"},{"ID":731,"Name":"Japanese Desserts","Coordinates":"728,326"}]}
                                         onSelect={locationID => setSelectedLocations(prev => ({...prev, pickupId: locationID}))}
                                         selectedLocationID={selectedLocations.pickupId}
                                     />
@@ -151,7 +133,6 @@ export const HomePage = () => {
                                     <LocationSelect
                                         placeholder='Dropoff location'
                                         locations={locations.Locations}
-                                        // locations={[{"ID":1,"Name":"My Home","Coordinates":"231,773"},{"ID":123,"Name":"Rachel's Floral Designs","Coordinates":"115,277"},{"ID":392,"Name":"Trom Chocolatier","Coordinates":"577,322"},{"ID":567,"Name":"Amazing Coffee Roasters","Coordinates":"211,653"},{"ID":731,"Name":"Japanese Desserts","Coordinates":"728,326"}]}
                                         onSelect={locationID => setSelectedLocations(prev => ({...prev, dropoffId: locationID}))}
                                         selectedLocationID={selectedLocations.dropoffId}
                                     />
@@ -165,7 +146,7 @@ export const HomePage = () => {
                                     >
                                         Request Drive
                                     </Button>
-                                    <Text color='gray' mt={4}>The distance between the two points is 40 miles</Text>
+                                    {/*<Text color='gray' mt={4}>The distance between the two points is 40 miles</Text>*/}
                                 </Box>
                             </Stack>
                         </CardBody>

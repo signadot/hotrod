@@ -99,7 +99,7 @@ export const HomePage = () => {
 
     return (
         <MainLayout>
-            <HStack alignItems='flex-start' p={4} gap={8} justifyContent='space-between'>
+            <HStack alignItems='flex-start' p={4} gap={8} justifyContent='space-between' h='100%'>
                 <Stack flexGrow={1} w='50%'>
                     <Card border={12} maxW={600}>
                         <CardHeader>
@@ -154,12 +154,14 @@ export const HomePage = () => {
                         </CardBody>
                     </Card>
                 </Stack>
-                <Stack flexGrow={1} h={650} position='relative' justifyContent='space-between' w='50%'>
-                    <Map/>
-
-                    <Stack position='absolute' bottom={0} left={0} w='100%' backgroundColor='white' overflowY='auto'
-                           maxH={'60%'}>
+                <Stack flexGrow={1} justifyContent='space-between' w='50%' h='100%' maxH={'900px'}>
+                    <Stack w='100%' backgroundColor='white' overflowY='auto'
+                           maxH={'50%'}>
                         <Logs logs={logs}/>
+                    </Stack>
+
+                    <Stack flexGrow={1} flexShrink={1}>
+                        <Map/>
                     </Stack>
                 </Stack>
             </HStack>

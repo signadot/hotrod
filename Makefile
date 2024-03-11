@@ -12,9 +12,12 @@ DOCKER ?= docker
 SHELL = /bin/bash
 .PHONY: build
 
-build:
+build: build-frontend-app
 	mkdir -p dist/$(GOOS)/$(GOARCH)/bin
 	CGO_ENABLED=0 GOOS=$(GOOS) GOARCH=$(GOARCH) go build -o dist/$(GOOS)/$(GOARCH)/bin/hotrod ./cmd/hotrod
+
+build-frontend-app:
+	cd services/frontend/react_app && ./scripts/build.sh
 
 dev-build-docker: build
 	$(DOCKER) build -t signadot/hotrod:latest \

@@ -20,12 +20,10 @@ import (
 	"encoding/json"
 	"expvar"
 	"fmt"
-	"io/fs"
 	"net/http"
 	"os"
 	"path"
 	"strconv"
-	"text/template"
 	"time"
 
 	"github.com/prometheus/client_golang/prometheus/promhttp"
@@ -45,9 +43,6 @@ import (
 //go:embed web_assets/*
 var assetFS embed.FS
 
-//go:embed templates/*
-var tplFS embed.FS
-
 // Server implements hotrod-frontend service
 type Server struct {
 	hostPort string
@@ -56,7 +51,6 @@ type Server struct {
 
 	tracer       trace.TracerProvider
 	logger       log.Factory
-	tplFS        fs.FS
 	location     location.Interface
 	notification notifications.Interface
 	dispatcher   *dispatcher
@@ -73,13 +67,6 @@ type ConfigOptions struct {
 
 // NewServer creates a new frontend.Server
 func NewServer(options ConfigOptions, logger log.Factory) *Server {
-	// load templates
-	tplFS, err := fs.Sub(tplFS, "templates")
-	_ = tplFS
-	if err != nil {
-		panic(err)
-	}
-
 	// get a tracer provider for the frontend
 	tracerProvider := tracing.InitOTEL("frontend", config.GetOtelExporterType(),
 		config.GetMetricsFactory(), logger)
@@ -99,7 +86,6 @@ func NewServer(options ConfigOptions, logger log.Factory) *Server {
 
 		tracer:       tracerProvider,
 		logger:       logger,
-		tplFS:        tplFS,
 		location:     locationClient,
 		notification: notificationHandler,
 		dispatcher:   dispatcher,
@@ -121,13 +107,28 @@ func (s *Server) Run() error {
 func (s *Server) createServeMux() http.Handler {
 	mux := tracing.NewServeMux(true, s.tracer, s.logger)
 	p := path.Join("/", s.basepath)
-	mux.Handle(path.Join(p, "/web_assets")+"/",
-		http.StripPrefix(s.basepath, http.FileServer(http.FS(assetFS))))
 	mux.Handle(path.Join(p, "/dispatch"), http.HandlerFunc(s.dispatch))
 	mux.Handle(path.Join(p, "/notifications"), http.HandlerFunc(s.notifications))
-	mux.Handle(path.Join(p, "/debug/vars"), expvar.Handler()) // expvar
-	mux.Handle(path.Join(p, "/metrics"), promhttp.Handler())  // Prometheus
-	mux.Handle(p, http.HandlerFunc(s.splash))
+	mux.Handle(path.Join(p, "/debug/vars"), expvar.Handler())       // expvar
+	mux.Handle(path.Join(p, "/metrics"), promhttp.Handler())        // Prometheus
+	mux.Handle(path.Join(p, "/splash"), http.HandlerFunc(s.splash)) // Prometheus
+	staticFileServer := http.FileServer(http.FS(assetFS))
+
+	mux.Handle("/web_assets/", http.StripPrefix("", staticFileServer))
+
+	mux.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path == "/" {
+			indexContent, err := assetFS.ReadFile("web_assets/index.html")
+			if err != nil {
+				http.Error(w, "Internal server error", http.StatusInternalServerError)
+				return
+			}
+			w.Header().Set("Content-Type", "text/html; charset=utf-8")
+			w.Write(indexContent)
+		} else {
+			staticFileServer.ServeHTTP(w, r)
+		}
+	}))
 	mux.Handle(path.Join(p, "/healthz"), http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 		s.logger.For(req.Context()).Info("/healthz")
 		resp.Write([]byte("ok"))
@@ -138,13 +139,6 @@ func (s *Server) createServeMux() http.Handler {
 func (s *Server) splash(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
-
-	// parse templates
-	t, err := template.ParseFS(s.tplFS, "*")
-	if err != nil {
-		httperr.HandleError(w, err, http.StatusInternalServerError)
-		return
-	}
 
 	// get all stored locations
 	locations, err := s.location.List(ctx)
@@ -159,11 +153,7 @@ func (s *Server) splash(w http.ResponseWriter, r *http.Request) {
 		TitleSuffix string
 	}{locations, os.Getenv("FRONTEND_TITLE_SUFFIX")}
 
-	// render the template
-	if err := t.Execute(w, data); err != nil {
-		httperr.HandleError(w, err, http.StatusInternalServerError)
-		return
-	}
+	s.writeResponse(data, w, r)
 }
 
 func (s *Server) dispatch(w http.ResponseWriter, r *http.Request) {

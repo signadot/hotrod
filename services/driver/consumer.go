@@ -67,12 +67,19 @@ func (consumer *Consumer) Cleanup(sarama.ConsumerGroupSession) error {
 
 // ConsumeClaim must start a consumer loop of ConsumerGroupClaim's Messages().
 func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, claim sarama.ConsumerGroupClaim) error {
-	for message := range claim.Messages() {
-		session.MarkMessage(message, "")
-		consumer.processDispatchRequest(message)
+	for {
+		select {
+		case message, ok := <-claim.Messages():
+			if !ok {
+				consumer.logger.Bg().Error("message channel was closed")
+				return nil
+			}
+			session.MarkMessage(message, "")
+			consumer.processDispatchRequest(message)
+		case <-session.Context().Done():
+			return nil
+		}
 	}
-
-	return nil
 }
 
 func (consumer *Consumer) shouldProcess(routingKey string) bool {
@@ -146,7 +153,7 @@ func (consumer *Consumer) processDispatchRequest(msg *sarama.ConsumerMessage) {
 	// get the driver with the best ETA
 	bestDriver, err := consumer.bestETA.Get(ctx, &dispatchReq, drivers)
 	if err != nil {
-		consumer.logger.For(ctx).Error("error calculating best route")
+		consumer.logger.For(ctx).Error("error calculating best route", zap.Error(err))
 		span.SetStatus(codes.Error, err.Error())
 		return
 	}

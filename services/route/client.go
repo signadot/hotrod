@@ -10,7 +10,6 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/signadot/hotrod/pkg/config"
 	"github.com/signadot/hotrod/pkg/log"
 )
 
@@ -20,9 +19,9 @@ type Client struct {
 	client RoutesServiceClient
 }
 
-func NewClient(tracerProvider trace.TracerProvider, logger log.Factory) *Client {
+func NewClient(tracerProvider trace.TracerProvider, logger log.Factory, hostPort string) *Client {
 	conn, err := grpc.Dial(
-		config.GetRouteAddr(),
+		hostPort,
 		grpc.WithTransportCredentials(insecure.NewCredentials()),
 		grpc.WithStatsHandler(otelgrpc.NewClientHandler(otelgrpc.WithTracerProvider(tracerProvider))),
 	)

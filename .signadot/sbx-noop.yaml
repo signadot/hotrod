@@ -1,0 +1,12 @@
+name: "@{name}"
+spec:
+  description: sandbox for "@{service}" service
+  cluster: demo
+  labels:
+    branch: "@{branch}"
+  forks:
+  - forkOf:
+      kind: Deployment
+      name: "@{service}"
+      namespace: "@{namespace}"
+    customizations: {}

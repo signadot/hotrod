@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/IBM/sarama"
 	"github.com/dnwe/otelsarama"
@@ -57,5 +58,10 @@ func getConfig(clientID string) *sarama.Config {
 	conf.Version = sarama.V1_1_0_0
 	conf.Net.TLS.Enable = false
 	conf.Net.SASL.Enable = false
+	conf.Net.DialTimeout = 5 * time.Second
+	conf.Net.ReadTimeout = 5 * time.Second
+	conf.Net.WriteTimeout = 5 * time.Second
+	conf.Producer.Timeout = 6 * time.Second
+	conf.Consumer.Group.Session.Timeout = 6 * time.Second
 	return conf
 }

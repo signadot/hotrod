@@ -69,7 +69,7 @@ func (s *Server) Run() error {
 	return err
 }
 
-// FindNearest implements gRPC driver interface
+// FindRoute implements gRPC route interface
 func (s *Server) FindRoute(ctx context.Context, req *FindRouteRequest) (*FindRouteResponse, error) {
 	s.logger.For(ctx).Info("Finding route", zap.String("from", req.From), zap.String("to", req.To))
 

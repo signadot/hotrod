@@ -146,7 +146,7 @@ export const HomePage = () => {
                                             isNaN(selectedLocations.dropoffId)
                                         }
                                     >
-                                        Request Drive
+                                        Request Ride
                                     </Button>
                                     {/*<Text color='gray' mt={4}>The distance between the two points is 40 miles</Text>*/}
                                 </Box>

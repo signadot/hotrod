@@ -101,6 +101,6 @@ func (s *Server) FindRoute(ctx context.Context, req *FindRouteRequest) (*FindRou
 	}
 
 	return &FindRouteResponse{
-		EtaSeconds: int32(time.Duration(eta) / time.Second),
+		EtaSeconds: -1 * int32(time.Duration(eta) / time.Second),
 	}, nil
 }

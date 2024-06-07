@@ -1,0 +1,37 @@
+spec:
+  namePrefix: hotrod-cypress-e2e
+  runnerGroup: cypress
+  script: |
+    #!/bin/bash
+    set -e
+
+    # Clone the git repo
+    echo "Cloning signadot repo"
+    git clone --single-branch -b $TARGET_BRANCH \
+      https://github.com/signadot/hotrod.git
+
+    # Run the cypress e2e tests
+    cd hotrod
+    export CYPRESS_HOTROD_NAMESPACE=$HOTROD_NAMESPACE
+    export CYPRESS_FRONTEND_SANDBOX_NAME=$FRONTEND_SANDBOX_NAME
+    export CYPRESS_LOCATION_SANDBOX_NAME=$LOCATION_SANDBOX_NAME
+    export CYPRESS_ROUTE_SANDBOX_NAME=$ROUTE_SANDBOX_NAME
+    export CYPRESS_DRIVER_SANDBOX_NAME=$DRIVER_SANDBOX_NAME
+    npx cypress run
+  env:
+    - name: TARGET_BRANCH
+      value: "@{branch}"
+    - name: HOTROD_NAMESPACE
+      value: "@{namespace}"
+    - name: FRONTEND_SANDBOX_NAME
+      value: "@{frontend_sandbox_name}"
+    - name: LOCATION_SANDBOX_NAME
+      value: "@{location_sandbox_name}"
+    - name: ROUTE_SANDBOX_NAME
+      value: "@{route_sandbox_name}"
+    - name: DRIVER_SANDBOX_NAME
+      value: "@{driver_sandbox_name}"
+  routingContext:
+    sandbox: "@{sandbox}"
+  uploadArtifact:
+    - path: hotrod/cypress/videos/hotrod.cy.js.mp4

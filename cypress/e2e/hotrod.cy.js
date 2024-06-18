@@ -20,33 +20,31 @@ describe('hotrod spec', () => {
       }
 
       // check routing context
-      var frontendSandboxName = Cypress.env('FRONTEND_SANDBOX_NAME');
+      var sandboxName = Cypress.env('SIGNADOT_SANDBOX_NAME');
+
       cy.get('.css-8g8ihq :nth-child(2) > :nth-child(2)').should('have.text', 'frontend');
-      if (frontendSandboxName === "") {
+      if (Cypress.env('SANDBOXED_FRONTEND') != "1") {
         cy.get(':nth-child(2) > :nth-child(3)').should('have.text', '(baseline)');
       } else {
-        cy.get(':nth-child(2) > :nth-child(3)').should('have.text', '(' + frontendSandboxName + ')');
+        cy.get(':nth-child(2) > :nth-child(3)').should('have.text', '(' + sandboxName + ')');
       }
-      var locationSandboxName = Cypress.env('LOCATION_SANDBOX_NAME');
       cy.get('.css-8g8ihq :nth-child(3) > :nth-child(2)').should('have.text', 'location');
-      if (locationSandboxName === "") {
+      if (Cypress.env('SANDBOXED_LOCATION') != "1") {
         cy.get(':nth-child(3) > :nth-child(3)').should('have.text', '(baseline)');
       } else {
-        cy.get(':nth-child(3) > :nth-child(3)').should('have.text', '(' + locationSandboxName + ')');
+        cy.get(':nth-child(3) > :nth-child(3)').should('have.text', '(' + sandboxName + ')');
       }
-      var routeSandboxName = Cypress.env('ROUTE_SANDBOX_NAME');
       cy.get(':nth-child(5) > :nth-child(2)').should('have.text', 'route');
-      if (routeSandboxName === "") {
+      if (Cypress.env('SANDBOXED_ROUTE') != "1") {
         cy.get(':nth-child(5) > :nth-child(3)').should('have.text', '(baseline)');
       } else {
-        cy.get(':nth-child(5) > :nth-child(3)').should('have.text', '(' + routeSandboxName + ')');
+        cy.get(':nth-child(5) > :nth-child(3)').should('have.text', '(' + sandboxName + ')');
       }
-      var driverSandboxName = Cypress.env('DRIVER_SANDBOX_NAME');
       cy.get(':nth-child(6) > :nth-child(2)').should('have.text', 'driver');
-      if (driverSandboxName === "") {
+      if (Cypress.env('SANDBOXED_DRIVER') != "1") {
         cy.get(':nth-child(6) > :nth-child(3)').should('have.text', '(baseline)');
       } else {
-        cy.get(':nth-child(6) > :nth-child(3)').should('have.text', '(' + driverSandboxName + ')');
+        cy.get(':nth-child(6) > :nth-child(3)').should('have.text', '(' + sandboxName + ')');
       }
     });
 })

@@ -14,11 +14,12 @@ spec:
     cd hotrod
     export CYPRESS_HOTROD_E2E="1"
     export CYPRESS_SIGNADOT_ROUTING_KEY=$SIGNADOT_ROUTING_KEY
+    export CYPRESS_SIGNADOT_SANDBOX_NAME=$SIGNADOT_SANDBOX_NAME
     export CYPRESS_HOTROD_NAMESPACE="@{namespace}"
-    export CYPRESS_FRONTEND_SANDBOX_NAME="@{frontend_sandbox_name}"
-    export CYPRESS_LOCATION_SANDBOX_NAME="@{location_sandbox_name}"
-    export CYPRESS_ROUTE_SANDBOX_NAME="@{route_sandbox_name}"
-    export CYPRESS_DRIVER_SANDBOX_NAME="@{driver_sandbox_name}"
+    export CYPRESS_SANDBOXED_FRONTEND="@{sandboxed_frontend}"
+    export CYPRESS_SANDBOXED_LOCATION="@{sandboxed_location}"
+    export CYPRESS_SANDBOXED_ROUTE="@{sandboxed_route}"
+    export CYPRESS_SANDBOXED_DRIVER="@{sandboxed_driver}"
     npx cypress run
 
   routingContext:

@@ -15,6 +15,10 @@ describe('hotrod spec', () => {
       // check if the driver has been delivered
       cy.get(':nth-child(6) > .css-bjcoli').contains(/Driver (.*) arriving in (.*)./);
 
+      if (Cypress.env('HOTROD_E2E') != "1"){
+        return
+      }
+
       // check routing context
       var frontendSandboxName = Cypress.env('FRONTEND_SANDBOX_NAME');
       cy.get('.css-8g8ihq :nth-child(2) > :nth-child(2)').should('have.text', 'frontend');

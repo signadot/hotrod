@@ -12,6 +12,7 @@ spec:
 
     # Run the cypress e2e tests
     cd hotrod
+    export CYPRESS_SIGNADOT_ROUTING_KEY=$SIGNADOT_ROUTING_KEY
     export CYPRESS_HOTROD_NAMESPACE="@{namespace}"
     npx cypress run
 

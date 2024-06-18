@@ -13,6 +13,7 @@ spec:
     # Run the cypress e2e tests
     cd hotrod
     export CYPRESS_HOTROD_E2E="1"
+    export CYPRESS_SIGNADOT_ROUTING_KEY=$SIGNADOT_ROUTING_KEY
     export CYPRESS_HOTROD_NAMESPACE="@{namespace}"
     export CYPRESS_FRONTEND_SANDBOX_NAME="@{frontend_sandbox_name}"
     export CYPRESS_LOCATION_SANDBOX_NAME="@{location_sandbox_name}"

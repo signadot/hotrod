@@ -10,9 +10,8 @@ spec:
     git clone --single-branch -b "@{branch}" \
       https://github.com/signadot/hotrod.git
 
-    # Run the cypress e2e tests
+    # Run all cypress tests
     cd hotrod
-    export CYPRESS_HOTROD_E2E="1"
     export CYPRESS_SIGNADOT_ROUTING_KEY=$SIGNADOT_ROUTING_KEY
     export CYPRESS_SIGNADOT_SANDBOX_NAME=$SIGNADOT_SANDBOX_NAME
     export CYPRESS_HOTROD_NAMESPACE="@{namespace}"
@@ -25,4 +24,5 @@ spec:
   routingContext:
     sandbox: "@{sandbox}"
   uploadArtifact:
-    - path: hotrod/cypress/videos/hotrod.cy.js.mp4
+    - path: hotrod/cypress/videos/hotrod-demo.cy.js.mp4
+    - path: hotrod/cypress/videos/hotrod-e2e.cy.js.mp4

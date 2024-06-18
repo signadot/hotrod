@@ -1,25 +1,13 @@
-// ***********************************************
-// This example commands.js shows you how to
-// create various custom commands and overwrite
-// existing commands.
-//
-// For more comprehensive examples of custom
-// commands please read more here:
-// https://on.cypress.io/custom-commands
-// ***********************************************
-//
-//
-// -- This is a parent command --
-// Cypress.Commands.add('login', (email, password) => { ... })
-//
-//
-// -- This is a child command --
-// Cypress.Commands.add('drag', { prevSubject: 'element'}, (subject, options) => { ... })
-//
-//
-// -- This is a dual command --
-// Cypress.Commands.add('dismiss', { prevSubject: 'optional'}, (subject, options) => { ... })
-//
-//
-// -- This will overwrite an existing command --
-// Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
+// Request a HotRod ride
+Cypress.Commands.add('requestRide', (from, to) => {
+    var frontendURL = 'http://frontend.' + Cypress.env('HOTROD_NAMESPACE') + ':8080';
+    // inject routing key
+    cy.intercept(frontendURL + '/*', (req) => {
+      req.headers['baggage'] += ',sd-routing-key=' + Cypress.env('SIGNADOT_ROUTING_KEY');
+    })
+    
+    cy.visit(frontendURL);
+    cy.get(':nth-child(1) > .chakra-select__wrapper > .chakra-select').select(from);
+    cy.get(':nth-child(3) > .chakra-select__wrapper > .chakra-select').select(to);
+    cy.get('.chakra-button').click();
+})

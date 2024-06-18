@@ -1,23 +1,8 @@
-describe('hotrod spec', () => {
-  it('request ride',
+describe('hotrod e2e spec', () => {
+  it('request ride and check routing context',
     () => {
-      var frontendURL = 'http://frontend.' + Cypress.env('HOTROD_NAMESPACE') + ':8080';
-      // inject routing key
-      cy.intercept(frontendURL + '/*', (req) => {
-        req.headers['baggage'] += ',sd-routing-key=' + Cypress.env('SIGNADOT_ROUTING_KEY');
-      })
-
-      cy.visit(frontendURL);
-      cy.get(':nth-child(1) > .chakra-select__wrapper > .chakra-select').select('1');
-      cy.get(':nth-child(3) > .chakra-select__wrapper > .chakra-select').select('123');
-      cy.get('.chakra-button').click();
-
-      // check if the driver has been delivered
-      cy.get(':nth-child(6) > .css-bjcoli').contains(/Driver (.*) arriving in (.*)./);
-
-      if (Cypress.env('HOTROD_E2E') != "1"){
-        return
-      }
+      // request a ride
+      cy.requestRide('1', '123')
 
       // check routing context
       var sandboxName = Cypress.env('SIGNADOT_SANDBOX_NAME');

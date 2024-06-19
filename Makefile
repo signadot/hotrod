@@ -1,7 +1,6 @@
 GOOS ?= $(shell go env GOOS)
 GOARCH ?= $(shell go env GOARCH)
 
-
 RELEASE_TAG ?= $(shell git describe)
 RELEASE_OSES ?= linux
 RELEASE_ARCHES ?= amd64 arm64
@@ -52,12 +51,11 @@ release-images.txt:
 
 tag-release:
 	(cd k8s/base && kustomize edit set image signadot/hotrod:$(RELEASE_TAG))
-	git commit -m tag-release-$(RELEASE_TAG) k8s/base
-	git tag -a -m release-$(RELEASE_TAG) $(RELEASE_TAG)
-	git push origin $(RELEASE_TAG)
+	git diff-index --quiet HEAD || git commit -m tag-release-$(RELEASE_TAG) k8s/base
+	git tag -a -f -m release-$(RELEASE_TAG) $(RELEASE_TAG)
+	git push origin -f $(RELEASE_TAG)
 
 release: build-release release-images.txt tag-release
-
 	for os in $(RELEASE_OSES); do \
  		for arch in $(RELEASE_ARCHES); do \
 			GOOS=$$os GOARCH=$$arch $(MAKE) push-docker; \

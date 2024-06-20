@@ -20,7 +20,7 @@ fi
 # check for changes before editing images
 #
 set +e
-git diff-index  --exit-code HEAD
+git diff  --exit-code
 if [ ! $? -eq 0 ]; then
 	echo "repository is dirty"
 	exit 1
@@ -31,17 +31,15 @@ set -e
 
 # do we need to commit the kustomize changes from above?
 set +e
-git diff-index  --exit-code HEAD
+git diff  --exit-code
 diffCode=$?;
 
 set -e
 if [ ${diffCode} -eq 1 ] ; then 
-	git add k8s/base
-	git status
 	git commit -m tag-release-${RELEASE_TAG} k8s/base
 	echo commited tag-release-${RELEASE_TAG}
 elif [ ${diffCode} -eq 0 ] ; then
-	echo ${RELEASE_TAG} already committed
+	echo image tag ${RELEASE_TAG} already committed
 else
 	echo "git diff-index failed"
 	exit 1

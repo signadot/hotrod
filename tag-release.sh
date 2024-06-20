@@ -19,7 +19,13 @@ fi
 #
 # check for changes before editing images
 #
+set +e
 git diff-index  --exit-code HEAD
+if [ ! $? -eq 0 ]; then
+	echo "repository is dirty"
+	exit 1
+fi
+set -e
 
 (cd k8s/base && kustomize edit set image signadot/hotrod:${RELEASE_TAG})
 

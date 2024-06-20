@@ -11,4 +11,4 @@ resources:
 
 images:
 - name: signadot/hotrod
-  newTag: tag-release-test1
+  newTag: tag-release-test4

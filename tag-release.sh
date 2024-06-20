@@ -33,9 +33,11 @@ set -e
 set +e
 git diff-index  --exit-code HEAD
 diffCode=$?;
-set -e
 
+set -e
 if [ ${diffCode} -eq 1 ] ; then 
+	git add k8s/base
+	git status
 	git commit -m tag-release-${RELEASE_TAG} k8s/base
 	echo commited tag-release-${RELEASE_TAG}
 elif [ ${diffCode} -eq 0 ] ; then

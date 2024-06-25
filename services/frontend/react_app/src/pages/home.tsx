@@ -57,7 +57,7 @@ export const HomePage = () => {
 
     if (!locations) {
         return (
-            <MainLayout>
+            <MainLayout titleSuffix="">
                 <Heading>Loading</Heading>
             </MainLayout>
         )
@@ -98,7 +98,7 @@ export const HomePage = () => {
     }
 
     return (
-        <MainLayout>
+        <MainLayout titleSuffix={locations.TitleSuffix}>
             <HStack alignItems='flex-start' p={4} gap={8} justifyContent='space-between' h='100%'>
                 <Stack flexGrow={1} w='50%'>
                     <Card border={12} maxW={600}>

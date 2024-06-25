@@ -50,10 +50,7 @@ release-images.txt:
 	done;
 
 tag-release:
-	(cd k8s/base && kustomize edit set image signadot/hotrod:$(RELEASE_TAG))
-	git diff-index --quiet HEAD || git commit -m tag-release-$(RELEASE_TAG) k8s/base
-	git tag -a -f -m release-$(RELEASE_TAG) $(RELEASE_TAG)
-	git push origin -f $(RELEASE_TAG)
+	./tag-release.sh $(RELEASE_TAG)
 
 release: build-release release-images.txt tag-release
 	for os in $(RELEASE_OSES); do \
@@ -69,3 +66,4 @@ generate-proto:
 	protoc --go_out=. --go_opt=paths=source_relative \
 		--go-grpc_out=. --go-grpc_opt=paths=source_relative \
 		services/route/route.proto
+

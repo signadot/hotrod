@@ -151,7 +151,7 @@ func (consumer *Consumer) processDispatchRequest(msg *sarama.ConsumerMessage) {
 	}
 
 	// get the driver with the best ETA
-	bestDriver, err := consumer.bestETA.Get(ctx, &dispatchReq, drivers)
+	_, err = consumer.bestETA.Get(ctx, &dispatchReq, drivers)
 	if err != nil {
 		consumer.logger.For(ctx).Error("error calculating best route", zap.Error(err))
 		span.SetStatus(codes.Error, err.Error())
@@ -159,10 +159,10 @@ func (consumer *Consumer) processDispatchRequest(msg *sarama.ConsumerMessage) {
 	}
 
 	// send a notification
-	consumer.notification.Store(ctx, &notifications.Notification{
-		ID:        fmt.Sprintf("req-%d-dispatched-driver", reqContext.ID),
-		Timestamp: time.Now(),
-		Context:   notificationCtx,
-		Body:      fmt.Sprintf("Driver %s arriving in %s", bestDriver.DriverID, bestDriver.ETA.String()),
-	})
+	// consumer.notification.Store(ctx, &notifications.Notification{
+	// 	ID:        fmt.Sprintf("req-%d-dispatched-driver", reqContext.ID),
+	// 	Timestamp: time.Now(),
+	// 	Context:   notificationCtx,
+	// 	Body:      fmt.Sprintf("Driver %s arriving in %s", bestDriver.DriverID, bestDriver.ETA.String()),
+	// })
 }

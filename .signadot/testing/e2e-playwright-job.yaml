@@ -4,7 +4,7 @@ spec:
   script: |
     #!/bin/bash
     set -e
-
+    
     # Clone the git repo
     echo "Cloning signadot repo"
     git clone --single-branch -b "@{branch}" \
@@ -12,19 +12,27 @@ spec:
 
     # Run all playwright tests
     cd hotrod
-    export CYPRESS_SIGNADOT_ROUTING_KEY=$SIGNADOT_ROUTING_KEY
-    export CYPRESS_SIGNADOT_SANDBOX_NAME=$SIGNADOT_SANDBOX_NAME
-    export CYPRESS_HOTROD_NAMESPACE="@{namespace}"
-    export CYPRESS_SANDBOXED_FRONTEND="@{sandboxed_frontend}"
-    export CYPRESS_SANDBOXED_LOCATION="@{sandboxed_location}"
-    export CYPRESS_SANDBOXED_ROUTE="@{sandboxed_route}"
-    export CYPRESS_SANDBOXED_DRIVER="@{sandboxed_driver}"
-    npm run e2e:playwright
     
-    ls
+    export HOTROD_NAMESPACE="@{namespace}"
+    export CI=true
+    
+    export SANDBOXED_FRONTEND="@{sandboxed_frontend}"
+    export SANDBOXED_LOCATION="@{sandboxed_location}"
+    export SANDBOXED_ROUTE="@{sandboxed_route}"
+    export SANDBOXED_DRIVER="@{sandboxed_driver}"
+    
+    npm ci
+    set +e
+    npm run e2e:playwright --spec playwright-tests/basic.spec.ts
+    E2E_EXIT_CODE=$?
+    set -e
+
+    tar czf playwright-report.tar.gz playwright-report
+
+    exit $E2E_EXIT_CODE
 
   routingContext:
     sandbox: "@{sandbox}"
   uploadArtifact:
-    - path: hotrod/cypress/videos/hotrod-demo.cy.js.mp4
-    - path: hotrod/cypress/videos/hotrod-e2e.cy.js.mp4
+    - path: hotrod/playwright-report/index.html
+    - path: hotrod/playwright-report.tar.gz

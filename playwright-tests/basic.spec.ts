@@ -6,6 +6,8 @@ test("request ride and check routing context", async ({ page }) => {
 	await page.reload();
 	await page.goto("/");
 	await page.waitForLoadState();
+	await page.reload();
+
 
 	await page.getByRole("combobox").first().selectOption("1");
 	await page.getByRole("combobox").nth(1).selectOption("123");

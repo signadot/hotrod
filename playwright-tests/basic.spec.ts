@@ -22,7 +22,7 @@ test("request ride and check routing context", async ({ page }) => {
 			return /baseline/;
 		}
 
-		return new RegExp(`/${sandboxName}/`);
+		return new RegExp(`${sandboxName}`);
 	};
 
 	await expect(

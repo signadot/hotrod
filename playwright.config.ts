@@ -33,7 +33,7 @@ export default defineConfig({
 		baseURL: BASE_URL,
 
 		/* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
-		trace: "on-first-retry",
+		trace: "on",
 
 		video: "on",
 		extraHTTPHeaders: {
@@ -48,9 +48,9 @@ export default defineConfig({
 			use: {
 				...devices["Desktop Chrome"],
 				baseURL: BASE_URL,
-				extraHTTPHeaders: {
-					baggage: `sd-routing-key=${process.env.SIGNADOT_ROUTING_KEY}`,
-				},
+				// extraHTTPHeaders: {
+				// 	baggage: `sd-routing-key=${process.env.SIGNADOT_ROUTING_KEY}`,
+				// },
 			},
 		},
 

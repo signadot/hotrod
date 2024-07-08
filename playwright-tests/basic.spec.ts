@@ -1,15 +1,11 @@
 import { test, expect } from "@playwright/test";
+import { BASE_URL } from "../playwright.config";
 
-test("request ride and check routing context", async ({ browser }) => {
+test("request ride and check routing context", async ({ page }) => {
 	const sandboxName = process.env.SIGNADOT_SANDBOX_NAME;
 
-	const newContext = await browser.newContext({
-		extraHTTPHeaders: {
-			baggage: `sd-routing-key=${process.env.SIGNADOT_ROUTING_KEY}`,
-		},
-	});
-
-	const page = await newContext.newPage();
+	await page.reload();
+	await page.goto(BASE_URL);
 
 	await page.reload();
 	await page.goto("/");
@@ -28,7 +24,6 @@ test("request ride and check routing context", async ({ browser }) => {
 
 		const serviceValue = process.env["SANDBOXED_" + service.toUpperCase()];
 
-		console.log({ serviceValue });
 		if (serviceValue !== "1") {
 			return /baseline/;
 		}

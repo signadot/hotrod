@@ -3,6 +3,7 @@ import { test, expect } from "@playwright/test";
 test("request ride and check routing context", async ({ page }) => {
 	const sandboxName = process.env.SIGNADOT_SANDBOX_NAME;
 
+	await page.reload();
 	await page.goto("/");
 	await page.waitForLoadState();
 

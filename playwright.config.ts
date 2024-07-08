@@ -13,8 +13,6 @@ import { defineConfig, devices } from "@playwright/test";
 
 const BASE_URL = `http://frontend.${process.env.HOTROD_NAMESPACE}:8080`;
 
-console.log({ BASE_URL, baggage: `sd-routing-key=${process.env.ROUTING_KEY}` });
-
 export default defineConfig({
 	testDir: "./playwright-tests",
 	/* Run tests in files in parallel */
@@ -37,7 +35,7 @@ export default defineConfig({
 
 		video: "on",
 		extraHTTPHeaders: {
-			"baggage": `sd-routing-key=${process.env.ROUTING_KEY}`,
+			baggage: `sd-routing-key=${process.env.ROUTING_KEY}`,
 		},
 	},
 
@@ -48,10 +46,6 @@ export default defineConfig({
 			use: {
 				...devices["Desktop Chrome"],
 				baseURL: BASE_URL,
-				headless: false,
-				extraHTTPHeaders: {
-					"baggage": `sd-routing-key=${process.env.ROUTING_KEY}`,
-				},
 			},
 		},
 

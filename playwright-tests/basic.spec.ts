@@ -1,17 +1,10 @@
 import { test, expect } from "@playwright/test";
-import { BASE_URL } from "../playwright.config";
 
 test("request ride and check routing context", async ({ page }) => {
 	const sandboxName = process.env.SIGNADOT_SANDBOX_NAME;
 
-	await page.reload();
-	await page.goto(BASE_URL);
-
-	await page.reload();
 	await page.goto("/");
 	await page.waitForLoadState();
-	await page.reload();
-	await page.goto("/");
 
 	await page.getByRole("combobox").first().selectOption("1");
 	await page.getByRole("combobox").nth(1).selectOption("123");

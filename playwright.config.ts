@@ -11,7 +11,8 @@ import { defineConfig, devices } from '@playwright/test';
  * See https://playwright.dev/docs/test-configuration.
  */
 
-console.log(process.env);
+const BASE_URL = `http://frontend.${process.env.HOTROD_NAMESPACE}:8080`;
+
 export default defineConfig({
   testDir: './playwright-tests',
   /* Run tests in files in parallel */
@@ -27,7 +28,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    // baseURL: 'http://127.0.0.1:3000',
+    baseURL: BASE_URL,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',

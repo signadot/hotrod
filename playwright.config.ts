@@ -13,6 +13,8 @@ import { defineConfig, devices } from "@playwright/test";
 
 const BASE_URL = `http://frontend.${process.env.HOTROD_NAMESPACE}:8080`;
 
+console.log({ ROUTING: process.env.SIGNADOT_ROUTING_KEY });
+
 export default defineConfig({
 	testDir: "./playwright-tests",
 	/* Run tests in files in parallel */

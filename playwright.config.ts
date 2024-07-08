@@ -2,8 +2,6 @@ import { defineConfig, devices } from "@playwright/test";
 
 const BASE_URL = `http://frontend.${process.env.HOTROD_NAMESPACE}:8080`;
 
-console.log({ ROUTING: process.env.SIGNADOT_ROUTING_KEY });
-
 export default defineConfig({
 	testDir: "./playwright-tests",
 	fullyParallel: true,
@@ -29,3 +27,15 @@ export default defineConfig({
 		},
 	],
 });
+
+signadot job submit \
+  -f .signadot/testing/e2e-playwright-job.yaml \
+  --config signadot-prod-config.yaml \
+  --set branch=use-playwright-e2e \
+  --set namespace="hotrod-istio" \
+  --set sandbox=pr-243-driver \
+  --set sandboxed_frontend="" \
+  --set sandboxed_location="" \
+  --set sandboxed_driver="1" \
+  --set sandboxed_route="" \
+  --attach

@@ -1,14 +1,21 @@
 import { test, expect } from "@playwright/test";
 
-test("request ride and check routing context", async ({ page }) => {
+test("request ride and check routing context", async ({ browser }) => {
 	const sandboxName = process.env.SIGNADOT_SANDBOX_NAME;
+
+	const newContext = await browser.newContext({
+		extraHTTPHeaders: {
+			baggage: `sd-routing-key=${process.env.SIGNADOT_ROUTING_KEY}`,
+		},
+	});
+
+	const page = await newContext.newPage();
 
 	await page.reload();
 	await page.goto("/");
 	await page.waitForLoadState();
 	await page.reload();
 	await page.goto("/");
-
 
 	await page.getByRole("combobox").first().selectOption("1");
 	await page.getByRole("combobox").nth(1).selectOption("123");

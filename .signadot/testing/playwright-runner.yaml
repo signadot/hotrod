@@ -1,0 +1,11 @@
+name: playwright
+spec:
+  cluster: "@{cluster}"
+  labels:
+    env: "@{env}"
+  namespace: signadot-tests
+  jobTimeout: 30m
+  image: mcr.microsoft.com/playwright:v1.45.1-jammy
+  scaling:
+    manual:
+      desiredPods: 1

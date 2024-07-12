@@ -14,11 +14,15 @@
 					"script": {
 						"exec": [
 							"pm.test(\"Check reponse status code\", function () {",
+							"    ",
 							"    if (pm.response.code === 500) {",
+							"",
+							"        console.log(pm.response.text());",
+							"        console.log(pm.request.body);",
+							"        ",
 							"        pm.expect(pm.response.text()).to.include(\"couldn't resolve dropoff location, sql: no rows in result set\");",
 							"        return;",
 							"    }",
-							"",
 							"});",
 							"",
 							"",
@@ -75,7 +79,7 @@
 				],
 				"body": {
 					"mode": "raw",
-					"raw": "{\"sessionID\":1490,\"requestID\":3,\"pickupLocationID\":123,\"dropoffLocationID\":1}",
+					"raw": "{\n    \"sessionID\": 1490,\n    \"requestID\": 3,\n    \"pickupLocationID\": 1,\n    \"dropoffLocationID\": {{dropoffLocation}}\n}",
 					"options": {
 						"raw": {
 							"language": "json"
@@ -83,11 +87,11 @@
 					}
 				},
 				"url": {
-					"raw": "http://frontend.hotrod-istio.svc:8080/dispatch",
+					"raw": "http://frontend.{{namespace}}.svc:8080/dispatch",
 					"protocol": "http",
 					"host": [
 						"frontend",
-						"hotrod-istio",
+						"{{namespace}}",
 						"svc"
 					],
 					"port": "8080",
@@ -304,6 +308,34 @@
 					"body": "{}"
 				}
 			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "dropoffLocation",
+			"value": "12"
 		}
 	]
 }

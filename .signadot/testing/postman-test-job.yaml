@@ -1,0 +1,26 @@
+spec:
+  namePrefix: hotrod-integration-api
+  runnerGroup: postman
+  script: |
+    #!/bin/bash
+    set -e
+    
+    npm install -g newman    
+    # Clone the git repo
+    echo "Cloning signadot repo"
+    git clone --single-branch -b "@{branch}" \
+      https://github.com/signadot/hotrod.git
+
+    # Run all postman tests
+    cd hotrod
+    
+    newman run postman/hotrod.postman_collection.json \
+      -r cli,json \
+      -d postman/data.json \
+      --env-var namespace=@{namespace}
+    
+    tar czf postman-report.tar.gz newman
+
+  uploadArtifact:
+    - path: hotrod/postman-report.tar.gz
+

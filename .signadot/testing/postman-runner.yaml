@@ -1,0 +1,11 @@
+name: postman
+spec:
+  cluster: "@{cluster}"
+  labels:
+    env: "@{env}"
+  namespace: signadot-tests
+  image: node:latest
+  jobTimeout: 30m
+  scaling:
+    manual:
+      desiredPods: 1

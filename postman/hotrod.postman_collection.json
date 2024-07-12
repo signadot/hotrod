@@ -1,0 +1,341 @@
+{
+	"info": {
+		"_postman_id": "938ece01-910a-4465-88f1-bbd380559d72",
+		"name": "Main hotrod",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "34676440"
+	},
+	"item": [
+		{
+			"name": "Dispatch",
+			"event": [
+				{
+					"listen": "test",
+					"script": {
+						"exec": [
+							"pm.test(\"Check reponse status code\", function () {",
+							"    ",
+							"    if (pm.response.code === 500) {",
+							"",
+							"        console.log(pm.response.text());",
+							"        console.log(pm.request.body);",
+							"        ",
+							"        pm.expect(pm.response.text()).to.include(\"couldn't resolve dropoff location, sql: no rows in result set\");",
+							"        return;",
+							"    }",
+							"});",
+							"",
+							"",
+							""
+						],
+						"type": "text/javascript",
+						"packages": {}
+					}
+				}
+			],
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Accept",
+						"value": "*/*"
+					},
+					{
+						"key": "Accept-Language",
+						"value": "en-US,en;q=0.9"
+					},
+					{
+						"key": "Cache-Control",
+						"value": "no-cache"
+					},
+					{
+						"key": "Connection",
+						"value": "keep-alive"
+					},
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					},
+					{
+						"key": "Origin",
+						"value": "http://frontend.hotrod-istio.svc:8080"
+					},
+					{
+						"key": "Pragma",
+						"value": "no-cache"
+					},
+					{
+						"key": "Referer",
+						"value": "http://frontend.hotrod-istio.svc:8080/"
+					},
+					{
+						"key": "User-Agent",
+						"value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+					},
+					{
+						"key": "baggage",
+						"value": "session=1490, request=1"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"sessionID\": 1490,\n    \"requestID\": 3,\n    \"pickupLocationID\": 1,\n    \"dropoffLocationID\": {{dropoffLocation}}\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "http://frontend.{{namespace}}.svc:8080/dispatch",
+					"protocol": "http",
+					"host": [
+						"frontend",
+						"{{namespace}}",
+						"svc"
+					],
+					"port": "8080",
+					"path": [
+						"dispatch"
+					]
+				}
+			},
+			"response": [
+				{
+					"name": "When dropoff location doesn't exists",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "*/*"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en-US,en;q=0.9"
+							},
+							{
+								"key": "Cache-Control",
+								"value": "no-cache"
+							},
+							{
+								"key": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Origin",
+								"value": "http://frontend.hotrod-istio.svc:8080"
+							},
+							{
+								"key": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"key": "Referer",
+								"value": "http://frontend.hotrod-istio.svc:8080/"
+							},
+							{
+								"key": "User-Agent",
+								"value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+							},
+							{
+								"key": "baggage",
+								"value": "session=1490, request=1"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"sessionID\":1490,\"requestID\":3,\"pickupLocationID\":123,\"dropoffLocationID\":1123}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://frontend.hotrod-istio.svc:8080/dispatch",
+							"protocol": "http",
+							"host": [
+								"frontend",
+								"hotrod-istio",
+								"svc"
+							],
+							"port": "8080",
+							"path": [
+								"dispatch"
+							]
+						}
+					},
+					"status": "Internal Server Error",
+					"code": 500,
+					"_postman_previewlanguage": "plain",
+					"header": [
+						{
+							"key": "content-type",
+							"value": "text/plain; charset=utf-8"
+						},
+						{
+							"key": "traceresponse",
+							"value": "00-f44de43133ceac615f5e488cda472b27-d492a600042e5dce-01"
+						},
+						{
+							"key": "x-content-type-options",
+							"value": "nosniff"
+						},
+						{
+							"key": "date",
+							"value": "Tue, 09 Jul 2024 19:22:11 GMT"
+						},
+						{
+							"key": "content-length",
+							"value": "63"
+						},
+						{
+							"key": "x-envoy-upstream-service-time",
+							"value": "631"
+						},
+						{
+							"key": "server",
+							"value": "envoy"
+						}
+					],
+					"cookie": [],
+					"body": "couldn't resolve dropoff location, sql: no rows in result set\n\n"
+				},
+				{
+					"name": "When all ok",
+					"originalRequest": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Accept",
+								"value": "*/*"
+							},
+							{
+								"key": "Accept-Language",
+								"value": "en-US,en;q=0.9"
+							},
+							{
+								"key": "Cache-Control",
+								"value": "no-cache"
+							},
+							{
+								"key": "Connection",
+								"value": "keep-alive"
+							},
+							{
+								"key": "Content-Type",
+								"value": "application/json"
+							},
+							{
+								"key": "Origin",
+								"value": "http://frontend.hotrod-istio.svc:8080"
+							},
+							{
+								"key": "Pragma",
+								"value": "no-cache"
+							},
+							{
+								"key": "Referer",
+								"value": "http://frontend.hotrod-istio.svc:8080/"
+							},
+							{
+								"key": "User-Agent",
+								"value": "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+							},
+							{
+								"key": "baggage",
+								"value": "session=1490, request=1"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\"sessionID\":1490,\"requestID\":3,\"pickupLocationID\":123,\"dropoffLocationID\":1}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "http://frontend.hotrod-istio.svc:8080/dispatch",
+							"protocol": "http",
+							"host": [
+								"frontend",
+								"hotrod-istio",
+								"svc"
+							],
+							"port": "8080",
+							"path": [
+								"dispatch"
+							]
+						}
+					},
+					"status": "OK",
+					"code": 200,
+					"_postman_previewlanguage": "json",
+					"header": [
+						{
+							"key": "content-type",
+							"value": "application/json"
+						},
+						{
+							"key": "traceresponse",
+							"value": "00-e1d588fa67e8cae4801b70f393bd9a0f-66433ba80b2cc17a-01"
+						},
+						{
+							"key": "date",
+							"value": "Tue, 09 Jul 2024 19:25:01 GMT"
+						},
+						{
+							"key": "content-length",
+							"value": "2"
+						},
+						{
+							"key": "x-envoy-upstream-service-time",
+							"value": "699"
+						},
+						{
+							"key": "server",
+							"value": "envoy"
+						}
+					],
+					"cookie": [],
+					"body": "{}"
+				}
+			]
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"packages": {},
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "dropoffLocation",
+			"value": "12"
+		}
+	]
+}

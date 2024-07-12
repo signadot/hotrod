@@ -14,11 +14,13 @@ spec:
     # Run all postman tests
     cd hotrod
     
-    newman run postman/hotrod.postman_collection.json
+    newman run postman/hotrod.postman_collection.json \
+      -r cli,json \
+      -d postman/data.json \
+      --env-var namespace=@{namespace}
+    
+    tar czf postman-report.tar.gz newman
 
-  routingContext:
-    sandbox: "@{sandbox}"
   uploadArtifact:
-    - path: hotrod/playwright-report/index.html
-    - path: hotrod/playwright-report.tar.gz
+    - path: hotrod/postman-report.tar.gz
 

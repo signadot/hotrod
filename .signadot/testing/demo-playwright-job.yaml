@@ -26,8 +26,6 @@ spec:
 
     exit $E2E_EXIT_CODE
 
-  routingContext:
-    sandbox: "@{sandbox}"
   uploadArtifact:
     - path: hotrod/playwright-report/index.html
     - path: hotrod/playwright-report.tar.gz

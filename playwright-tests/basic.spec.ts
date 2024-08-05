@@ -1,42 +1,29 @@
 import { test, expect } from "@playwright/test";
 
-test("request ride and check routing context", async ({ page }) => {
-	const sandboxName = process.env.SIGNADOT_SANDBOX_NAME;
+test.describe("Request a ride", () => {
+	test("check route resolve routes", async ({ page }) => {
+		await page.goto("/");
+		await page.waitForLoadState();
 
-	await page.goto("/");
-	await page.waitForLoadState();
+		await page.getByRole("combobox").first().selectOption("1");
+		await page.getByRole("combobox").nth(1).selectOption("123");
+		await page.getByRole("button", { name: "Request Ride" }).click();
 
-	await page.getByRole("combobox").first().selectOption("1");
-	await page.getByRole("combobox").nth(1).selectOption("123");
-	await page.getByRole("button", { name: "Request Ride" }).click();
+		await expect(
+			page.locator("//div[p[2][contains(text(), 'route')]]/p[4]"),
+		).toHaveText("Resolving routes")
+	});
 
-	const getSandboxName = (
-		service: "browser" | "frontend" | "location" | "driver" | "route",
-	): RegExp => {
-		if (!sandboxName) return /baseline/;
+	test("check driver series", async ({ page }) => {
+		await page.goto("/");
+		await page.waitForLoadState();
 
-		const serviceValue = process.env["SANDBOXED_" + service.toUpperCase()];
+		await page.getByRole("combobox").first().selectOption("1");
+		await page.getByRole("combobox").nth(1).selectOption("123");
+		await page.getByRole("button", { name: "Request Ride" }).click();
 
-		if (serviceValue !== "1") {
-			return /baseline/;
-		}
-
-		return new RegExp(`${sandboxName}`);
-	};
-
-	await expect(
-		page.locator('//*[@id="accordion-panel-:r0:"]/div/div[1]'),
-	).toHaveText(getSandboxName("browser"));
-	await expect(
-		page.locator('//*[@id="accordion-panel-:r0:"]/div/div[2]'),
-	).toHaveText(getSandboxName("frontend"));
-	await expect(
-		page.locator('//*[@id="accordion-panel-:r0:"]/div/div[3]'),
-	).toHaveText(getSandboxName("location"));
-	await expect(
-		page.locator('//*[@id="accordion-panel-:r0:"]/div/div[4]'),
-	).toHaveText(getSandboxName("driver"));
-	await expect(
-		page.locator('//*[@id="accordion-panel-:r0:"]/div/div[5]'),
-	).toHaveText(getSandboxName("route"));
+		await expect(
+			page.locator("//div[p[2][contains(text(), 'driver')]]/p[4]").last(),
+		).toHaveText(/.*T7\d{5}C.*/);
+	});
 });

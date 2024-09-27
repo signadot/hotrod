@@ -17,6 +17,7 @@ package location
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -71,16 +72,18 @@ func (s *Server) Run() error {
 
 func (s *Server) createServeMux() http.Handler {
 	mux := tracing.NewServeMux(false, s.tracerProvider, s.logger)
-	mux.Handle("/locations", http.HandlerFunc(s.locations))
-	mux.Handle("/location", http.HandlerFunc(s.location))
-	mux.Handle("/healthz", http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
+	mux.Handle("GET /locations", http.HandlerFunc(s.listLocations))
+	mux.Handle("GET /location", http.HandlerFunc(s.getLocation))
+	mux.Handle("POST /location", http.HandlerFunc(s.createLocation))
+	mux.Handle("DELETE /location", http.HandlerFunc(s.deleteLocation))
+	mux.Handle("GET /healthz", http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 		s.logger.For(req.Context()).Info("/healthz")
 		resp.Write([]byte("ok"))
 	}))
 	return mux
 }
 
-func (s *Server) locations(w http.ResponseWriter, r *http.Request) {
+func (s *Server) listLocations(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
 	locations, err := s.database.List(ctx)
@@ -99,7 +102,7 @@ func (s *Server) locations(w http.ResponseWriter, r *http.Request) {
 	w.Write(data)
 }
 
-func (s *Server) location(w http.ResponseWriter, r *http.Request) {
+func (s *Server) getLocation(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
 	if err := r.ParseForm(); httperr.HandleError(w, err, http.StatusBadRequest) {
@@ -107,14 +110,9 @@ func (s *Server) location(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	locationIDStr := r.Form.Get("locationID")
-	if locationIDStr == "" {
-		http.Error(w, "Missing required 'locationID' parameter", http.StatusBadRequest)
-		return
-	}
-	locationID, err := strconv.Atoi(locationIDStr)
-	if err != nil {
-		http.Error(w, "Parameter 'locationID' is not an integer", http.StatusBadRequest)
+	locationID, err := parseLocationID(r)
+	if httperr.HandleError(w, err, http.StatusBadRequest) {
+		s.logger.For(ctx).Error("bad request", zap.Error(err))
 		return
 	}
 
@@ -148,4 +146,70 @@ func (s *Server) location(w http.ResponseWriter, r *http.Request) {
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(data)
+}
+
+func (s *Server) createLocation(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
+
+	// decode the request body
+	var loc Location
+	err := json.NewDecoder(r.Body).Decode(&loc)
+	if httperr.HandleError(w, err, http.StatusBadRequest) {
+		s.logger.For(ctx).Error("bad request", zap.Error(err))
+		return
+	}
+
+	// create the location
+	loc.ID, err = s.database.Create(ctx, &loc)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("request failed", zap.Error(err))
+		return
+	}
+
+	// marshal response
+	data, err := json.Marshal(loc)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("cannot marshal response", zap.Error(err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(data)
+}
+
+func (s *Server) deleteLocation(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
+	if err := r.ParseForm(); httperr.HandleError(w, err, http.StatusBadRequest) {
+		s.logger.For(ctx).Error("bad request", zap.Error(err))
+		return
+	}
+
+	locationID, err := parseLocationID(r)
+	if httperr.HandleError(w, err, http.StatusBadRequest) {
+		s.logger.For(ctx).Error("bad request", zap.Error(err))
+		return
+	}
+
+	err = s.database.Delete(ctx, locationID)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("request failed", zap.Error(err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte("{}"))
+}
+
+func parseLocationID(r *http.Request) (int, error) {
+	locationIDStr := r.Form.Get("locationID")
+	if locationIDStr == "" {
+		return 0, errors.New("missing required 'locationID' parameter")
+	}
+	locationID, err := strconv.Atoi(locationIDStr)
+	if err != nil {
+		return 0, errors.New("parameter 'locationID' is not an integer")
+	}
+	return locationID, nil
 }

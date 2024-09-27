@@ -21,9 +21,9 @@ import (
 
 // Location contains data about a location.
 type Location struct {
-	ID          int64
-	Name        string
-	Coordinates string
+	ID          int64  `json:"id"`
+	Name        string `json:"name"`
+	Coordinates string `json:"coordinates"`
 }
 
 // Interface exposed by the Location service.

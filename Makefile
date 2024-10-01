@@ -49,10 +49,7 @@ release-images.txt:
 		done; \
 	done;
 
-tag-release:
-	./tag-release.sh $(RELEASE_TAG)
-
-release: build-release release-images.txt tag-release
+release-image: build-release release-images.txt
 	for os in $(RELEASE_OSES); do \
  		for arch in $(RELEASE_ARCHES); do \
 			GOOS=$$os GOARCH=$$arch $(MAKE) push-docker; \
@@ -61,6 +58,11 @@ release: build-release release-images.txt tag-release
 	$(DOCKER) manifest create --amend signadot/hotrod:$(RELEASE_TAG) \
 		$(shell cat dist/release-images.txt)
 	$(DOCKER) manifest push signadot/hotrod:$(RELEASE_TAG)
+
+tag-release:
+	./tag-release.sh $(RELEASE_TAG)
+
+release: release-image tag-release
 
 generate-proto:
 	protoc --go_out=. --go_opt=paths=source_relative \

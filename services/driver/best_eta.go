@@ -92,7 +92,7 @@ func (eta *bestETA) getRoutes(ctx context.Context, pickupLoc *location.Location,
 		driver := dd // capture loop var
 		// Use worker pool to (potentially) execute requests in parallel
 		eta.pool.Execute(func() {
-			route, err := eta.route.FindRoute(ctx, driver.Coordinates, pickupLoc.Coordinates)
+			route, err := eta.route.FindRoute(ctx, driver.Coordinates, pickupLoc.Coordinates.String())
 			routesLock.Lock()
 			results = append(results, routeResult{
 				driverID: driver.DriverID,

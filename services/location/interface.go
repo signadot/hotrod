@@ -17,13 +17,23 @@ package location
 
 import (
 	"context"
+	"fmt"
 )
 
 // Location contains data about a location.
 type Location struct {
-	ID          int64  `json:"id"`
-	Name        string `json:"name"`
-	Coordinates string `json:"coordinates"`
+	ID          int64       `json:"id"`
+	Name        string      `json:"name"`
+	Coordinates Coordinates `json:"coordinates"`
+}
+
+type Coordinates struct {
+	Lat  float64 `json:"lat"`
+	Long float64 `json:"long"`
+}
+
+func (c Coordinates) String() string {
+	return fmt.Sprintf("%f,%f", c.Lat, c.Long)
 }
 
 // Interface exposed by the Location service.

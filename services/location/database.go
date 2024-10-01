@@ -18,6 +18,8 @@ package location
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -55,29 +57,44 @@ CREATE TABLE IF NOT EXISTS locations
 
 var seed = []Location{
 	{
-		ID:          1,
-		Name:        "My Home",
-		Coordinates: "231,773",
+		ID:   1,
+		Name: "My Home",
+		Coordinates: Coordinates{
+			Lat:  -34.901112,
+			Long: -56.164532,
+		},
 	},
 	{
-		ID:          123,
-		Name:        "Rachel's Floral Designs",
-		Coordinates: "115,277",
+		ID:   123,
+		Name: "Rachel's Floral Designs",
+		Coordinates: Coordinates{
+			Lat:  -87,
+			Long: 123,
+		},
 	},
 	{
-		ID:          567,
-		Name:        "Amazing Coffee Roasters",
-		Coordinates: "211,653",
+		ID:   567,
+		Name: "Amazing Coffee Roasters",
+		Coordinates: Coordinates{
+			Lat:  34.23,
+			Long: -56,
+		},
 	},
 	{
-		ID:          392,
-		Name:        "Trom Chocolatier",
-		Coordinates: "577,322",
+		ID:   392,
+		Name: "Trom Chocolatier",
+		Coordinates: Coordinates{
+			Lat:  12.3456,
+			Long: -46.3,
+		},
 	},
 	{
-		ID:          731,
-		Name:        "Japanese Desserts",
-		Coordinates: "728,326",
+		ID:   731,
+		Name: "Japanese Desserts",
+		Coordinates: Coordinates{
+			Lat:  65,
+			Long: 123,
+		},
 	},
 }
 
@@ -155,8 +172,14 @@ func (d *database) List(ctx context.Context) ([]Location, error) {
 	var cs []Location
 	for rows.Next() {
 		c := Location{}
-		if err := rows.Scan(&c.ID, &c.Name, &c.Coordinates); err != nil {
+		var coordinates string
+		if err := rows.Scan(&c.ID, &c.Name, &coordinates); err != nil {
 			return nil, err
+		}
+		v := strings.Split(coordinates, ",")
+		if len(v) >= 2 {
+			c.Coordinates.Lat, _ = strconv.ParseFloat(strings.TrimSpace(v[0]), 64)
+			c.Coordinates.Long, _ = strconv.ParseFloat(strings.TrimSpace(v[1]), 64)
 		}
 		cs = append(cs, c)
 	}
@@ -286,7 +309,7 @@ func (d *database) setupDB() {
 	}
 	for i := range seed {
 		c := &seed[i]
-		if _, err := stmt.Exec(c.ID, c.Name, c.Coordinates); err != nil {
+		if _, err := stmt.Exec(c.ID, c.Name, c.Coordinates.String()); err != nil {
 			panic(err)
 		}
 	}

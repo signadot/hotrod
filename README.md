@@ -7,7 +7,7 @@ been modified considerably to showcase Signadot & Sandboxes.
 
 ## Running
 
-First, [install Signadot Operator](https://docs.signadot.com/docs/installation)
+First, [install Signadot Operator](https://www.signadot.com/docs/installation/signadot-operator)
 if you haven't already.
 
 ### Run everything in Kubernetes

@@ -47,6 +47,7 @@ CREATE TABLE IF NOT EXISTS locations
     id bigint unsigned NOT NULL AUTO_INCREMENT,
     name varchar(255) NOT NULL,
     coordinates varchar(255) NOT NULL,
+    description varchar(255),  -- New column
 
     PRIMARY KEY (id),
 	UNIQUE KEY name (name)
@@ -58,26 +59,32 @@ var seed = []Location{
 		ID:          1,
 		Name:        "My Home",
 		Coordinates: "231,773",
+                Description: "Cozy two-bedroom apartment", // New field
 	},
 	{
 		ID:          123,
 		Name:        "Rachel's Floral Designs",
 		Coordinates: "115,277",
+                Description: "Flower shop specializing in arrangements",
 	},
 	{
 		ID:          567,
 		Name:        "Amazing Coffee Roasters",
 		Coordinates: "211,653",
+                Description: "Local coffee roaster with a variety of blends",
+
 	},
 	{
 		ID:          392,
 		Name:        "Trom Chocolatier",
 		Coordinates: "577,322",
+                Description: "Artisan chocolate and confectionery",
 	},
 	{
 		ID:          731,
 		Name:        "Japanese Desserts",
 		Coordinates: "728,326",
+                Description: "Traditional Japanese sweets and pastries",
 	},
 }
 
@@ -136,11 +143,11 @@ func (d *database) List(ctx context.Context) ([]Location, error) {
 		semconv.PeerServiceKey.String("mysql"),
 		attribute.
 			Key("sql.query").
-			String("SELECT id, name, coordinates FROM locations"),
+			String("SELECT id, name, coordinates, description FROM locations"),
 	)
 	defer span.End()
 
-	query := "SELECT id, name, coordinates FROM locations"
+	query := "SELECT id, name, coordinates, description FROM locations"
 	rows, err := d.db.Query(query)
 	if err != nil {
 		if !d.shouldRetry(err) {
@@ -155,7 +162,7 @@ func (d *database) List(ctx context.Context) ([]Location, error) {
 	var cs []Location
 	for rows.Next() {
 		c := Location{}
-		if err := rows.Scan(&c.ID, &c.Name, &c.Coordinates); err != nil {
+		if err := rows.Scan(&c.ID, &c.Name, &c.Coordinates, &c.Description); err != nil {
 			return nil, err
 		}
 		cs = append(cs, c)
@@ -168,13 +175,13 @@ func (d *database) List(ctx context.Context) ([]Location, error) {
 }
 
 func (d *database) Create(ctx context.Context, location *Location) (int64, error) {
-	query := "INSERT INTO locations SET name = ?, coordinates = ?"
-	res, err := d.db.Exec(query, location.Name, location.Coordinates)
+	query := "INSERT INTO locations SET name = ?, coordinates = ?, description = ?"
+	res, err := d.db.Exec(query, location.Name, location.Coordinates, location.Description)
 	if err != nil {
 		if !d.shouldRetry(err) {
 			return 0, err
 		}
-		res, err = d.db.Exec(query, location.Name, location.Coordinates)
+		res, err = d.db.Exec(query, location.Name, location.Coordinates, location.Description)
 		if err != nil {
 			return 0, err
 		}
@@ -187,13 +194,13 @@ func (d *database) Create(ctx context.Context, location *Location) (int64, error
 }
 
 func (d *database) Update(ctx context.Context, location *Location) error {
-	query := "UPDATE locations SET name = ?, coordinates = ? WHERE id = ?"
-	res, err := d.db.Exec(query, location.Name, location.Coordinates, location.ID)
+	query := "UPDATE locations SET name = ?, coordinates = ?, description = ? WHERE id = ?"
+	res, err := d.db.Exec(query, location.Name, location.Coordinates, location.Description, location.ID)
 	if err != nil {
 		if !d.shouldRetry(err) {
 			return err
 		}
-		res, err = d.db.Exec(query, location.Name, location.Coordinates, location.ID)
+		res, err = d.db.Exec(query, location.Name, location.Coordinates, location.Description, location.ID)
 		if err != nil {
 			return err
 		}
@@ -216,7 +223,7 @@ func (d *database) Get(ctx context.Context, locationID int) (*Location, error) {
 		semconv.PeerServiceKey.String("mysql"),
 		attribute.
 			Key("sql.query").
-			String(fmt.Sprintf("SELECT id, name, coordinates from locations WHERE id = %d", locationID)),
+			String(fmt.Sprintf("SELECT id, name, coordinates, description FROM locations WHERE id = %d", locationID)),
 	)
 	defer span.End()
 
@@ -230,7 +237,7 @@ func (d *database) Get(ctx context.Context, locationID int) (*Location, error) {
 	delay.Sleep(config.GetMySQLGetDelay(), config.GetMySQLGetDelayStdDev())
 
 	var c Location
-	query := "SELECT id, name, coordinates FROM locations WHERE id = ?"
+	query := "SELECT id, name, coordinates, description FROM locations WHERE id = ?"
 	row := d.db.QueryRow(query, locationID)
 	if row.Err() != nil {
 		if !d.shouldRetry(row.Err()) {
@@ -241,7 +248,7 @@ func (d *database) Get(ctx context.Context, locationID int) (*Location, error) {
 			return nil, row.Err()
 		}
 	}
-	if err := row.Scan(&c.ID, &c.Name, &c.Coordinates); err != nil {
+	if err := row.Scan(&c.ID, &c.Name, &c.Coordinates, &c.Description); err != nil {
 		return nil, err
 	}
 	return &c, nil

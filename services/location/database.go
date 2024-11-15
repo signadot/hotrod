@@ -50,7 +50,7 @@ CREATE TABLE IF NOT EXISTS locations
     description varchar(255),  -- New column
 
     PRIMARY KEY (id),
-	UNIQUE KEY name (name)
+    UNIQUE KEY name (name)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 `
 
@@ -59,32 +59,31 @@ var seed = []Location{
 		ID:          1,
 		Name:        "My Home",
 		Coordinates: "231,773",
-                Description: "Cozy two-bedroom apartment", // New field
+		Description: "Cozy two-bedroom apartment", // New field
 	},
 	{
 		ID:          123,
 		Name:        "Rachel's Floral Designs",
 		Coordinates: "115,277",
-                Description: "Flower shop specializing in arrangements",
+		Description: "Flower shop specializing in arrangements",
 	},
 	{
 		ID:          567,
 		Name:        "Amazing Coffee Roasters",
 		Coordinates: "211,653",
-                Description: "Local coffee roaster with a variety of blends",
-
+		Description: "Local coffee roaster with a variety of blends",
 	},
 	{
 		ID:          392,
 		Name:        "Trom Chocolatier",
 		Coordinates: "577,322",
-                Description: "Artisan chocolate and confectionery",
+		Description: "Artisan chocolate and confectionery",
 	},
 	{
 		ID:          731,
 		Name:        "Japanese Desserts",
 		Coordinates: "728,326",
-                Description: "Traditional Japanese sweets and pastries",
+		Description: "Traditional Japanese sweets and pastries",
 	},
 }
 
@@ -278,22 +277,35 @@ func (d *database) shouldRetry(err error) bool {
 	return false
 }
 
+func (d *database) Init() error {
+	// Initialize the database schema
+	d.setupDB()
+	return nil
+}
+
 func (d *database) setupDB() {
-	// Create the table
+	// Create the table if it doesn't exist
 	fmt.Println("creating locations table")
 	_, err := d.db.Exec(tableSchema)
 	if err != nil {
 		panic(err)
 	}
 
+	// Alter the table to add the description column if it doesn't exist
+	fmt.Println("ensuring description column exists")
+	_, err = d.db.Exec("ALTER TABLE locations ADD COLUMN IF NOT EXISTS description VARCHAR(255)")
+	if err != nil {
+		panic(err)
+	}
+
 	fmt.Println("seeding database")
-	stmt, err := d.db.Prepare("INSERT INTO locations (id, name, coordinates) VALUES (?, ?, ?)")
+	stmt, err := d.db.Prepare("INSERT INTO locations (id, name, coordinates, description) VALUES (?, ?, ?, ?)")
 	if err != nil {
 		panic(err)
 	}
 	for i := range seed {
 		c := &seed[i]
-		if _, err := stmt.Exec(c.ID, c.Name, c.Coordinates); err != nil {
+		if _, err := stmt.Exec(c.ID, c.Name, c.Coordinates, c.Description); err != nil {
 			panic(err)
 		}
 	}

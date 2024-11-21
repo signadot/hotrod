@@ -1,0 +1,10 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: route
+spec:
+  template:
+    metadata:
+      annotations:
+        linkerd.io/inject: enabled
+        sidecar.signadot.com/inject: "true"

@@ -5,7 +5,7 @@ module.exports = defineConfig({
     video: true,
     // experimentalStudio: true,
     env: {
-      HOTROD_NAMESPACE: 'hotrod',
+      HOTROD_NAMESPACE: 'hotrod-istio',
       SIGNADOT_ROUTING_KEY: '',
       FRONTEND_SANDBOX_NAME: '',
       LOCATION_SANDBOX_NAME: '',

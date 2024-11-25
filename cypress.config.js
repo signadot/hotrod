@@ -3,7 +3,7 @@ const { defineConfig } = require("cypress");
 module.exports = defineConfig({
   e2e: {
     video: true,
-    experimentalStudio: true,
+    // experimentalStudio: true,
     env: {
       HOTROD_NAMESPACE: 'hotrod',
       SIGNADOT_ROUTING_KEY: '',

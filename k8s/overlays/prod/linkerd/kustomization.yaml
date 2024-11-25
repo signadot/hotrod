@@ -1,9 +1,11 @@
 
 resources:
 - ../../../base
+- http-route.yaml
 
 patches:
 - path: frontend-linkerd-annotation.yaml
 - path: location-linkerd-annotation.yaml
 - path: driver-linkerd-annotation.yaml
 - path: route-linkerd-annotation.yaml
+- path: location-service.yaml

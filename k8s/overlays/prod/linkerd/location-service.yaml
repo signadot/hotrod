@@ -1,0 +1,11 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: location
+spec:
+  ports:
+      # this is a dummy port which is not listened to
+      # in order to actually exercise linkerd actively
+      # in our linkerd integration
+    - name: http-refuse-connection
+      port: 7981

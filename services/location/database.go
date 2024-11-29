@@ -46,7 +46,7 @@ CREATE TABLE IF NOT EXISTS locations
 (
     id bigint unsigned NOT NULL,
     name varchar(255) NOT NULL,
-    description varchar(255),
+    description varchar(255), //this is a new field
     coordinates varchar(255) NOT NULL,
     PRIMARY KEY (id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;

@@ -505,26 +505,27 @@ jobs:
             ${{ steps.get-comment-body.outputs.body }}
           edit-mode: replace
 
-      - name: Run Tests
-        run: |
-          # Run the proxy
-          echo "Starting signadot proxy..."
-          signadot local proxy --sandbox ${SANDBOX_NAME} \
-            --map http://frontend.${NAMESPACE}:8080@localhost:38080 > /tmp/signadot-proxy.log &
-          PROXY_PID=$!
-          sleep 1
-          cat /tmp/signadot-proxy.log
+      # # Disable tests here to run via Job manually 
+      # - name: Run Tests
+      #   run: |
+      #     # Run the proxy
+      #     echo "Starting signadot proxy..."
+      #     signadot local proxy --sandbox ${SANDBOX_NAME} \
+      #       --map http://frontend.${NAMESPACE}:8080@localhost:38080 > /tmp/signadot-proxy.log &
+      #     PROXY_PID=$!
+      #     sleep 1
+      #     cat /tmp/signadot-proxy.log
 
-          # Run integration tests
-          echo "Executing tests..."
-          go install github.com/jstemmer/go-junit-report/v2@latest
-          TEST_FRONTEND_ADDR=localhost:38080 TEST_TARGET_WORKLOAD=driver TEST_SANDBOX_NAME=${SANDBOX_NAME} go test -v \
-            ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
+      #     # Run integration tests
+      #     echo "Executing tests..."
+      #     go install github.com/jstemmer/go-junit-report/v2@latest
+      #     TEST_FRONTEND_ADDR=localhost:38080 TEST_TARGET_WORKLOAD=driver TEST_SANDBOX_NAME=${SANDBOX_NAME} go test -v \
+      #       ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
 
-          # Stop the proxy
-          echo "Stopping signadot proxy..."
-          cat /tmp/signadot-proxy.log
-          kill ${PROXY_PID}
+      #     # Stop the proxy
+      #     echo "Stopping signadot proxy..."
+      #     cat /tmp/signadot-proxy.log
+      #     kill ${PROXY_PID}
 
       - name: Publish Test Results
         uses: EnricoMi/publish-unit-test-result-action@v2

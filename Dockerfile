@@ -5,4 +5,3 @@ ARG TARGETPLATFORM
 COPY dist/$TARGETPLATFORM/bin/hotrod /app/hotrod
 
 ENTRYPOINT ["/app/hotrod"]
-

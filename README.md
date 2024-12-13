@@ -24,3 +24,30 @@ To uninstall:
 ```bash
 kubectl delete ns "${NAMESPACE}"
 ```
+
+
+## Development
+
+### Frontend
+
+To run frontend you could easily run with `air` that helps with hot-reload. 
+
+Before running `air` or manual steps you have to set up the following env
+```shell
+export KAFKA_BROKER=kafka-headless.namespace.svc:9092
+export REDIS_ADDR=redis.namespace.svc:6379
+export FRONTEND_LOCATION_ADDR=location.namespace.svc:8081
+```
+
+Now let's run the frontend
+```shell
+air
+```
+
+That will listen for the changes and restart the server every change.
+
+If no want to use this approach, you could
+```shell
+make build-frontend-app
+go run ./cmd/hotrod/main.go frontend
+```

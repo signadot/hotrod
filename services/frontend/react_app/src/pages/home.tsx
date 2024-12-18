@@ -1,5 +1,22 @@
 import {MainLayout} from "../components/layouts";
-import {Box, Button, Card, CardBody, CardHeader, Heading, HStack, Stack, StackDivider,} from "@chakra-ui/react";
+import {
+    Box,
+    Button,
+    Card,
+    CardBody,
+    CardHeader,
+    Drawer,
+    DrawerBody,
+    DrawerContent,
+    DrawerFooter,
+    DrawerHeader,
+    Heading,
+    HStack,
+    Stack,
+    StackDivider,
+    useDisclosure,
+    useToast,
+} from "@chakra-ui/react";
 
 import {Logs} from "../components/features/logs/logs.tsx";
 import {Map} from "../components/features/map/map.tsx";
@@ -18,6 +35,9 @@ export const HomePage = () => {
 
     const [selectedLocations, setSelectedLocations] = useState({pickupId: -1, dropoffId: -1});
     const {logs, addNewLog, addErrorEntry, addInformationEntry} = useLogs();
+
+    const logsModal = useDisclosure();
+    const toast = useToast();
 
     useEffect(() => {
         const fetchLocations = async () => {
@@ -75,15 +95,26 @@ export const HomePage = () => {
             dropoffLocationID: dropoffId
         }
 
-        const pickupLocation = locations?.Locations.find(l => l.ID === pickupId);
-        const dropoffLocation = locations?.Locations.find(l => l.ID === dropoffId);
+        const pickupLocation = locations?.Locations.find(l => l.id === pickupId);
+        const dropoffLocation = locations?.Locations.find(l => l.id === dropoffId);
+
+        toast({
+            title: 'Hotrod::Drive requested.',
+            description: `Drive requested to ${dropoffLocation?.name}`,
+            status: 'success',
+            duration: 9000,
+            isClosable: true,
+            position: "top"
+        });
+
+        // Reset locations
+        setSelectedLocations({pickupId: -1, dropoffId: -1});
 
         addNewLog(pickupLocation!, dropoffLocation!, requestID, {
             messageType: "info",
             service: 'browser',
             date: new Date(),
             status: 'Requesting a ride.'
-
         });
 
         try {
@@ -155,14 +186,34 @@ export const HomePage = () => {
                     </Card>
                 </Stack>
                 <Stack flexGrow={1} justifyContent='space-between' w='50%' h='100%' maxH={'900px'}>
-                    <Stack w='100%' backgroundColor='white' overflowY='auto'
-                           maxH={'50%'}>
-                        <Logs logs={logs}/>
-                    </Stack>
+                    <Drawer
+                        isOpen={logsModal.isOpen}
+                        placement='right'
+                        onClose={() => {
+                        }}
+                        size="lg"
+                        trapFocus={false}
+                        blockScrollOnMount={false}
+                        variant="aside"
+                    >
+                        <DrawerContent>
+                            <DrawerHeader>Notifications logs</DrawerHeader>
 
+                            <DrawerBody>
+                                <Logs logs={logs}/>
+                            </DrawerBody>
+
+                            <DrawerFooter>
+                                <Button variant='outline' mr={3} onClick={logsModal.onClose}>
+                                    Close
+                                </Button>
+                            </DrawerFooter>
+                        </DrawerContent>
+                    </Drawer>
                     <Stack flexGrow={1} flexShrink={1}>
-                        <Map/>
+                        <Map dropoffLocationID={selectedLocations.dropoffId} pickupLocationID={selectedLocations.pickupId}/>
                     </Stack>
+                    <Button variant='outline' size="sm" onClick={logsModal.onToggle}>Show Logs</Button>
                 </Stack>
             </HStack>
         </MainLayout>

@@ -1,0 +1,44 @@
+.drawer {
+    position: fixed;
+    top: 0;
+    right: 0;
+    width: 700px;
+    height: 100%;
+    background: white;
+    box-shadow: -2px 0 5px rgba(0, 0, 0, 0.1);
+    transform: translateX(100%);
+    transition: transform 0.3s ease;
+    z-index: 999999;
+    display: flex;
+    flex-direction: column; /* Ensures vertical stacking */
+
+    gap: 1rem;
+}
+
+.drawer.open {
+    transform: translateX(0);
+}
+
+.drawer-header {
+    padding: 1rem;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+}
+
+.drawer-body {
+    flex: 1; /* Fills available space */
+    padding: 1rem;
+    overflow-y: auto; /* Allows scrolling when content overflows */
+}
+
+.drawer-footer {
+    padding: 1rem;
+    border-top: 1px solid #ddd;
+    background: white;
+}
+
+
+
+.leaflet-control { z-index: 0 !important}
+.leaflet-pane { z-index: 0 !important}
+.leaflet-top, .leaflet-bottom {z-index: 0 !important}

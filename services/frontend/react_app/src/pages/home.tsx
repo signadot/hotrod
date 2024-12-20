@@ -5,18 +5,15 @@ import {
     Card,
     CardBody,
     CardHeader,
-    Drawer,
-    DrawerBody,
-    DrawerContent,
-    DrawerFooter,
-    DrawerHeader,
     Heading,
     HStack,
     Stack,
     StackDivider,
+    Text,
     useDisclosure,
     useToast,
 } from "@chakra-ui/react";
+import styles from "./home.module.css";
 
 import {Logs} from "../components/features/logs/logs.tsx";
 import {Map} from "../components/features/map/map.tsx";
@@ -27,6 +24,16 @@ import {Locations} from "../types/location.ts";
 import {LocationSelect} from "../components/common/locationSelect/locationSelect.tsx";
 import {useLogs} from "../hooks/useLogs.tsx";
 import {NotificationResponse} from "../types/notifications.ts";
+import {useGetRequestArrival} from "../hooks/useGetRequestArrival.tsx";
+import Countdown, {CountdownRenderProps} from "react-countdown";
+
+const countdownRenderer = ({minutes, seconds, completed, driverName}: CountdownRenderProps & { driverName: string }) => {
+    if (completed) {
+        return <Text>{driverName} arrived</Text>;
+    } else {
+        return <Text as="b">The driver {driverName} will arrive in {minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}</Text>;
+    }
+};
 
 export const HomePage = () => {
     const session = useSession();
@@ -35,6 +42,7 @@ export const HomePage = () => {
 
     const [selectedLocations, setSelectedLocations] = useState({pickupId: -1, dropoffId: -1});
     const {logs, addNewLog, addErrorEntry, addInformationEntry} = useLogs();
+    const lastRequestedDrive = useGetRequestArrival(logs);
 
     const logsModal = useDisclosure();
     const toast = useToast();
@@ -179,39 +187,41 @@ export const HomePage = () => {
                                     >
                                         Request Ride
                                     </Button>
-                                    {/*<Text color='gray' mt={4}>The distance between the two points is 40 miles</Text>*/}
                                 </Box>
                             </Stack>
                         </CardBody>
                     </Card>
+
+                    {lastRequestedDrive.driverArrival &&
+                        <HStack divider={<StackDivider/>} spacing='4' justifyContent="center" alignItems="center"
+                                bg="teal.200" p="1rem" maxW={600} borderRadius={4}>
+                            <Countdown
+                                date={new Date(Date.now()).setSeconds(lastRequestedDrive.driverArrival)}
+                                renderer={(props) => countdownRenderer({
+                                    ...props,
+                                    driverName: lastRequestedDrive.driverName
+                                })}
+                            />
+                        </HStack>}
                 </Stack>
                 <Stack flexGrow={1} justifyContent='space-between' w='50%' h='100%' maxH={'900px'}>
-                    <Drawer
-                        isOpen={logsModal.isOpen}
-                        placement='right'
-                        onClose={() => {
-                        }}
-                        size="lg"
-                        trapFocus={false}
-                        blockScrollOnMount={false}
-                        variant="aside"
-                    >
-                        <DrawerContent>
-                            <DrawerHeader>Notifications logs</DrawerHeader>
+                    <div className={`${styles.drawer} ${logsModal.isOpen ? styles.open : ''}`}>
+                        <div className={styles.drawerHeader}>
+                            <Heading size="md">Notifications Logs</Heading>
+                        </div>
+                        <div className={styles.drawerBody}>
+                            <Logs logs={logs}/>
+                        </div>
+                        <div className={styles.drawerFooter}>
+                            <Button variant="outline" onClick={logsModal.onClose}>
+                                Close
+                            </Button>
+                        </div>
+                    </div>
 
-                            <DrawerBody>
-                                <Logs logs={logs}/>
-                            </DrawerBody>
-
-                            <DrawerFooter>
-                                <Button variant='outline' mr={3} onClick={logsModal.onClose}>
-                                    Close
-                                </Button>
-                            </DrawerFooter>
-                        </DrawerContent>
-                    </Drawer>
                     <Stack flexGrow={1} flexShrink={1}>
-                        <Map dropoffLocationID={selectedLocations.dropoffId} pickupLocationID={selectedLocations.pickupId}/>
+                        <Map dropoffLocationID={selectedLocations.dropoffId}
+                             pickupLocationID={selectedLocations.pickupId}/>
                     </Stack>
                     <Button variant='outline' size="sm" onClick={logsModal.onToggle}>Show Logs</Button>
                 </Stack>

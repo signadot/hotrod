@@ -107,8 +107,8 @@ export const HomePage = () => {
         const dropoffLocation = locations?.Locations.find(l => l.id === dropoffId);
 
         toast({
-            title: 'Hotrod::Drive requested.',
-            description: `Drive requested to ${dropoffLocation?.name}`,
+            title: 'Hotrod::Ride requested.',
+            description: `Ride requested to ${dropoffLocation?.name}`,
             status: 'success',
             duration: 9000,
             isClosable: true,

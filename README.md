@@ -34,9 +34,9 @@ To run frontend you could easily run with `air` that helps with hot-reload.
 
 Before running `air` or manual steps you have to set up the following env
 ```shell
-export KAFKA_BROKER=kafka-headless.namespace.svc:9092
-export REDIS_ADDR=redis.namespace.svc:6379
-export FRONTEND_LOCATION_ADDR=location.namespace.svc:8081
+export KAFKA_BROKER=kafka-headless.${NAMESPACE}.svc:9092
+export REDIS_ADDR=redis.${NAMESPACE}.svc:6379
+export FRONTEND_LOCATION_ADDR=location.${NAMESPACE}.svc:8081
 ```
 
 Now let's run the frontend

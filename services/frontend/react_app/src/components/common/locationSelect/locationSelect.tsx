@@ -24,7 +24,7 @@ export const LocationSelect = ({ placeholder, locations, selectedLocationID, onS
         >
             { locations.map(loc => {
                 return (
-                    <option value={loc.ID}>{loc.Name}</option>
+                    <option value={loc.id}>{loc.name}</option>
                 )
             })}
         </Select>

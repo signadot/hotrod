@@ -208,7 +208,7 @@ export const HomePage = () => {
                 <Stack flexGrow={1} justifyContent='space-between' w='50%' h='100%' maxH={'900px'}>
                     <div className={`${styles.drawer} ${logsModal.isOpen ? styles.open : ''}`}>
                         <div className={styles.drawerHeader}>
-                            <Heading size="md">Notifications Logs</Heading>
+                            <Heading size="md" mt={3}>Logs</Heading>
                         </div>
                         <div className={styles.drawerBody}>
                             <Logs logs={logs}/>

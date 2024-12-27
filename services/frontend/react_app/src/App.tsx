@@ -3,29 +3,27 @@ import {HomePage} from "./pages/home.tsx";
 import {SessionProvider} from "./context/sessionContext/context.tsx";
 import {ChakraProvider, extendTheme} from "@chakra-ui/react";
 
+
+import { accordionAnatomy } from '@chakra-ui/anatomy'
+import { createMultiStyleConfigHelpers } from '@chakra-ui/react'
+
+const { definePartsStyle, defineMultiStyleConfig } =
+    createMultiStyleConfigHelpers(accordionAnatomy.keys)
+
+const baseStyle = definePartsStyle({
+    container: {
+        borderColor: 'gray.400',
+    },
+})
+
+
+const accordionTheme = defineMultiStyleConfig({ baseStyle })
+
 function App() {
 
-    const components = {
-        Drawer: {
-            variants: {
-                aside: {
-                    overlay: {
-                        pointerEvents: 'none',
-                        background: 'transparent',
-                    },
-                    dialogContainer: {
-                        pointerEvents: 'none',
-                        background: 'transparent',
-                    },
-                    dialog: {
-                        pointerEvents: 'auto',
-                    },
-                },
-            },
-        },
-    };
-
-    const theme = extendTheme({components});
+    const theme = extendTheme({
+        components: { Accordion: accordionTheme },
+    })
 
     return (
         <ChakraProvider theme={theme}>

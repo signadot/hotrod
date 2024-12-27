@@ -27,11 +27,11 @@ import {NotificationResponse} from "../types/notifications.ts";
 import {useGetRequestArrival} from "../hooks/useGetRequestArrival.tsx";
 import Countdown, {CountdownRenderProps} from "react-countdown";
 
-const countdownRenderer = ({minutes, seconds, completed, driverName}: CountdownRenderProps & { driverName: string }) => {
+const countdownRenderer = ({minutes, seconds, completed, driverName, driverPlate}: CountdownRenderProps & { driverName: string, driverPlate: string }) => {
     if (completed) {
         return <Text>{driverName} arrived</Text>;
     } else {
-        return <Text as="b">The driver {driverName} will arrive in {minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}</Text>;
+        return <Text as="b">The driver {driverName} ({driverPlate}) will arrive in {minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}</Text>;
     }
 };
 
@@ -107,8 +107,8 @@ export const HomePage = () => {
         const dropoffLocation = locations?.Locations.find(l => l.id === dropoffId);
 
         toast({
-            title: 'Hotrod::Drive requested.',
-            description: `Drive requested to ${dropoffLocation?.name}`,
+            title: 'Hotrod::Ride requested.',
+            description: `Ride requested to ${dropoffLocation?.name}`,
             status: 'success',
             duration: 9000,
             isClosable: true,
@@ -199,7 +199,8 @@ export const HomePage = () => {
                                 date={new Date(Date.now()).setSeconds(lastRequestedDrive.driverArrival)}
                                 renderer={(props) => countdownRenderer({
                                     ...props,
-                                    driverName: lastRequestedDrive.driverName
+                                    driverName: lastRequestedDrive.driverDetails.name,
+                                    driverPlate: lastRequestedDrive.driverDetails.plate,
                                 })}
                             />
                         </HStack>}

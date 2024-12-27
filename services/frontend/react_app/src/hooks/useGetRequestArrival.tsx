@@ -4,7 +4,10 @@ import { faker } from "@faker-js/faker";
 
 export const useGetRequestArrival = (logs: Log[]) => {
     const [driverArrival, setDriverArrival] = useState<number | undefined>();
-    const [driverName, setDriverName] = useState("");
+    const [driverDetails, setDriverDetails] = useState({
+        name: "",
+        plate: "",
+    });
 
     const parseDriverLogService = (entry: LogEntry) => {
         if (entry.service !== 'driver') return;
@@ -37,13 +40,20 @@ export const useGetRequestArrival = (logs: Log[]) => {
             .map((e) => parseDriverLogService(e))
             .find((e) => e !== undefined);
 
-        setDriverName(faker.person.fullName());
+        const plate = driverEntries.map(e => {
+            return e.status.match(/Driver\s+(.*?)\s+arriving/)
+        }).find(e => e !== null);
+
+        setDriverDetails({
+            name: faker.person.fullName(),
+            plate: plate && plate.length > 1 ? plate[1] : "Unknown",
+        });
         setDriverArrival(parsedTime);
     }, [logs]);
 
 
     return {
         driverArrival,
-        driverName,
+        driverDetails,
     };
 };

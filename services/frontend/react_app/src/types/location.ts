@@ -6,7 +6,7 @@ export type Locations = {
 }
 
 export type Location = {
-    ID: number,
-    Name: string,
-    Coordinates: string,
+    id: number,
+    name: string,
+    coordinates: string,
 }

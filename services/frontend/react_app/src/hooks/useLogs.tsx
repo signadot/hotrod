@@ -20,7 +20,6 @@ export type LogEntry = {
 export const useLogs = () => {
     const [logs, setLogs] = useState<Log[]>([]);
 
-
     const addNewLog = (pickupLocation: Location, dropoffLocation: Location, requestID: number, log: LogEntry) => {
         setLogs(prev => [{ pickupLocation, dropoffLocation, requestID, entries: [log]}, ...prev])
     }

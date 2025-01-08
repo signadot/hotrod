@@ -51,3 +51,17 @@ If no want to use this approach, you could
 make build-frontend-app
 go run ./cmd/hotrod/main.go frontend
 ```
+
+
+## Deployment
+
+### Release 
+
+To build and push new images, we can leverage by using the `make release`.
+
+For the case of releasing latest images we can do `RELEASE_TAG=latest make release`.
+Note that you can replace the `RELEASE_TAG` with the value you need.
+
+### Considerations
+
+You have to make sure you have the rights to write in signadot/hotrod.

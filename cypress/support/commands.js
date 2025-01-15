@@ -9,5 +9,6 @@ Cypress.Commands.add('requestRide', (from, to) => {
     cy.visit(frontendURL);
     cy.get(':nth-child(1) > .chakra-select__wrapper > .chakra-select').select(from);
     cy.get(':nth-child(3) > .chakra-select__wrapper > .chakra-select').select(to);
-    cy.get('.chakra-button').click();
+    cy.contains('button', 'Request Ride').click();
+    cy.contains('button', 'Show Logs').click();
 })

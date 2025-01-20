@@ -196,7 +196,7 @@ export const HomePage = () => {
                         <HStack divider={<StackDivider/>} spacing='4' justifyContent="center" alignItems="center"
                                 bg="teal.200" p="1rem" maxW={600} borderRadius={4}>
                             <Countdown
-                                date={new Date(Date.now()).setSeconds(lastRequestedDrive.driverArrival)}
+                                date={new Date(Date.now() + lastRequestedDrive.driverArrival * 1000)}
                                 renderer={(props) => countdownRenderer({
                                     ...props,
                                     driverName: lastRequestedDrive.driverDetails.name,

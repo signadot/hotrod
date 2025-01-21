@@ -4,6 +4,8 @@ module.exports = defineConfig({
   e2e: {
     video: true,
     experimentalStudio: true,
+    viewportWidth: 1024,
+    viewportHeight: 780,
     env: {
       HOTROD_NAMESPACE: 'hotrod',
       SIGNADOT_ROUTING_KEY: '',

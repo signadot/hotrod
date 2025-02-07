@@ -142,35 +142,6 @@ jobs:
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
-      - id: get-comment-body
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        run: |
-          body="https://app.signadot.com/sandbox/name/${SANDBOX_NAME}"
-          body="${body//'%'/'%25'}"
-          body="${body//$'\n'/'%0A'}"
-          body="${body//$'\r'/'%0D'}"
-          echo "::set-output name=body::$body"
-      - name: Find Comment
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        uses: peter-evans/find-comment@v2
-        id: fc
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: Route Sandbox
-
-      - name: Create or update comment
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        uses: peter-evans/create-or-update-comment@v3
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body: |
-            Route Sandbox Ready!
-            ${{ steps.get-comment-body.outputs.body }}
-          edit-mode: replace
-
       - name: Run Tests
         run: |
           # Run the proxy
@@ -246,35 +217,6 @@ jobs:
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
-      - id: get-comment-body
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        run: |
-          body="https://app.signadot.com/sandbox/name/${SANDBOX_NAME}"
-          body="${body//'%'/'%25'}"
-          body="${body//$'\n'/'%0A'}"
-          body="${body//$'\r'/'%0D'}"
-          echo "::set-output name=body::$body"
-      - name: Find Comment
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        uses: peter-evans/find-comment@v2
-        id: fc
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: Frontend Sandbox
-
-      - name: Create or update comment
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        uses: peter-evans/create-or-update-comment@v3
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body: |
-            Frontend Sandbox Ready!
-            ${{ steps.get-comment-body.outputs.body }}
-          edit-mode: replace
-
       - name: Run Tests
         run: |
           # Run the proxy
@@ -345,35 +287,6 @@ jobs:
             --set namespace=${NAMESPACE} \
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
-
-      - id: get-comment-body
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        run: |
-          body="https://app.signadot.com/sandbox/name/${SANDBOX_NAME}"
-          body="${body//'%'/'%25'}"
-          body="${body//$'\n'/'%0A'}"
-          body="${body//$'\r'/'%0D'}"
-          echo "::set-output name=body::$body"
-      - name: Find Comment
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        uses: peter-evans/find-comment@v2
-        id: fc
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: Location Sandbox
-
-      - name: Create or update comment
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        uses: peter-evans/create-or-update-comment@v3
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body: |
-            Location Sandbox Ready!
-            ${{ steps.get-comment-body.outputs.body }}
-          edit-mode: replace
 
       - name: Run Tests
         run: |
@@ -450,35 +363,6 @@ jobs:
             --set namespace=${NAMESPACE} \
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
-
-      - id: get-comment-body
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        run: |
-          body="https://app.signadot.com/sandbox/name/${SANDBOX_NAME}"
-          body="${body//'%'/'%25'}"
-          body="${body//$'\n'/'%0A'}"
-          body="${body//$'\r'/'%0D'}"
-          echo "::set-output name=body::$body"
-      - name: Find Comment
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        uses: peter-evans/find-comment@v2
-        id: fc
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: Driver Sandbox
-
-      - name: Create or update comment
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        uses: peter-evans/create-or-update-comment@v3
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body: |
-            Driver Sandbox Ready!
-            ${{ steps.get-comment-body.outputs.body }}
-          edit-mode: replace
 
       - name: Run Tests
         run: |

@@ -22,7 +22,7 @@ import (
 // Location contains data about a location.
 type Location struct {
 	ID          int64  `json:"id"`
-	Name        string `json:"name"`
+	FullName    string `json:"fullName"`
 	Coordinates string `json:"coordinates"`
 }
 

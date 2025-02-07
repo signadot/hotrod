@@ -50,7 +50,7 @@ func NewServer(hostPort string, logger log.Factory) *Server {
 		config.GetMetricsFactory(), logger)
 
 	return &Server{
-		hostPort:       hostPort,
+		hostPort:       "8087",
 		tracerProvider: tracerProvider,
 		logger:         logger,
 		database:       newDatabase(logger),

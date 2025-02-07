@@ -37,7 +37,7 @@ func addFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&metricsBackend, "metrics", "m", "prometheus", expvarDepr+"Metrics backend (expvar|prometheus). ")
 
 	// Add flags to choose ports for services
-	cmd.PersistentFlags().IntVarP(&locationPort, "location-service-port", "c", 8081, "Port for location service")
+	cmd.PersistentFlags().IntVarP(&locationPort, "location-service-port", "c", 8087, "Port for location service")
 	cmd.PersistentFlags().IntVarP(&frontendPort, "frontend-service-port", "f", 8080, "Port for frontend service")
 	cmd.PersistentFlags().IntVarP(&routePort, "route-service-port", "r", 8083, "Port for routing service")
 

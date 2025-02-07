@@ -176,7 +176,7 @@ export const HomePage = () => {
                                 <Box>
                                     <Button
                                         variant='solid'
-                                        colorScheme='cyan'
+                                        colorScheme='red'
                                         onClick={handleRequestDrive}
                                         isDisabled={
                                             selectedLocations.pickupId === -1 ||

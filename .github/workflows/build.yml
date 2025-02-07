@@ -197,15 +197,6 @@ jobs:
           cat /tmp/signadot-proxy.log
           kill ${PROXY_PID}
 
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          check_name: Route Test Results
-          files: |
-            *report.xml
-
-
   sandbox-frontend:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.frontend == 'true' }}
@@ -304,14 +295,6 @@ jobs:
           echo "Stopping signadot proxy..."
           cat /tmp/signadot-proxy.log
           kill ${PROXY_PID}
-
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          check_name: Frontend Test Results
-          files: |
-            *report.xml
 
 
   sandbox-location:
@@ -418,14 +401,6 @@ jobs:
           cat /tmp/signadot-proxy.log
           kill ${PROXY_PID}
 
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          check_name: Location Test Results
-          files: |
-            *report.xml
-
 
   sandbox-driver:
     runs-on: ubuntu-latest
@@ -525,11 +500,3 @@ jobs:
           echo "Stopping signadot proxy..."
           cat /tmp/signadot-proxy.log
           kill ${PROXY_PID}
-
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          check_name: Driver Test Results
-          files: |
-            *report.xml

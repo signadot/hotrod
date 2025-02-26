@@ -3,4 +3,4 @@ resources:
 
 images:
 - name: signadot/hotrod
-  newTag: quickstart-v3
+  newTag: quickstart-v4

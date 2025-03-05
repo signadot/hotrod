@@ -12,26 +12,37 @@ export const useGetRequestArrival = (logs: Log[]) => {
     const parseDriverLogService = (entry: LogEntry) => {
         if (entry.service !== 'driver') return;
 
-        const rawTimeMatch = entry.status.match(/(\d+m\d+s|\d+m|\d+s)/);
+        // Allow for optional minus sign in front of the time
+        const rawTimeMatch = entry.status.match(/-?\d+m\d+s|-?\d+m|-?\d+s/);
 
         if (!rawTimeMatch) return; // No substring that looks like time
 
         const rawTime = rawTimeMatch[0];
 
         /**
-         * Possible cases
-         * 3m
-         * 3m2s
-         * 2s
-         * */
-        const timeRegex = /^(?:(\d+)m)?(?:(\d+)s)?$/;
+         * Possible cases (including optional negative sign):
+         * - 3m
+         * - 3m2s
+         * - 2s
+         * - -3m
+         * - -3m2s
+         * - -2s
+         */
+        const timeRegex = /^(-)?(?:(\d+)m)?(?:(\d+)s)?$/;
         const match = rawTime.match(timeRegex);
 
         if (!match) return;
 
-        const minutes = parseInt(match[1] || '0', 10);
-        const seconds = parseInt(match[2] || '0', 10);
-        return minutes * 60 + seconds;
+        const isNegative = !!match[1];
+        const minutes = parseInt(match[2] || '0', 10);
+        const seconds = parseInt(match[3] || '0', 10);
+
+        let totalSeconds = minutes * 60 + seconds;
+        if (isNegative) {
+            totalSeconds = -totalSeconds;
+        }
+
+        return totalSeconds;
     };
 
     useEffect(() => {

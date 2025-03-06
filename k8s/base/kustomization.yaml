@@ -11,4 +11,4 @@ resources:
 
 images:
 - name: signadot/hotrod
-  newTag: quickstart-v4-fix
+  newTag: quickstart-v5-fix

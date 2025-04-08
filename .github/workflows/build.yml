@@ -119,12 +119,12 @@ jobs:
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"istio"* ]]; then
-            echo "Found istio label"
-            NAMESPACE="hotrod-istio"
-          else
-            echo "istio label not found"
+          if [[ "$LABELS" == *"hotrod-devmesh"* ]]; then
+            echo "Found hotrod-devmesh label"
             NAMESPACE="hotrod-devmesh"
+          else
+            echo "Using default namespace"
+            NAMESPACE="hotrod-istio"
           fi
           echo "Using namespace=${NAMESPACE}"
           echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
@@ -194,12 +194,12 @@ jobs:
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"istio"* ]]; then
-            echo "Found istio label"
-            NAMESPACE="hotrod-istio"
-          else
-            echo "istio label not found"
+          if [[ "$LABELS" == *"hotrod-devmesh"* ]]; then
+            echo "Found hotrod-devmesh label"
             NAMESPACE="hotrod-devmesh"
+          else
+            echo "Using default namespace"
+            NAMESPACE="hotrod-istio"
           fi
           echo "Using namespace=${NAMESPACE}"
           echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
@@ -265,12 +265,12 @@ jobs:
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"istio"* ]]; then
-            echo "Found istio label"
-            NAMESPACE="hotrod-istio"
-          else
-            echo "istio label not found"
+          if [[ "$LABELS" == *"hotrod-devmesh"* ]]; then
+            echo "Found hotrod-devmesh label"
             NAMESPACE="hotrod-devmesh"
+          else
+            echo "Using default namespace"
+            NAMESPACE="hotrod-istio"
           fi
           echo "Using namespace=${NAMESPACE}"
           echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
@@ -314,12 +314,12 @@ jobs:
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"istio"* ]]; then
-            echo "Found istio label"
-            NAMESPACE="hotrod-istio"
-          else
-            echo "istio label not found"
+          if [[ "$LABELS" == *"hotrod-devmesh"* ]]; then
+            echo "Found hotrod-devmesh label"
             NAMESPACE="hotrod-devmesh"
+          else
+            echo "Using default namespace"
+            NAMESPACE="hotrod-istio"
           fi
           echo "Using namespace=${NAMESPACE}"
           echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"

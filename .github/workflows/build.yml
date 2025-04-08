@@ -142,7 +142,11 @@ jobs:
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
-      - name: Run Tests
+      - name: Run Smart Tests
+        run: |
+          signadot st run --sandbox=${SANDBOX_NAME} --publish
+
+      - name: Run Integration Tests using Signadot Local Proxy
         run: |
           # Run the proxy
           echo "Starting signadot proxy..."
@@ -217,6 +221,10 @@ jobs:
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
+      - name: Run Smart Tests
+        run: |
+          signadot st run --sandbox=${SANDBOX_NAME} --publish
+
   sandbox-location:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.location == 'true' }}
@@ -266,6 +274,11 @@ jobs:
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
+
+      - name: Run Smart Tests
+        run: |
+          signadot st run --sandbox=${SANDBOX_NAME} --publish
+
   sandbox-driver:
     runs-on: ubuntu-latest
     if: ${{ github.event_name == 'pull_request' && needs.changes.outputs.driver == 'true' }}
@@ -314,3 +327,7 @@ jobs:
             --set namespace=${NAMESPACE} \
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
+
+      - name: Run Smart Tests
+        run: |
+          signadot st run --sandbox=${SANDBOX_NAME} --publish

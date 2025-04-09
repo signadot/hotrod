@@ -67,14 +67,14 @@ type ConfigOptions struct {
 
 // NewServer creates a new frontend.Server
 func NewServer(options ConfigOptions, logger log.Factory) *Server {
-	// get a tracer provider for the frontend
+	// get tracer provider for the frontend
 	tracerProvider := tracing.InitOTEL("frontend", config.GetOtelExporterType(),
 		config.GetMetricsFactory(), logger)
 
-	// get a location client
+	// get location client
 	locationClient := location.NewClient(tracerProvider, logger, options.LocationHostPort)
 
-	// get a notification handler
+	// get notification handler
 	notificationHandler := notifications.NewNotificationHandler(tracerProvider, logger)
 
 	// get a dispatcher

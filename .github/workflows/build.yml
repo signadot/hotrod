@@ -119,12 +119,12 @@ jobs:
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"istio"* ]]; then
-            echo "Found istio label"
-            NAMESPACE="hotrod-istio"
-          else
-            echo "istio label not found"
+          if [[ "$LABELS" == *"devmesh"* ]]; then
+            echo "Found devmesh label"
             NAMESPACE="hotrod-devmesh"
+          else
+            echo "Using default namespace"
+            NAMESPACE="hotrod-istio"
           fi
           echo "Using namespace=${NAMESPACE}"
           echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
@@ -142,7 +142,11 @@ jobs:
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
-      - name: Run Tests
+      - name: Run Smart Tests
+        run: |
+          signadot st run --sandbox=${SANDBOX_NAME} --publish
+
+      - name: Run Integration Tests using Signadot Local Proxy
         run: |
           # Run the proxy
           echo "Starting signadot proxy..."
@@ -194,12 +198,12 @@ jobs:
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"istio"* ]]; then
-            echo "Found istio label"
-            NAMESPACE="hotrod-istio"
-          else
-            echo "istio label not found"
+          if [[ "$LABELS" == *"devmesh"* ]]; then
+            echo "Found devmesh label"
             NAMESPACE="hotrod-devmesh"
+          else
+            echo "Using default namespace"
+            NAMESPACE="hotrod-istio"
           fi
           echo "Using namespace=${NAMESPACE}"
           echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
@@ -217,27 +221,9 @@ jobs:
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
-      - name: Run Tests
+      - name: Run Smart Tests
         run: |
-          # Run the proxy
-          echo "Starting signadot proxy..."
-          signadot local proxy --sandbox ${SANDBOX_NAME} \
-            --map http://frontend.${NAMESPACE}:8080@localhost:38080 > /tmp/signadot-proxy.log &
-          PROXY_PID=$!
-          sleep 1
-          cat /tmp/signadot-proxy.log
-
-          # Run integration tests
-          echo "Executing tests..."
-          go install github.com/jstemmer/go-junit-report/v2@latest
-          TEST_FRONTEND_ADDR=localhost:38080 TEST_TARGET_WORKLOAD=frontend TEST_SANDBOX_NAME=${SANDBOX_NAME} go test -v \
-            ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
-
-          # Stop the proxy
-          echo "Stopping signadot proxy..."
-          cat /tmp/signadot-proxy.log
-          kill ${PROXY_PID}
-
+          signadot st run --sandbox=${SANDBOX_NAME} --publish
 
   sandbox-location:
     runs-on: ubuntu-latest
@@ -265,12 +251,12 @@ jobs:
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"istio"* ]]; then
-            echo "Found istio label"
-            NAMESPACE="hotrod-istio"
-          else
-            echo "istio label not found"
+          if [[ "$LABELS" == *"devmesh"* ]]; then
+            echo "Found devmesh label"
             NAMESPACE="hotrod-devmesh"
+          else
+            echo "Using default namespace"
+            NAMESPACE="hotrod-istio"
           fi
           echo "Using namespace=${NAMESPACE}"
           echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
@@ -287,6 +273,11 @@ jobs:
             --set namespace=${NAMESPACE} \
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
+
+
+      - name: Run Smart Tests
+        run: |
+          signadot st run --sandbox=${SANDBOX_NAME} --publish
 
   sandbox-driver:
     runs-on: ubuntu-latest
@@ -314,12 +305,12 @@ jobs:
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"istio"* ]]; then
-            echo "Found istio label"
-            NAMESPACE="hotrod-istio"
-          else
-            echo "istio label not found"
+          if [[ "$LABELS" == *"devmesh"* ]]; then
+            echo "Found devmesh label"
             NAMESPACE="hotrod-devmesh"
+          else
+            echo "Using default namespace"
+            NAMESPACE="hotrod-istio"
           fi
           echo "Using namespace=${NAMESPACE}"
           echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
@@ -337,23 +328,6 @@ jobs:
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
-      - name: Run Tests
+      - name: Run Smart Tests
         run: |
-          # Run the proxy
-          echo "Starting signadot proxy..."
-          signadot local proxy --sandbox ${SANDBOX_NAME} \
-            --map http://frontend.${NAMESPACE}:8080@localhost:38080 > /tmp/signadot-proxy.log &
-          PROXY_PID=$!
-          sleep 1
-          cat /tmp/signadot-proxy.log
-
-          # Run integration tests
-          echo "Executing tests..."
-          go install github.com/jstemmer/go-junit-report/v2@latest
-          TEST_FRONTEND_ADDR=localhost:38080 TEST_TARGET_WORKLOAD=driver TEST_SANDBOX_NAME=${SANDBOX_NAME} go test -v \
-            ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
-
-          # Stop the proxy
-          echo "Stopping signadot proxy..."
-          cat /tmp/signadot-proxy.log
-          kill ${PROXY_PID}
+          signadot st run --sandbox=${SANDBOX_NAME} --publish

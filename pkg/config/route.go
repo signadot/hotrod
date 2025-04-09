@@ -24,7 +24,7 @@ func GetRouteCalcDelay() time.Duration {
 	return dur
 }
 
-// the standard deviation
+// GetRouteCalcStdDev calculates the standard deviation
 func GetRouteCalcStdDev() time.Duration {
 	return GetRouteCalcDelay() / 4
 }

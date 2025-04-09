@@ -119,8 +119,8 @@ jobs:
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"hotrod-devmesh"* ]]; then
-            echo "Found hotrod-devmesh label"
+          if [[ "$LABELS" == *"devmesh"* ]]; then
+            echo "Found devmesh label"
             NAMESPACE="hotrod-devmesh"
           else
             echo "Using default namespace"
@@ -198,8 +198,8 @@ jobs:
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"hotrod-devmesh"* ]]; then
-            echo "Found hotrod-devmesh label"
+          if [[ "$LABELS" == *"devmesh"* ]]; then
+            echo "Found devmesh label"
             NAMESPACE="hotrod-devmesh"
           else
             echo "Using default namespace"
@@ -251,8 +251,8 @@ jobs:
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"hotrod-devmesh"* ]]; then
-            echo "Found hotrod-devmesh label"
+          if [[ "$LABELS" == *"devmesh"* ]]; then
+            echo "Found devmesh label"
             NAMESPACE="hotrod-devmesh"
           else
             echo "Using default namespace"
@@ -305,8 +305,8 @@ jobs:
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"hotrod-devmesh"* ]]; then
-            echo "Found hotrod-devmesh label"
+          if [[ "$LABELS" == *"devmesh"* ]]; then
+            echo "Found devmesh label"
             NAMESPACE="hotrod-devmesh"
           else
             echo "Using default namespace"

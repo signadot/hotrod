@@ -330,4 +330,4 @@ jobs:
 
       - name: Run Smart Tests
         run: |
-          signadot st run --sandbox=${SANDBOX_NAME} --publish∑
+          signadot st run --sandbox=${SANDBOX_NAME} --publish

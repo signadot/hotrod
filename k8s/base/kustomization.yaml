@@ -8,4 +8,6 @@ resources:
 - location.yaml
 - driver.yaml
 - route.yaml
-
+images:
+- name: signadot/hotrod
+  newTag: latest

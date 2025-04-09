@@ -43,9 +43,9 @@ type Server struct {
 	database       *database
 }
 
-// NewServer creates a new location.Server
+// NewServer creates new location.Server
 func NewServer(hostPort string, logger log.Factory) *Server {
-	// get a tracer provider for the location
+	// get tracer provider for the location
 	tracerProvider := tracing.InitOTEL("location", config.GetOtelExporterType(),
 		config.GetMetricsFactory(), logger)
 

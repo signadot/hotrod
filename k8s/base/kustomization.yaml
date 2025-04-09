@@ -9,6 +9,3 @@ resources:
 - driver.yaml
 - route.yaml
 
-images:
-- name: signadot/hotrod
-  newTag: quickstart-v5-fix

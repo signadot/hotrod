@@ -100,7 +100,7 @@ jobs:
     env:
       SIGNADOT_ORG: signadot
       SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
-      SANDBOX_IMAGE_TAG: ${{ github.sha }}
+      SANDBOX_IMAGE_TAG: ${{ github.sha }}-linux-amd64
       SANDBOX_NAME: pr-${{ github.event.number }}-route
     steps:
       - uses: actions/checkout@v3
@@ -179,7 +179,7 @@ jobs:
     env:
       SIGNADOT_ORG: signadot
       SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
-      SANDBOX_IMAGE_TAG: ${{ github.sha }}
+      SANDBOX_IMAGE_TAG: ${{ github.sha }}-linux-amd64
       SANDBOX_NAME: pr-${{ github.event.number }}-frontend
     steps:
       - uses: actions/checkout@v3
@@ -232,7 +232,7 @@ jobs:
     env:
       SIGNADOT_ORG: signadot
       SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
-      SANDBOX_IMAGE_TAG: ${{ github.sha }}
+      SANDBOX_IMAGE_TAG: ${{ github.sha }}-linux-amd64
       SANDBOX_NAME: pr-${{ github.event.number }}-location
     steps:
       - uses: actions/checkout@v3
@@ -286,7 +286,7 @@ jobs:
     env:
       SIGNADOT_ORG: signadot
       SIGNADOT_API_KEY: ${{ secrets.SIGNADOT_API_KEY }}
-      SANDBOX_IMAGE_TAG: ${{ github.sha }}
+      SANDBOX_IMAGE_TAG: ${{ github.sha }}-linux-amd64
       SANDBOX_NAME: pr-${{ github.event.number }}-driver
     steps:
       - uses: actions/checkout@v3

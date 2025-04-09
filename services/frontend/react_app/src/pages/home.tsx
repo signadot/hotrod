@@ -29,11 +29,17 @@ import {useGetRequestArrival} from "../hooks/useGetRequestArrival.tsx";
 import Countdown, {CountdownRenderProps} from "react-countdown";
 
 const countdownRenderer = ({minutes, seconds, driverName, driverPlate, props }: CountdownRenderProps & { driverName: string, driverPlate: string }) => {
+    const PlateDisplay = () => (
+        <Badge colorScheme="purple" px={2} py={1} borderRadius="md" fontSize="0.9em">{driverPlate}</Badge>
+    );
+
     if (minutes === 0 && seconds === 0) {
-        return <Text>{driverName} arrived</Text>;
+        return <Text as="b">
+            The driver {driverName} <PlateDisplay/> arrived
+        </Text>;
     } else {
         return <Text as="b">
-            The driver {driverName} <Badge colorScheme="purple" px={2} py={1} borderRadius="md" fontSize="0.9em">{driverPlate}</Badge> will arrive in {props.overtime ? "-" : ""}{minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}
+            The driver {driverName} <PlateDisplay/> will arrive in {props.overtime ? "-" : ""}{minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}
         </Text>;
     }
 };

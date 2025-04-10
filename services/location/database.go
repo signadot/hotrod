@@ -56,27 +56,27 @@ CREATE TABLE IF NOT EXISTS locations
 var seed = []Location{
 	{
 		ID:          1,
-		Name:        "My Home",
+		LocName:     "My Home",
 		Coordinates: "231,773",
 	},
 	{
 		ID:          123,
-		Name:        "Rachel's Floral Designs",
+		LocName:     "Rachel's Floral Designs",
 		Coordinates: "115,277",
 	},
 	{
 		ID:          567,
-		Name:        "Amazing Coffee Roasters",
+		LocName:     "Amazing Coffee Roasters",
 		Coordinates: "211,653",
 	},
 	{
 		ID:          392,
-		Name:        "Trom Chocolatier",
+		LocName:     "Trom Chocolatier",
 		Coordinates: "577,322",
 	},
 	{
 		ID:          731,
-		Name:        "Japanese Desserts",
+		LocName:     "Japanese Desserts",
 		Coordinates: "728,326",
 	},
 }
@@ -155,7 +155,7 @@ func (d *database) List(ctx context.Context) ([]Location, error) {
 	var cs []Location
 	for rows.Next() {
 		c := Location{}
-		if err := rows.Scan(&c.ID, &c.Name, &c.Coordinates); err != nil {
+		if err := rows.Scan(&c.ID, &c.LocName, &c.Coordinates); err != nil {
 			return nil, err
 		}
 		cs = append(cs, c)
@@ -169,12 +169,12 @@ func (d *database) List(ctx context.Context) ([]Location, error) {
 
 func (d *database) Create(ctx context.Context, location *Location) (int64, error) {
 	query := "INSERT INTO locations SET name = ?, coordinates = ?"
-	res, err := d.db.Exec(query, location.Name, location.Coordinates)
+	res, err := d.db.Exec(query, location.LocName, location.Coordinates)
 	if err != nil {
 		if !d.shouldRetry(err) {
 			return 0, err
 		}
-		res, err = d.db.Exec(query, location.Name, location.Coordinates)
+		res, err = d.db.Exec(query, location.LocName, location.Coordinates)
 		if err != nil {
 			return 0, err
 		}
@@ -188,12 +188,12 @@ func (d *database) Create(ctx context.Context, location *Location) (int64, error
 
 func (d *database) Update(ctx context.Context, location *Location) error {
 	query := "UPDATE locations SET name = ?, coordinates = ? WHERE id = ?"
-	res, err := d.db.Exec(query, location.Name, location.Coordinates, location.ID)
+	res, err := d.db.Exec(query, location.LocName, location.Coordinates, location.ID)
 	if err != nil {
 		if !d.shouldRetry(err) {
 			return err
 		}
-		res, err = d.db.Exec(query, location.Name, location.Coordinates, location.ID)
+		res, err = d.db.Exec(query, location.LocName, location.Coordinates, location.ID)
 		if err != nil {
 			return err
 		}
@@ -241,7 +241,7 @@ func (d *database) Get(ctx context.Context, locationID int) (*Location, error) {
 			return nil, row.Err()
 		}
 	}
-	if err := row.Scan(&c.ID, &c.Name, &c.Coordinates); err != nil {
+	if err := row.Scan(&c.ID, &c.LocName, &c.Coordinates); err != nil {
 		return nil, err
 	}
 	return &c, nil
@@ -286,7 +286,7 @@ func (d *database) setupDB() {
 	}
 	for i := range seed {
 		c := &seed[i]
-		if _, err := stmt.Exec(c.ID, c.Name, c.Coordinates); err != nil {
+		if _, err := stmt.Exec(c.ID, c.LocName, c.Coordinates); err != nil {
 			panic(err)
 		}
 	}

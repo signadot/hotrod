@@ -18,6 +18,8 @@ package location
 import (
 	"context"
 	"fmt"
+	"strconv"
+	"strings"
 	"time"
 
 	"go.opentelemetry.io/otel/attribute"
@@ -55,29 +57,29 @@ CREATE TABLE IF NOT EXISTS locations
 
 var seed = []Location{
 	{
-		ID:          1,
-		Name:        "My Home",
-		Coordinates: "231,773",
+		ID:   1,
+		Name: "My Home",
+		//Coordinates: "231,773",
 	},
 	{
-		ID:          123,
-		Name:        "Rachel's Floral Designs",
-		Coordinates: "115,277",
+		ID:   123,
+		Name: "Rachel's Floral Designs",
+		//Coordinates: "115,277",
 	},
 	{
-		ID:          567,
-		Name:        "Amazing Coffee Roasters",
-		Coordinates: "211,653",
+		ID:   567,
+		Name: "Amazing Coffee Roasters",
+		//Coordinates: "211,653",
 	},
 	{
-		ID:          392,
-		Name:        "Trom Chocolatier",
-		Coordinates: "577,322",
+		ID:   392,
+		Name: "Trom Chocolatier",
+		//Coordinates: "577,322",
 	},
 	{
-		ID:          731,
-		Name:        "Japanese Desserts",
-		Coordinates: "728,326",
+		ID:   731,
+		Name: "Japanese Desserts",
+		//Coordinates: "728,326",
 	},
 }
 
@@ -155,9 +157,26 @@ func (d *database) List(ctx context.Context) ([]Location, error) {
 	var cs []Location
 	for rows.Next() {
 		c := Location{}
-		if err := rows.Scan(&c.ID, &c.Name, &c.Coordinates); err != nil {
+		coords := ""
+
+		if err := rows.Scan(&c.ID, &c.Name, &coords); err != nil {
 			return nil, err
 		}
+		sLong, sLat, ok := strings.Cut(coords, ",")
+		if !ok {
+			panic("not ok")
+		}
+		long, err := strconv.Atoi(sLong)
+		if err != nil {
+			panic(err)
+		}
+		c.Longitude = long
+		lat, err := strconv.Atoi(sLat)
+		if err != nil {
+			panic(err)
+		}
+		c.Latitue = lat
+
 		cs = append(cs, c)
 	}
 	if err := rows.Err(); err != nil {
@@ -169,12 +188,13 @@ func (d *database) List(ctx context.Context) ([]Location, error) {
 
 func (d *database) Create(ctx context.Context, location *Location) (int64, error) {
 	query := "INSERT INTO locations SET name = ?, coordinates = ?"
-	res, err := d.db.Exec(query, location.Name, location.Coordinates)
+	coords := fmt.Sprintf("%d,%d", location.Longitude, location.Latitue)
+	res, err := d.db.Exec(query, location.Name, coords)
 	if err != nil {
 		if !d.shouldRetry(err) {
 			return 0, err
 		}
-		res, err = d.db.Exec(query, location.Name, location.Coordinates)
+		res, err = d.db.Exec(query, location.Name, coords)
 		if err != nil {
 			return 0, err
 		}
@@ -188,12 +208,13 @@ func (d *database) Create(ctx context.Context, location *Location) (int64, error
 
 func (d *database) Update(ctx context.Context, location *Location) error {
 	query := "UPDATE locations SET name = ?, coordinates = ? WHERE id = ?"
-	res, err := d.db.Exec(query, location.Name, location.Coordinates, location.ID)
+	coords := fmt.Sprintf("%d,%d", location.Longitude, location.Latitue)
+	res, err := d.db.Exec(query, location.Name, coords, location.ID)
 	if err != nil {
 		if !d.shouldRetry(err) {
 			return err
 		}
-		res, err = d.db.Exec(query, location.Name, location.Coordinates, location.ID)
+		res, err = d.db.Exec(query, location.Name, coords, location.ID)
 		if err != nil {
 			return err
 		}
@@ -241,9 +262,24 @@ func (d *database) Get(ctx context.Context, locationID int) (*Location, error) {
 			return nil, row.Err()
 		}
 	}
-	if err := row.Scan(&c.ID, &c.Name, &c.Coordinates); err != nil {
+	coords := ""
+	if err := row.Scan(&c.ID, &c.Name, coords); err != nil {
 		return nil, err
 	}
+	sLong, sLat, ok := strings.Cut(coords, ",")
+	if !ok {
+		panic("not ok")
+	}
+	long, err := strconv.Atoi(sLong)
+	if err != nil {
+		panic(err)
+	}
+	c.Longitude = long
+	lat, err := strconv.Atoi(sLat)
+	if err != nil {
+		panic(err)
+	}
+	c.Latitue = lat
 	return &c, nil
 }
 
@@ -286,7 +322,8 @@ func (d *database) setupDB() {
 	}
 	for i := range seed {
 		c := &seed[i]
-		if _, err := stmt.Exec(c.ID, c.Name, c.Coordinates); err != nil {
+		coords := fmt.Sprintf("%d,%d", c.Longitude, c.Latitue)
+		if _, err := stmt.Exec(c.ID, c.Name, coords); err != nil {
 			panic(err)
 		}
 	}

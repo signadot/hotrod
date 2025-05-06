@@ -4,6 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net"
+	"os"
 	"time"
 
 	"github.com/dnwe/otelsarama"
@@ -22,6 +24,29 @@ import (
 	"github.com/IBM/sarama"
 )
 
+// isRouteserverReachable checks if the routeserver is available and reachable
+func isRouteserverReachable(logger log.Factory) (string, bool) {
+	routeserverURL := os.Getenv("SIGNADOT_ROUTESERVER")
+	if routeserverURL == "" {
+		logger.Bg().Info("No routeserver URL found")
+		return "", false
+	}
+
+	// Try to connect to check reachability
+	timeout := 2 * time.Second
+	conn, err := net.DialTimeout("tcp", routeserverURL, timeout)
+	if err != nil {
+		logger.Bg().Info("Routeserver not reachable",
+			zap.String("url", routeserverURL),
+			zap.Error(err))
+		return routeserverURL, false
+	}
+
+	conn.Close()
+	logger.Bg().Info("Routeserver is reachable", zap.String("url", routeserverURL))
+	return routeserverURL, true
+}
+
 // Consumer represents a Sarama consumer group consumer
 type Consumer struct {
 	tracer       trace.Tracer
@@ -35,11 +60,23 @@ type Consumer struct {
 
 func newConsumer(ctx context.Context, tracerProvider trace.TracerProvider,
 	logger log.Factory) *Consumer {
-	// create a routesapi baseline watched instance
-	// TODO: remove this in case we're not running with Signadot
-	routing, err := watched.BaselineWatchedFromEnv()
-	if err != nil {
-		panic(err)
+	// Log something funky during initialization
+	logger.Bg().Info("🚕 Vrooom! Driver service starting up! 🚗 Ready to find the fastest routes! 🛣️")
+
+	// Only initialize routing if routeserver URL is set and reachable
+	var routing watched.BaselineWatched
+	routeserverURL, reachable := isRouteserverReachable(logger)
+
+	if reachable {
+		logger.Bg().Info("Initializing routing with reachable routeserver",
+			zap.String("url", routeserverURL))
+		var err error
+		routing, err = watched.BaselineWatchedFromEnv()
+		if err != nil {
+			logger.Bg().Info("Failed to create BaselineWatchedFromEnv, continuing without routing", zap.Error(err))
+		}
+	} else {
+		logger.Bg().Info("Continuing without routing")
 	}
 
 	tracer := tracerProvider.Tracer("driver")
@@ -84,6 +121,10 @@ func (consumer *Consumer) ConsumeClaim(session sarama.ConsumerGroupSession, clai
 }
 
 func (consumer *Consumer) shouldProcess(routingKey string) bool {
+	if consumer.routing == nil {
+		// If routing is not set up, process all messages
+		return true
+	}
 	if sbName := config.SignadotSandboxName(); sbName != "" {
 		return consumer.routing.RoutesTo(routingKey, sbName)
 	}

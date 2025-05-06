@@ -19,7 +19,7 @@ build-frontend-app:
 	cd services/frontend/react_app && ./scripts/build.sh
 
 dev-build-docker: build
-	$(DOCKER) build -t signadot/hotrod:latest \
+	$(DOCKER) build -t signadot/hotrod:dev \
 		--platform $(GOOS)/$(GOARCH) \
 		.
 

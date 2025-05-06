@@ -60,8 +60,6 @@ type Consumer struct {
 
 func newConsumer(ctx context.Context, tracerProvider trace.TracerProvider,
 	logger log.Factory) *Consumer {
-	// Log something funky during initialization
-	logger.Bg().Info("🚕 Vrooom! Driver service starting up! 🚗 Ready to find the fastest routes! 🛣️")
 
 	// Only initialize routing if routeserver URL is set and reachable
 	var routing watched.BaselineWatched

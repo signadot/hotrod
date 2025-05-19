@@ -56,27 +56,27 @@ CREATE TABLE IF NOT EXISTS locations
 var seed = []Location{
 	{
 		ID:          1,
-		Name:        "My Home",
+		Name:        "Resource Plugin Demo 1",
 		Coordinates: "231,773",
 	},
 	{
 		ID:          123,
-		Name:        "Rachel's Floral Designs",
+		Name:        "Resource Plugin Demo 2",
 		Coordinates: "115,277",
 	},
 	{
 		ID:          567,
-		Name:        "Amazing Coffee Roasters",
+		Name:        "Resource Plugin Demo 3",
 		Coordinates: "211,653",
 	},
 	{
 		ID:          392,
-		Name:        "Trom Chocolatier",
+		Name:        "Resource Plugin Demo 4",
 		Coordinates: "577,322",
 	},
 	{
 		ID:          731,
-		Name:        "Japanese Desserts",
+		Name:        "Resource Plugin Demo 5",
 		Coordinates: "728,326",
 	},
 }

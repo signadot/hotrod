@@ -1,0 +1,30 @@
+name: Build and Push Driver Image for Preview
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout PR code
+        uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to DockerHub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push driver service image
+        run: |
+          IMAGE_NAME=${{ secrets.DOCKERHUB_USERNAME }}/hotrod-driver:${{ github.head_ref }}
+          echo "Building and pushing $IMAGE_NAME"
+          docker build -t $IMAGE_NAME -f driver/Dockerfile .
+          docker push $IMAGE_NAME

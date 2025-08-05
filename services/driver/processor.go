@@ -26,7 +26,6 @@ import (
 	"time"
 
 	"github.com/IBM/sarama"
-	"github.com/signadot/hotrod/pkg/config"
 	"github.com/signadot/hotrod/pkg/kafka"
 	"github.com/signadot/hotrod/pkg/log"
 	"github.com/signadot/hotrod/pkg/tracing"
@@ -50,15 +49,13 @@ func (p *Processor) Run() error {
 	p.logger.For(ctx).Info("Starting a new consumer")
 
 	// get a tracer provider for the driver
-	tracerProvider := tracing.InitOTEL("driver", config.GetOtelExporterType(),
-		config.GetMetricsFactory(), p.logger)
+	tracerProvider := tracing.InitOTEL("driver", p.logger)
 
 	// create a consumer handler
 	consumer := newConsumer(ctx, tracerProvider, p.logger)
 
 	// create a new tracer provider for kafka
-	kafkaTracerProvider := tracing.InitOTEL("kafka", config.GetOtelExporterType(),
-		config.GetMetricsFactory(), p.logger)
+	kafkaTracerProvider := tracing.InitOTEL("kafka", p.logger)
 
 	var (
 		consumerGroup sarama.ConsumerGroup

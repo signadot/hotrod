@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/signadot/hotrod/pkg/config"
 	"github.com/signadot/hotrod/pkg/log"
 	"github.com/signadot/hotrod/pkg/tracing"
 	"go.uber.org/zap"
@@ -29,8 +28,7 @@ func TestLocationClient(t *testing.T) {
 	l := log.NewFactory(zapLogger)
 
 	// get a tracer provider for the frontend
-	tracerProvider := tracing.InitOTEL("frontend", config.GetOtelExporterType(),
-		config.GetMetricsFactory(), l)
+	tracerProvider := tracing.InitOTEL("frontend", l)
 
 	// get a location client
 	locationClient := NewClient(tracerProvider, l, os.Getenv("TEST_LOCATION_ADDR"))

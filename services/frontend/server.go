@@ -20,6 +20,7 @@ import (
 	"encoding/json"
 	"expvar"
 	"fmt"
+	"net"
 	"net/http"
 	"os"
 	"path"
@@ -45,9 +46,8 @@ var assetFS embed.FS
 
 // Server implements hotrod-frontend service
 type Server struct {
-	hostPort string
+	addr     string
 	basepath string
-	jaegerUI string
 
 	tracer       trace.TracerProvider
 	logger       log.Factory
@@ -56,23 +56,13 @@ type Server struct {
 	dispatcher   *dispatcher
 }
 
-// ConfigOptions used to make sure service clients
-// can find correct server ports
-type ConfigOptions struct {
-	FrontendHostPort string
-	LocationHostPort string
-	RouteHostPort    string
-	Basepath         string
-}
-
 // NewServer creates a new frontend.Server
-func NewServer(options ConfigOptions, logger log.Factory) *Server {
+func NewServer(logger log.Factory) *Server {
 	// get tracer provider for the frontend
-	tracerProvider := tracing.InitOTEL("frontend", config.GetOtelExporterType(),
-		config.GetMetricsFactory(), logger)
+	tracerProvider := tracing.InitOTEL("frontend", logger)
 
 	// get location client
-	locationClient := location.NewClient(tracerProvider, logger, options.LocationHostPort)
+	locationClient := location.NewClient(tracerProvider, logger, config.GetLocationAddr())
 
 	// get notification handler
 	notificationHandler := notifications.NewNotificationHandler(tracerProvider, logger)
@@ -81,8 +71,8 @@ func NewServer(options ConfigOptions, logger log.Factory) *Server {
 	dispatcher := newDispatcher(tracerProvider, logger, locationClient)
 
 	return &Server{
-		hostPort: options.FrontendHostPort,
-		basepath: options.Basepath,
+		addr:     net.JoinHostPort("0.0.0.0", config.GetFrontendBindPort()),
+		basepath: config.GetFrontendBasepath(),
 
 		tracer:       tracerProvider,
 		logger:       logger,
@@ -95,9 +85,9 @@ func NewServer(options ConfigOptions, logger log.Factory) *Server {
 // Run starts the frontend server
 func (s *Server) Run() error {
 	mux := s.createServeMux()
-	s.logger.Bg().Info("Starting", zap.String("address", "http://"+path.Join(s.hostPort, s.basepath)))
+	s.logger.Bg().Info("Starting", zap.String("address", "http://"+path.Join(s.addr, s.basepath)))
 	server := &http.Server{
-		Addr:              s.hostPort,
+		Addr:              s.addr,
 		Handler:           mux,
 		ReadHeaderTimeout: 3 * time.Second,
 	}

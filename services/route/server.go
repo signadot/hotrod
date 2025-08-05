@@ -25,7 +25,7 @@ import (
 // Server implements jaeger-demo-frontend service
 type Server struct {
 	UnimplementedRoutesServiceServer
-	hostPort       string
+	addr           string
 	tracerProvider trace.TracerProvider
 	logger         log.Factory
 	server         *grpc.Server
@@ -35,17 +35,16 @@ type Server struct {
 var _ RoutesServiceServer = (*Server)(nil)
 
 // NewServer creates a new Server
-func NewServer(hostPort string, logger log.Factory) *Server {
+func NewServer(logger log.Factory) *Server {
 	// get a tracer provider for the route service
-	tracerProvider := tracing.InitOTEL("route", config.GetOtelExporterType(),
-		config.GetMetricsFactory(), logger)
+	tracerProvider := tracing.InitOTEL("route", logger)
 
 	server := grpc.NewServer(
 		grpc.StatsHandler(otelgrpc.NewServerHandler(otelgrpc.WithTracerProvider(tracerProvider))),
 	)
 
 	return &Server{
-		hostPort:       hostPort,
+		addr:           net.JoinHostPort("0.0.0.0", config.GetRouteBindPort()),
 		tracerProvider: tracerProvider,
 		logger:         logger,
 		server:         server,
@@ -55,7 +54,7 @@ func NewServer(hostPort string, logger log.Factory) *Server {
 
 // Run starts the Driver server
 func (s *Server) Run() error {
-	lis, err := net.Listen("tcp", s.hostPort)
+	lis, err := net.Listen("tcp", s.addr)
 	if err != nil {
 		s.logger.Bg().Fatal("Unable to create http listener", zap.Error(err))
 	}

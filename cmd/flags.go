@@ -21,13 +21,6 @@ import (
 var (
 	metricsBackend string
 	verbose        bool
-
-	locationPort int
-	frontendPort int
-	routePort    int
-
-	basePath   string
-	baseDomain string
 )
 
 const expvarDepr = "(deprecated, will be removed after 2024-01-01 or in release v1.53.0, whichever is later) "
@@ -35,15 +28,5 @@ const expvarDepr = "(deprecated, will be removed after 2024-01-01 or in release 
 // used by root command
 func addFlags(cmd *cobra.Command) {
 	cmd.PersistentFlags().StringVarP(&metricsBackend, "metrics", "m", "prometheus", expvarDepr+"Metrics backend (expvar|prometheus). ")
-
-	// Add flags to choose ports for services
-	cmd.PersistentFlags().IntVarP(&locationPort, "location-service-port", "c", 8081, "Port for location service")
-	cmd.PersistentFlags().IntVarP(&frontendPort, "frontend-service-port", "f", 8080, "Port for frontend service")
-	cmd.PersistentFlags().IntVarP(&routePort, "route-service-port", "r", 8083, "Port for routing service")
-
-	// Flag for serving frontend at custom basepath url
-	cmd.PersistentFlags().StringVarP(&basePath, "basepath", "b", "", `Basepath for frontend service(default "/")`)
-	cmd.PersistentFlags().StringVarP(&baseDomain, "basedomain", "B", "", `Base domain for accessing hotrod services`)
-
 	cmd.PersistentFlags().BoolVarP(&verbose, "verbose", "v", false, "Enables debug logging")
 }

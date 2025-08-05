@@ -5,9 +5,8 @@ import (
 	"time"
 )
 
-func GetMySQLAddress() string {
-	return EnvDefault("MYSQL_HOST", "location-db") +
-		":" + EnvDefault("MYSQL_PORT", "3306")
+func GetMySQLAddr() string {
+	return ExpandNamespace(EnvDefault("MYSQL_ADDR", "location-db:3306"))
 }
 
 func GetMySQLUser() string {

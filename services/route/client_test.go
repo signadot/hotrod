@@ -5,7 +5,6 @@ import (
 	"os"
 	"testing"
 
-	"github.com/signadot/hotrod/pkg/config"
 	"github.com/signadot/hotrod/pkg/log"
 	"github.com/signadot/hotrod/pkg/tracing"
 	"go.uber.org/zap"
@@ -29,8 +28,7 @@ func TestRouteClient(t *testing.T) {
 	l := log.NewFactory(zapLogger)
 
 	// get a tracer provider for the frontend
-	tracerProvider := tracing.InitOTEL("route", config.GetOtelExporterType(),
-		config.GetMetricsFactory(), l)
+	tracerProvider := tracing.InitOTEL("route", l)
 
 	// get a route client
 	routeClient := NewClient(tracerProvider, l, os.Getenv("TEST_ROUTE_ADDR"))

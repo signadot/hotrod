@@ -23,6 +23,7 @@ spec:
             - frontend
             - --verbose
           env:
+            # baseline reference
             - name: SIGNADOT_BASELINE_KIND
               value: Deployment
             - name: SIGNADOT_BASELINE_NAMESPACE
@@ -31,8 +32,15 @@ spec:
                   fieldPath: metadata.namespace
             - name: SIGNADOT_BASELINE_NAME
               value: "frontend"
+            # service dependencies (<NAMESPACE> get replaced at runtime by the app)
+            - name: LOCATION_ADDR
+              value: location.<NAMESPACE>:8081
+            - name: REDIS_ADDR
+              value: redis.<NAMESPACE>:6379
+            - name: KAFKA_BROKER_ADDR
+              value: kafka-headless.<NAMESPACE>:9092
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "http://jaeger:4318"
+              value: http://jaeger.<NAMESPACE>:4318
           image: signadot/hotrod:latest
           imagePullPolicy: Always
           ports:

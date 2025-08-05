@@ -16,9 +16,6 @@
 package cmd
 
 import (
-	"net"
-	"strconv"
-
 	"github.com/spf13/cobra"
 	"go.uber.org/zap"
 
@@ -34,10 +31,7 @@ var routeCmd = &cobra.Command{
 	RunE: func(cmd *cobra.Command, args []string) error {
 		zapLogger := logger.With(zap.String("service", "route"))
 		logger := log.NewFactory(zapLogger)
-		server := route.NewServer(
-			net.JoinHostPort("0.0.0.0", strconv.Itoa(routePort)),
-			logger,
-		)
+		server := route.NewServer(logger)
 		return logError(zapLogger, server.Run())
 	},
 }

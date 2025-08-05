@@ -31,8 +31,7 @@ func NewNotificationHandler(tracerProvider trace.TracerProvider, logger log.Fact
 		DB:       0, // use default DB
 	})
 	// create a new tracer provider for redis
-	redisTracerProvider := tracing.InitOTEL("redis", config.GetOtelExporterType(),
-		config.GetMetricsFactory(), logger)
+	redisTracerProvider := tracing.InitOTEL("redis", logger)
 	if err := redisotel.InstrumentTracing(rdb,
 		redisotel.WithTracerProvider(redisTracerProvider)); err != nil {
 		panic(err)

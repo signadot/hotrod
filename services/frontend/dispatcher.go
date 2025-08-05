@@ -8,7 +8,6 @@ import (
 
 	"github.com/IBM/sarama"
 	"github.com/dnwe/otelsarama"
-	"github.com/signadot/hotrod/pkg/config"
 	"github.com/signadot/hotrod/pkg/kafka"
 	"github.com/signadot/hotrod/pkg/log"
 	"github.com/signadot/hotrod/pkg/tracing"
@@ -33,8 +32,7 @@ func newDispatcher(tracerProvider trace.TracerProvider, logger log.Factory,
 	logger = logger.With(zap.String("component", "dispatcher"))
 
 	// create a new tracer provider for kafka
-	kafkaTracerProvider := tracing.InitOTEL("kafka", config.GetOtelExporterType(),
-		config.GetMetricsFactory(), logger)
+	kafkaTracerProvider := tracing.InitOTEL("kafka", logger)
 	producerTicker := time.NewTicker(100 * time.Millisecond)
 	defer producerTicker.Stop()
 	var (

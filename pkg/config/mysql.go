@@ -6,7 +6,7 @@ import (
 )
 
 func GetMySQLAddr() string {
-	return ExpandNamespace(EnvDefault("MYSQL_ADDR", "location-db:3306"))
+	return ExpandNamespace(EnvDefault("MYSQL_ADDR", "mysql:3306"))
 }
 
 func GetMySQLUser() string {

@@ -39,11 +39,11 @@ type Client struct {
 }
 
 // NewClient creates a new location.Client
-func NewClient(tracerProvider trace.TracerProvider, logger log.Factory, hostPort string) *Client {
+func NewClient(tracerProvider trace.TracerProvider, logger log.Factory, addr string) *Client {
 	return &Client{
 		logger:   logger,
 		client:   tracing.NewHTTPClient(tracerProvider),
-		hostPort: hostPort,
+		hostPort: addr,
 	}
 }
 
@@ -77,13 +77,13 @@ func (c *Client) Put(ctx context.Context, location *Location) error {
 	url := fmt.Sprintf("http://%s/location?locationID=%d", c.hostPort, location.ID)
 	fmt.Println(url)
 	var outLocation Location
-	if err := c.putJSON(ctx, "/locations", url, location, outLocation); err != nil {
+	if err := c.putJSON(ctx, url, location, outLocation); err != nil {
 		return err
 	}
 	return nil
 }
 
-func (c *Client) putJSON(ctx context.Context, ep, url string, reqIn, respOut interface{}) error {
+func (c *Client) putJSON(ctx context.Context, url string, reqIn, respOut interface{}) error {
 	d, err := json.Marshal(reqIn)
 	if err != nil {
 		return err

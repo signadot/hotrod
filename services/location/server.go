@@ -19,6 +19,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"net"
 	"net/http"
 	"strconv"
 	"time"
@@ -36,7 +37,7 @@ import (
 
 // Server implements Location service
 type Server struct {
-	hostPort       string
+	addr           string
 	tracerProvider trace.TracerProvider
 	logger         log.Factory
 	notification   notifications.Interface
@@ -44,13 +45,12 @@ type Server struct {
 }
 
 // NewServer creates new location.Server
-func NewServer(hostPort string, logger log.Factory) *Server {
+func NewServer(logger log.Factory) *Server {
 	// get tracer provider for the location
-	tracerProvider := tracing.InitOTEL("location", config.GetOtelExporterType(),
-		config.GetMetricsFactory(), logger)
+	tracerProvider := tracing.InitOTEL("location", logger)
 
 	return &Server{
-		hostPort:       hostPort,
+		addr:           net.JoinHostPort("0.0.0.0", config.GetLocationBindPort()),
 		tracerProvider: tracerProvider,
 		logger:         logger,
 		database:       newDatabase(logger),
@@ -61,9 +61,9 @@ func NewServer(hostPort string, logger log.Factory) *Server {
 // Run starts the Location server
 func (s *Server) Run() error {
 	mux := s.createServeMux()
-	s.logger.Bg().Info("Starting", zap.String("address", "http://"+s.hostPort))
+	s.logger.Bg().Info("Starting", zap.String("address", "http://"+s.addr))
 	server := &http.Server{
-		Addr:              s.hostPort,
+		Addr:              s.addr,
 		Handler:           mux,
 		ReadHeaderTimeout: 3 * time.Second,
 	}

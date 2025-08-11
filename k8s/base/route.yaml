@@ -22,6 +22,7 @@ spec:
           args:
             - route
           env:
+            # baseline reference
             - name: SIGNADOT_BASELINE_KIND
               value: Deployment
             - name: SIGNADOT_BASELINE_NAMESPACE
@@ -30,8 +31,11 @@ spec:
                   fieldPath: metadata.namespace
             - name: SIGNADOT_BASELINE_NAME
               value: "route"
+            # service dependencies
+            - name: REDIS_ADDR
+              value: redis.<NAMESPACE>:6379
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: "http://jaeger:4318"
+              value: http://jaeger.<NAMESPACE>:4318
           image: signadot/hotrod:latest
           imagePullPolicy: Always
           ports:

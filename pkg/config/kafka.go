@@ -1,6 +1,9 @@
 package config
 
+func GetKafkaBrokerAddr() string {
+	return ExpandNamespace(EnvDefault("KAFKA_BROKER_ADDR", "kafka-headless:9092"))
+}
+
 func GetKafkaBrokers() []string {
-	broker := EnvDefault("KAFKA_BROKER", "kafka-headless:9092")
-	return []string{broker}
+	return []string{GetKafkaBrokerAddr()}
 }

@@ -6,7 +6,7 @@ import (
 )
 
 func GetRouteAddr() string {
-	return ExpandNamespace(EnvDefault("ROUTE_ADDR", "route:8083"))
+	return EnvDefault("ROUTE_ADDR", "route:8083")
 }
 
 func GetRouteBindPort() string {

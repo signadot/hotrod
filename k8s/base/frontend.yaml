@@ -32,15 +32,15 @@ spec:
                   fieldPath: metadata.namespace
             - name: SIGNADOT_BASELINE_NAME
               value: "frontend"
-            # service dependencies (<NAMESPACE> get replaced at runtime by the app)
+            # service dependencies
             - name: LOCATION_ADDR
-              value: location.<NAMESPACE>:8081
+              value: location.$(SIGNADOT_BASELINE_NAMESPACE):8081
             - name: REDIS_ADDR
-              value: redis.<NAMESPACE>:6379
+              value: redis.$(SIGNADOT_BASELINE_NAMESPACE):6379
             - name: KAFKA_BROKER_ADDR
-              value: kafka-headless.<NAMESPACE>:9092
+              value: kafka-headless.$(SIGNADOT_BASELINE_NAMESPACE):9092
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: http://jaeger.<NAMESPACE>:4318
+              value: http://jaeger.$(SIGNADOT_BASELINE_NAMESPACE):4318
           image: signadot/hotrod:latest
           imagePullPolicy: Always
           ports:

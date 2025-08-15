@@ -62,7 +62,7 @@ jobs:
           go-version: ${{ env.GO_VERSION }}
 
       - name: Go Mod Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/go/pkg/mod
           key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-mod-${{ hashFiles('**/go.sum') }}
@@ -70,7 +70,7 @@ jobs:
             ${{ runner.os }}-go-${{ env.GO_VERSION }}-mod-
 
       - name: Go Build Cache
-        uses: actions/cache@v2
+        uses: actions/cache@v4
         with:
           path: ~/.cache/go-build
           key: ${{ runner.os }}-go-${{ env.GO_VERSION }}-build-${{ hashFiles('**/go.sum') }}
@@ -119,12 +119,12 @@ jobs:
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"istio"* ]]; then
-            echo "Found istio label"
-            NAMESPACE="hotrod-istio"
-          else
-            echo "istio label not found"
+          if [[ "$LABELS" == *"devmesh"* ]]; then
+            echo "Found devmesh label"
             NAMESPACE="hotrod-devmesh"
+          else
+            echo "Using default namespace"
+            NAMESPACE="hotrod-istio"
           fi
           echo "Using namespace=${NAMESPACE}"
           echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
@@ -142,36 +142,11 @@ jobs:
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
-      - id: get-comment-body
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+      - name: Run Smart Tests
         run: |
-          body="https://app.signadot.com/sandbox/name/${SANDBOX_NAME}"
-          body="${body//'%'/'%25'}"
-          body="${body//$'\n'/'%0A'}"
-          body="${body//$'\r'/'%0D'}"
-          echo "::set-output name=body::$body"
-      - name: Find Comment
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        uses: peter-evans/find-comment@v2
-        id: fc
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: Route Sandbox
+          signadot st run --sandbox=${SANDBOX_NAME} --publish
 
-      - name: Create or update comment
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        uses: peter-evans/create-or-update-comment@v3
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body: |
-            Route Sandbox Ready!
-            ${{ steps.get-comment-body.outputs.body }}
-          edit-mode: replace
-
-      - name: Run Tests
+      - name: Run Integration Tests using Signadot Local Proxy
         run: |
           # Run the proxy
           echo "Starting signadot proxy..."
@@ -196,15 +171,6 @@ jobs:
           echo "Stopping signadot proxy..."
           cat /tmp/signadot-proxy.log
           kill ${PROXY_PID}
-
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          check_name: Route Test Results
-          files: |
-            *report.xml
-
 
   sandbox-frontend:
     runs-on: ubuntu-latest
@@ -232,12 +198,12 @@ jobs:
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"istio"* ]]; then
-            echo "Found istio label"
-            NAMESPACE="hotrod-istio"
-          else
-            echo "istio label not found"
+          if [[ "$LABELS" == *"devmesh"* ]]; then
+            echo "Found devmesh label"
             NAMESPACE="hotrod-devmesh"
+          else
+            echo "Using default namespace"
+            NAMESPACE="hotrod-istio"
           fi
           echo "Using namespace=${NAMESPACE}"
           echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
@@ -255,64 +221,9 @@ jobs:
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
-      - id: get-comment-body
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+      - name: Run Smart Tests
         run: |
-          body="https://app.signadot.com/sandbox/name/${SANDBOX_NAME}"
-          body="${body//'%'/'%25'}"
-          body="${body//$'\n'/'%0A'}"
-          body="${body//$'\r'/'%0D'}"
-          echo "::set-output name=body::$body"
-      - name: Find Comment
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        uses: peter-evans/find-comment@v2
-        id: fc
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: Frontend Sandbox
-
-      - name: Create or update comment
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        uses: peter-evans/create-or-update-comment@v3
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body: |
-            Frontend Sandbox Ready!
-            ${{ steps.get-comment-body.outputs.body }}
-          edit-mode: replace
-
-      - name: Run Tests
-        run: |
-          # Run the proxy
-          echo "Starting signadot proxy..."
-          signadot local proxy --sandbox ${SANDBOX_NAME} \
-            --map http://frontend.${NAMESPACE}:8080@localhost:38080 > /tmp/signadot-proxy.log &
-          PROXY_PID=$!
-          sleep 1
-          cat /tmp/signadot-proxy.log
-
-          # Run integration tests
-          echo "Executing tests..."
-          go install github.com/jstemmer/go-junit-report/v2@latest
-          TEST_FRONTEND_ADDR=localhost:38080 TEST_TARGET_WORKLOAD=frontend TEST_SANDBOX_NAME=${SANDBOX_NAME} go test -v \
-            ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
-
-          # Stop the proxy
-          echo "Stopping signadot proxy..."
-          cat /tmp/signadot-proxy.log
-          kill ${PROXY_PID}
-
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          check_name: Frontend Test Results
-          files: |
-            *report.xml
-
+          signadot st run --sandbox=${SANDBOX_NAME} --publish
 
   sandbox-location:
     runs-on: ubuntu-latest
@@ -340,12 +251,12 @@ jobs:
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"istio"* ]]; then
-            echo "Found istio label"
-            NAMESPACE="hotrod-istio"
-          else
-            echo "istio label not found"
+          if [[ "$LABELS" == *"devmesh"* ]]; then
+            echo "Found devmesh label"
             NAMESPACE="hotrod-devmesh"
+          else
+            echo "Using default namespace"
+            NAMESPACE="hotrod-istio"
           fi
           echo "Using namespace=${NAMESPACE}"
           echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
@@ -363,69 +274,10 @@ jobs:
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
-      - id: get-comment-body
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+
+      - name: Run Smart Tests
         run: |
-          body="https://app.signadot.com/sandbox/name/${SANDBOX_NAME}"
-          body="${body//'%'/'%25'}"
-          body="${body//$'\n'/'%0A'}"
-          body="${body//$'\r'/'%0D'}"
-          echo "::set-output name=body::$body"
-      - name: Find Comment
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        uses: peter-evans/find-comment@v2
-        id: fc
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: Location Sandbox
-
-      - name: Create or update comment
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        uses: peter-evans/create-or-update-comment@v3
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body: |
-            Location Sandbox Ready!
-            ${{ steps.get-comment-body.outputs.body }}
-          edit-mode: replace
-
-      - name: Run Tests
-        run: |
-          # Run the proxy
-          echo "Starting signadot proxy..."
-          signadot local proxy --sandbox ${SANDBOX_NAME} \
-            --map http://location.${NAMESPACE}:8081@localhost:38081 \
-            --map http://frontend.${NAMESPACE}:8080@localhost:38080 > /tmp/signadot-proxy.log &
-          PROXY_PID=$!
-          sleep 1
-          cat /tmp/signadot-proxy.log
-
-          # Run api tests
-          echo "Executing tests..."
-          go install github.com/jstemmer/go-junit-report/v2@latest
-          TEST_LOCATION_ADDR=localhost:38081 go test -v \
-            ${GITHUB_WORKSPACE}/services/location/ | go-junit-report -set-exit-code -out api-report.xml
-
-          # Run integration tests
-          TEST_FRONTEND_ADDR=localhost:38080 TEST_TARGET_WORKLOAD=location TEST_SANDBOX_NAME=${SANDBOX_NAME} go test -v \
-            ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
-
-          # Stop the proxy
-          echo "Stopping signadot proxy..."
-          cat /tmp/signadot-proxy.log
-          kill ${PROXY_PID}
-
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          check_name: Location Test Results
-          files: |
-            *report.xml
-
+          signadot st run --sandbox=${SANDBOX_NAME} --publish
 
   sandbox-driver:
     runs-on: ubuntu-latest
@@ -453,12 +305,12 @@ jobs:
           echo "Checking for labels..."
           LABELS="${{ toJSON(github.event.pull_request.labels.*.name) }}"
           echo "Labels on PR: $LABELS"
-          if [[ "$LABELS" == *"istio"* ]]; then
-            echo "Found istio label"
-            NAMESPACE="hotrod-istio"
-          else
-            echo "istio label not found"
+          if [[ "$LABELS" == *"devmesh"* ]]; then
+            echo "Found devmesh label"
             NAMESPACE="hotrod-devmesh"
+          else
+            echo "Using default namespace"
+            NAMESPACE="hotrod-istio"
           fi
           echo "Using namespace=${NAMESPACE}"
           echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
@@ -476,60 +328,6 @@ jobs:
             -f - \
             < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
 
-      - id: get-comment-body
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
+      - name: Run Smart Tests
         run: |
-          body="https://app.signadot.com/sandbox/name/${SANDBOX_NAME}"
-          body="${body//'%'/'%25'}"
-          body="${body//$'\n'/'%0A'}"
-          body="${body//$'\r'/'%0D'}"
-          echo "::set-output name=body::$body"
-      - name: Find Comment
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        uses: peter-evans/find-comment@v2
-        id: fc
-        with:
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body-includes: Driver Sandbox
-
-      - name: Create or update comment
-        if: ${{ github.event_name == 'pull_request' && github.actor != 'dependabot[bot]' }}
-        uses: peter-evans/create-or-update-comment@v3
-        with:
-          comment-id: ${{ steps.fc.outputs.comment-id }}
-          issue-number: ${{ github.event.pull_request.number }}
-          comment-author: 'github-actions[bot]'
-          body: |
-            Driver Sandbox Ready!
-            ${{ steps.get-comment-body.outputs.body }}
-          edit-mode: replace
-
-      - name: Run Tests
-        run: |
-          # Run the proxy
-          echo "Starting signadot proxy..."
-          signadot local proxy --sandbox ${SANDBOX_NAME} \
-            --map http://frontend.${NAMESPACE}:8080@localhost:38080 > /tmp/signadot-proxy.log &
-          PROXY_PID=$!
-          sleep 1
-          cat /tmp/signadot-proxy.log
-
-          # Run integration tests
-          echo "Executing tests..."
-          go install github.com/jstemmer/go-junit-report/v2@latest
-          TEST_FRONTEND_ADDR=localhost:38080 TEST_TARGET_WORKLOAD=driver TEST_SANDBOX_NAME=${SANDBOX_NAME} go test -v \
-            ${GITHUB_WORKSPACE}/services/frontend/ | go-junit-report -set-exit-code -out integration-report.xml
-
-          # Stop the proxy
-          echo "Stopping signadot proxy..."
-          cat /tmp/signadot-proxy.log
-          kill ${PROXY_PID}
-
-      - name: Publish Test Results
-        uses: EnricoMi/publish-unit-test-result-action@v2
-        if: always()
-        with:
-          check_name: Driver Test Results
-          files: |
-            *report.xml
+          signadot st run --sandbox=${SANDBOX_NAME} --publish

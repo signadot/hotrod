@@ -78,22 +78,6 @@ func onInitialize() {
 	default:
 		logger.Fatal("unsupported metrics backend " + metricsBackend)
 	}
-
-	if locationPort != 8081 {
-		logger.Info("changing location service port", zap.Int("old", 8081), zap.Int("new", locationPort))
-	}
-
-	if frontendPort != 8080 {
-		logger.Info("changing frontend service port", zap.Int("old", 8080), zap.Int("new", frontendPort))
-	}
-
-	if routePort != 8083 {
-		logger.Info("changing route service port", zap.Int("old", 8083), zap.Int("new", routePort))
-	}
-
-	if basePath != "" {
-		logger.Info("changing basepath for frontend", zap.String("old", "/"), zap.String("new", basePath))
-	}
 }
 
 func logError(logger *zap.Logger, err error) error {

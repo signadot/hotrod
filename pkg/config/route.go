@@ -6,7 +6,11 @@ import (
 )
 
 func GetRouteAddr() string {
-	return EnvDefault("ROUTE_ADDR", "route:8083")
+	return ExpandNamespace(EnvDefault("ROUTE_ADDR", "route:8083"))
+}
+
+func GetRouteBindPort() string {
+	return EnvDefault("ROUTE_BIND_PORT", "8083")
 }
 
 // how long a route calculation takes
@@ -24,7 +28,7 @@ func GetRouteCalcDelay() time.Duration {
 	return dur
 }
 
-// the standard deviation
+// GetRouteCalcStdDev calculates the standard deviation
 func GetRouteCalcStdDev() time.Duration {
 	return GetRouteCalcDelay() / 4
 }

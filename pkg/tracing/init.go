@@ -35,7 +35,7 @@ import (
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
 
-	"github.com/jaegertracing/jaeger/pkg/metrics"
+	"github.com/signadot/hotrod/pkg/config"
 	"github.com/signadot/hotrod/pkg/log"
 	"github.com/signadot/hotrod/pkg/tracing/rpcmetrics"
 )
@@ -43,8 +43,10 @@ import (
 var once sync.Once
 
 // InitOTEL initializes OpenTelemetry SDK.
-func InitOTEL(serviceName string, exporterType string, metricsFactory metrics.Factory, logger log.Factory) trace.TracerProvider {
+func InitOTEL(serviceName string, logger log.Factory) trace.TracerProvider {
 	once.Do(func() {
+		config.InitOtelExporter()
+
 		otel.SetTextMapPropagator(
 			propagation.NewCompositeTextMapPropagator(
 				propagation.TraceContext{},
@@ -52,13 +54,14 @@ func InitOTEL(serviceName string, exporterType string, metricsFactory metrics.Fa
 			))
 	})
 
+	exporterType := config.GetOtelExporterType()
 	exp, err := createOtelExporter(exporterType)
 	if err != nil {
 		logger.Bg().Fatal("cannot create exporter", zap.String("exporterType", exporterType), zap.Error(err))
 	}
 	logger.Bg().Debug("using " + exporterType + " trace exporter")
 
-	rpcmetricsObserver := rpcmetrics.NewObserver(metricsFactory, rpcmetrics.DefaultNameNormalizer)
+	rpcmetricsObserver := rpcmetrics.NewObserver(config.GetMetricsFactory(), rpcmetrics.DefaultNameNormalizer)
 
 	res, err := resource.New(
 		context.Background(),

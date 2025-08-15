@@ -1,7 +1,7 @@
 package config
 
 func GetRedisAddr() string {
-	return EnvDefault("REDIS_ADDR", "redis:6379")
+	return ExpandNamespace(EnvDefault("REDIS_ADDR", "redis:6379"))
 }
 
 func GetRedisPassword() string {

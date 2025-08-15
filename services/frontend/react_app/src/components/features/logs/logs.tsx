@@ -74,7 +74,7 @@ const BaseLog = ({ log }: BaseLogProps) => {
             <h2>
                 <AccordionButton>
                     <Box as="span" flex='1' textAlign='left'>
-                        Request ID: #{requestID} from <LocationHighlight value={pickupLocation.Name} type='pickup'/> to <LocationHighlight value={dropoffLocation.Name} type='dropoff'/>
+                        Request ID: #{requestID} from <LocationHighlight value={pickupLocation.name} type='pickup'/> to <LocationHighlight value={dropoffLocation.name} type='dropoff'/>
                     </Box>
                     <AccordionIcon />
                 </AccordionButton>

@@ -1,0 +1,21 @@
+apiVersion: policy.linkerd.io/v1beta2
+kind: HTTPRoute
+metadata:
+  name: location-router
+spec:
+  parentRefs:
+    - name: location
+      kind: Service
+      group: core
+      port: 8081
+  rules:
+    - matches:
+      - headers:
+        - name: "x-refuse-connection"
+          value: "true"
+      backendRefs:
+        - name: "location"
+          port: 7981
+    - backendRefs:
+      - name: "location"
+        port: 8081

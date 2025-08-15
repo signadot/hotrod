@@ -117,8 +117,7 @@ func newDatabase(logger log.Factory) *database {
 	}
 
 	return &database{
-		tracer: tracing.InitOTEL("mysql", config.GetOtelExporterType(),
-			config.GetMetricsFactory(), logger).Tracer("mysql"),
+		tracer: tracing.InitOTEL("mysql", logger).Tracer("mysql"),
 		logger: logger,
 		lock: &tracing.Mutex{
 			SessionBaggageKey: "request",
@@ -130,7 +129,7 @@ func newDatabase(logger log.Factory) *database {
 func driverConfig() *mysql.Config {
 	dc := mysql.NewConfig()
 	dc.Net = "tcp"
-	dc.Addr = config.GetMySQLAddress()
+	dc.Addr = config.GetMySQLAddr()
 	dc.DBName = config.GetMySQLDatabaseName()
 	dc.User = config.GetMySQLUser()
 	dc.Passwd = config.GetMySQLPassword()

@@ -36,6 +36,7 @@ type Consumer struct {
 func newConsumer(ctx context.Context, tracerProvider trace.TracerProvider,
 	logger log.Factory) *Consumer {
 	// create a routesapi baseline watched instance
+	// TODO: remove this in case we're not running with Signadot
 	routing, err := watched.BaselineWatchedFromEnv()
 	if err != nil {
 		panic(err)

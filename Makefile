@@ -55,7 +55,10 @@ release-image: build-release release-images.txt
 			GOOS=$$os GOARCH=$$arch $(MAKE) push-docker; \
 		done; \
 	done;
-	$(DOCKER) manifest create --amend signadot/hotrod:$(RELEASE_TAG) \
+	# Remove existing manifest if it exists to ensure a fresh state
+	$(DOCKER) manifest rm signadot/hotrod:$(RELEASE_TAG) || true
+	# Create a new manifest with the freshly built images
+	$(DOCKER) manifest create signadot/hotrod:$(RELEASE_TAG) \
 		$(shell cat dist/release-images.txt)
 	$(DOCKER) manifest push signadot/hotrod:$(RELEASE_TAG)
 

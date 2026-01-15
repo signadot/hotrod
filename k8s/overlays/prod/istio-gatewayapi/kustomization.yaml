@@ -1,7 +1,9 @@
 
 resources:
 - ../../../base
-- virtual-service.yaml
 
 components:
   - ../../../components/inject-istio
+  - ../../../components/get-gatewayapi-routes
+
+

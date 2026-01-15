@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+patches:
+  - path: frontend-image-pull-config.yaml
+  - path: location-image-pull-config.yaml
+  - path: driver-image-pull-config.yaml
+  - path: route-image-pull-config.yaml
+
+

@@ -1,7 +1,9 @@
 
 resources:
-- ../../prod/istio
-- ../../../base/jaeger
+  - ../../prod/linkerd-gatewayapi
+  - ../../../base/jaeger
 
 components:
   - ../../../components/set-image-pull-never
+
+

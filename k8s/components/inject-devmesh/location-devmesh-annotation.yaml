@@ -4,7 +4,8 @@ metadata:
   name: location
 spec:
   template:
-    spec:
-      containers:
-      - name: hotrod
-        imagePullPolicy: Never
+    metadata:
+      annotations:
+        sidecar.signadot.com/inject: "true"
+
+

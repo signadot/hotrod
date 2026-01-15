@@ -1,9 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: location
+  name: frontend
 spec:
   template:
     metadata:
       labels:
         sidecar.istio.io/inject: "true"
+
+

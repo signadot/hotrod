@@ -1,0 +1,8 @@
+
+resources:
+- ../../../base
+components:
+  - ../../../components/inject-linkerd
+  - ../../../components/get-gatewayapi-routes
+
+

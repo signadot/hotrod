@@ -1,0 +1,10 @@
+apiVersion: kustomize.config.k8s.io/v1alpha1
+kind: Component
+
+patches:
+  - path: frontend-istio-label.yaml
+  - path: location-istio-label.yaml
+  - path: driver-istio-label.yaml
+  - path: route-istio-label.yaml
+
+

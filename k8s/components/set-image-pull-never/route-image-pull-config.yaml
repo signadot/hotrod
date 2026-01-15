@@ -8,3 +8,5 @@ spec:
       containers:
       - name: hotrod
         imagePullPolicy: Never
+
+

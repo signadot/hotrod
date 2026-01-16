@@ -1,9 +1,11 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: route
+  name: location
 spec:
   template:
     metadata:
-      annotations:
-        sidecar.signadot.com/inject: "true"
+      labels:
+        sidecar.istio.io/inject: "true"
+
+

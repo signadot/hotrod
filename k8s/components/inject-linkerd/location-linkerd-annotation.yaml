@@ -4,7 +4,6 @@ metadata:
   name: location
 spec:
   template:
-    spec:
-      containers:
-      - name: hotrod
-        imagePullPolicy: Never
+    metadata:
+      annotations:
+        linkerd.io/inject: enabled

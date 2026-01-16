@@ -3,9 +3,9 @@ resources:
 - ../../../base
 - http-route.yaml
 
+components:
+  - ../../../components/inject-linkerd
+  - ../../../components/inject-devmesh
+
 patches:
-- path: frontend-linkerd-annotation.yaml
-- path: location-linkerd-annotation.yaml
-- path: driver-linkerd-annotation.yaml
-- path: route-linkerd-annotation.yaml
-- path: location-service.yaml
+  - path: location-service.yaml

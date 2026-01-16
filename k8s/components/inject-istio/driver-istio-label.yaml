@@ -7,3 +7,5 @@ spec:
     metadata:
       labels:
         sidecar.istio.io/inject: "true"
+
+

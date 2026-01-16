@@ -2,8 +2,5 @@
 resources:
 - ../../../base
 
-patches:
-- path: frontend-devmesh-annotation.yaml
-- path: location-devmesh-annotation.yaml
-- path: driver-devmesh-annotation.yaml
-- path: route-devmesh-annotation.yaml
+components:
+  - ../../../components/inject-devmesh

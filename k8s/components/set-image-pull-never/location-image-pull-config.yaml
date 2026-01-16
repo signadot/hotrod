@@ -1,10 +1,12 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: route
+  name: location
 spec:
   template:
     spec:
       containers:
       - name: hotrod
         imagePullPolicy: Never
+
+

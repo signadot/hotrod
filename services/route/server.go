@@ -76,7 +76,7 @@ func (s *Server) FindRoute(ctx context.Context, req *FindRouteRequest) (*FindRou
 	delay.Sleep(config.GetRouteCalcDelay(), config.GetRouteCalcStdDev())
 
 	// Generate a random number between 3 and 45 with decimals
-	eta := time.Duration((rand.Float64()*(45-3) + 3) * float64(time.Minute))
+	eta := time.Duration((rand.Float64()*(45-3) + 3) * float64(time.Second))
 	if os.Getenv("FAST_ROUTE") != "" {
 		eta = time.Second
 	}

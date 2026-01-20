@@ -18,6 +18,7 @@ message FindRouteRequest {
 
 message FindRouteResponse {
   int32 eta_seconds = 1;
+  int32 distance_meters = 2;
 }
 
 

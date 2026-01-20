@@ -7,7 +7,8 @@ import (
 
 // Route describes a route.
 type Route struct {
-	ETA time.Duration
+	ETA      time.Duration
+	Distance int32 // meters
 }
 
 // Interface exposed by the Route service.

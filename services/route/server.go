@@ -99,7 +99,11 @@ func (s *Server) FindRoute(ctx context.Context, req *FindRouteRequest) (*FindRou
 		})
 	}
 
+	// Generate random distance between 1 and 20 km
+	distanceMeters := int32((rand.Float64()*(20-1) + 1) * 1000)
+
 	return &FindRouteResponse{
-		EtaSeconds: int32(time.Duration(eta) / time.Second),
+		EtaSeconds:     int32(time.Duration(eta) / time.Second),
+		DistanceMeters: distanceMeters,
 	}, nil
 }

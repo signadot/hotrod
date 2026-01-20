@@ -164,6 +164,6 @@ func (consumer *Consumer) processDispatchRequest(msg *sarama.ConsumerMessage) {
 		ID:        fmt.Sprintf("req-%d-dispatched-driver", reqContext.ID),
 		Timestamp: time.Now(),
 		Context:   notificationCtx,
-		Body:      fmt.Sprintf("Driver %s arriving in %s", bestDriver.DriverID, bestDriver.ETA.String()),
+		Body:      fmt.Sprintf("Driver %s arriving in %s (%d km away)", bestDriver.DriverID, bestDriver.ETA.String(), bestDriver.Distance),
 	})
 }

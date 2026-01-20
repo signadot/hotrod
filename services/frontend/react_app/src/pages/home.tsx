@@ -27,11 +27,11 @@ import {NotificationResponse} from "../types/notifications.ts";
 import {useGetRequestArrival} from "../hooks/useGetRequestArrival.tsx";
 import Countdown, {CountdownRenderProps} from "react-countdown";
 
-const countdownRenderer = ({minutes, seconds, driverName, driverPlate, props }: CountdownRenderProps & { driverName: string, driverPlate: string }) => {
+const countdownRenderer = ({minutes, seconds, driverName, driverPlate, driverDistance, props }: CountdownRenderProps & { driverName: string, driverPlate: string, driverDistance?: number }) => {
     if (minutes === 0 && seconds === 0) {
         return <Text>{driverName} arrived</Text>;
     } else {
-        return <Text as="b">The driver {driverName} ({driverPlate}) will arrive in {props.overtime ? "-" : ""}{minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}</Text>;
+        return <Text as="b">The driver {driverName} ({driverPlate}) will arrive in {props.overtime ? "-" : ""}{minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}{driverDistance && ` • ${driverDistance} km away`}</Text>;
     }
 };
 
@@ -201,6 +201,7 @@ export const HomePage = () => {
                                     ...props,
                                     driverName: lastRequestedDrive.driverDetails.name,
                                     driverPlate: lastRequestedDrive.driverDetails.plate,
+                                    driverDistance: lastRequestedDrive.driverDistance,
                                 })}
                                 overtime={lastRequestedDrive.driverArrival < 0}
                             />

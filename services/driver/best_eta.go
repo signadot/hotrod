@@ -29,6 +29,7 @@ type bestETA struct {
 type Response struct {
 	DriverID string
 	ETA      time.Duration
+	Distance int32 // meters
 }
 
 func newBestETA(tracerProvider trace.TracerProvider, tracer trace.Tracer, logger log.Factory) *bestETA {
@@ -59,6 +60,7 @@ func (eta *bestETA) Get(ctx context.Context, dispatchReq *DispatchRequest,
 		if result.route.ETA < resp.ETA {
 			resp.ETA = result.route.ETA
 			resp.DriverID = result.driverID
+			resp.Distance = result.route.Distance
 		}
 	}
 	if resp.DriverID == "" {

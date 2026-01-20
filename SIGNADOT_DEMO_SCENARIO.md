@@ -12,13 +12,18 @@ Create a Signadot sandbox named "demo-distance-feature" with local mappings for 
 ## Demo Prompt
 
 ```
-The distance display feature has been implemented across the route, driver, and frontend services, and an E2E Playwright test has been added.
+The distance display feature has been implemented across the route, driver, and frontend services, and an E2E Playwright test has been added. The Signadot Sandbox (demo-distance-feature) has been created that bridges local and remote services in K8s and enables end-to-end testing.
 
-Start the local services using the sandbox environment, run the E2E Playwright test to verify the feature works, and if it fails, investigate the logs from all three services (route.log, driver.log, frontend.log), identify the root cause, fix the bug, build and rerun the services changed and verify all tests pass. Continuously execute this loop until the tests pass.
+Verify this implementation using the following loop:
+- Start the local services
+- Run the E2E Playwright tests to verify the feature works
+- If tests fail, investigate using the logs from all three services (route.log, driver.log, frontend.log) and identify the root cause
+- Fix the bug and build the changed services
 
-Important:
-- After making any code changes to the frontend React app (services/frontend/react_app/), rebuild it with `make build-frontend-app` before restarting services. Go code changes are picked up automatically by `go run`.
-- Run Playwright tests with a single worker: `npm run e2e:playwright -- --workers=1`
+Use the following scripts as needed:
+- start services using run-local-services.sh <sandbox name>
+- stop services using stop-local-services.sh
+- run playwright tests using run-e2e-tests.sh <routing key>
 ```
 
 ## Pre-Demo Setup

@@ -5,4 +5,10 @@ components:
   - ../../../components/inject-linkerd
   - ../../../components/get-gatewayapi-routes
 
+patches:
+  # We must set the match for the GRPCRoute to the correct service and method
+  # due to this Linkerd bug:
+  # https://github.com/linkerd/linkerd2/issues/14047
+  - path: grpcroute-match.yaml
+
 

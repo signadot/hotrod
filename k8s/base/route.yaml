@@ -33,9 +33,9 @@ spec:
               value: "route"
             # service dependencies
             - name: REDIS_ADDR
-              value: redis.<NAMESPACE>:6379
+              value: redis.$(SIGNADOT_BASELINE_NAMESPACE):6379
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
-              value: http://jaeger.<NAMESPACE>:4318
+              value: http://jaeger.$(SIGNADOT_BASELINE_NAMESPACE):4318
           image: signadot/hotrod:latest
           imagePullPolicy: Always
           ports:

@@ -24,6 +24,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -44,6 +45,9 @@ import (
 //go:embed web_assets/*
 var assetFS embed.FS
 
+var dispatchedDriverIDRegex = regexp.MustCompile(`^req-(\d+)-dispatched-driver$`)
+var dispatchedDriverBodyRegex = regexp.MustCompile(`^Driver\s+(.+?)\s+arriving in`)
+
 // Server implements hotrod-frontend service
 type Server struct {
 	addr     string
@@ -54,6 +58,7 @@ type Server struct {
 	location     location.Interface
 	notification notifications.Interface
 	dispatcher   *dispatcher
+	rideHistory  *rideHistoryStore
 }
 
 // NewServer creates a new frontend.Server
@@ -69,6 +74,7 @@ func NewServer(logger log.Factory) *Server {
 
 	// get a dispatcher
 	dispatcher := newDispatcher(tracerProvider, logger, locationClient)
+	rideHistory := newRideHistoryStore()
 
 	return &Server{
 		addr:     net.JoinHostPort("0.0.0.0", config.GetFrontendBindPort()),
@@ -79,6 +85,7 @@ func NewServer(logger log.Factory) *Server {
 		location:     locationClient,
 		notification: notificationHandler,
 		dispatcher:   dispatcher,
+		rideHistory:  rideHistory,
 	}
 }
 
@@ -99,6 +106,7 @@ func (s *Server) createServeMux() http.Handler {
 	p := path.Join("/", s.basepath)
 	mux.Handle(path.Join(p, "/dispatch"), http.HandlerFunc(s.dispatch))
 	mux.Handle(path.Join(p, "/notifications"), http.HandlerFunc(s.notifications))
+	mux.Handle(path.Join(p, "/ride-history"), http.HandlerFunc(s.rideHistoryList))
 	mux.Handle(path.Join(p, "/debug/vars"), expvar.Handler())       // expvar
 	mux.Handle(path.Join(p, "/metrics"), promhttp.Handler())        // Prometheus
 	mux.Handle(path.Join(p, "/splash"), http.HandlerFunc(s.splash)) // Prometheus
@@ -157,6 +165,7 @@ func (s *Server) dispatch(w http.ResponseWriter, r *http.Request) {
 		s.logger.For(ctx).Error("error parsing request body", zap.Error(err))
 		return
 	}
+	requestedAt := time.Now().UTC()
 
 	// get request context
 	reqContext := &notifications.RequestContext{
@@ -190,8 +199,20 @@ func (s *Server) dispatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	err = s.rideHistory.Store(ctx, &RideHistoryEntry{
+		RequestID:       dispatchReq.RequestID,
+		PickupLocation:  pickupLoc.Name,
+		DropoffLocation: dropoffLoc.Name,
+		RequestedAt:     requestedAt,
+		DriverPlate:     "Pending",
+	})
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("couldn't persist ride history", zap.Error(err))
+		return
+	}
+
 	// dispatch a driver request
-	err = s.dispatcher.DispatchDriver(ctx, &dispatchReq, pickupLoc, dropoffLoc)
+	err = s.dispatcher.DispatchDriver(ctx, &dispatchReq, pickupLoc, dropoffLoc, requestedAt)
 	if httperr.HandleError(w, err, http.StatusInternalServerError) {
 		s.logger.For(ctx).Error("couldn't trigger dispatch request", zap.Error(err))
 		return
@@ -234,8 +255,38 @@ func (s *Server) notifications(w http.ResponseWriter, r *http.Request) {
 		s.logger.For(ctx).Error("request failed", zap.Error(err))
 		return
 	}
+	for _, notification := range data.Notifications {
+		requestID, driverPlate, ok := extractDispatchedDriver(notification.ID, notification.Body)
+		if !ok {
+			continue
+		}
+		if err := s.rideHistory.UpdateDriverPlate(ctx, requestID, driverPlate); err != nil {
+			s.logger.For(ctx).Error("failed to update driver plate in ride history", zap.Error(err))
+		}
+	}
 
 	s.writeResponse(data, w, r)
+}
+
+func (s *Server) rideHistoryList(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	rides, err := s.rideHistory.List(ctx)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("request failed", zap.Error(err))
+		return
+	}
+
+	resp := RideHistoryResponse{
+		Total: len(rides),
+		Rides: rides,
+	}
+	s.writeResponse(resp, w, r)
 }
 
 func (s *Server) writeResponse(response interface{}, w http.ResponseWriter, r *http.Request) {
@@ -247,4 +298,23 @@ func (s *Server) writeResponse(response interface{}, w http.ResponseWriter, r *h
 
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(data)
+}
+
+func extractDispatchedDriver(notificationID, notificationBody string) (uint, string, bool) {
+	idMatches := dispatchedDriverIDRegex.FindStringSubmatch(notificationID)
+	if len(idMatches) != 2 {
+		return 0, "", false
+	}
+
+	requestID, err := strconv.Atoi(idMatches[1])
+	if err != nil {
+		return 0, "", false
+	}
+
+	bodyMatches := dispatchedDriverBodyRegex.FindStringSubmatch(notificationBody)
+	if len(bodyMatches) != 2 {
+		return uint(requestID), "", false
+	}
+
+	return uint(requestID), bodyMatches[1], true
 }

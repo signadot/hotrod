@@ -48,14 +48,6 @@ Then: `go run ./cmd/hotrod all`
 
 ### Signadot CLI
 Installed at `/usr/local/bin/signadot` (v1.5.0). This project uses the **staging** environment. The CLI config at `~/.signadot/config.yaml` must point `api_url` and `proxy_url` to the staging subdomains (i.e. `api.staging.*` and `proxy.staging.*`). Authentication requires `SIGNADOT_API_KEY` and `SIGNADOT_ORG` env vars (injected as secrets). Use `--insecure-storage` flag because the headless VM has no keyring daemon. The update script handles this automatically.
-
-### Signadot closed-loop skill
-See `skills/signadot/SKILL.md` for the closed-loop development workflow (implement → sandbox → test → iterate). Existing project config:
-- `.signadot/sbx-gh-template.yaml` / `sbx-noop.yaml` — sandbox spec templates (cluster: `demo`)
-- `.signadot/testing/` — job runner groups and test job specs (Cypress, Playwright, Postman)
-- `smart-tests/` — Starlark smart tests for `frontend/dispatch` and `location/get-location`
-- `.signadot/config.yaml` — points smart tests to `smart-tests/` directory
-
 ### Lint / Test / Build
 - **Go vet:** `go vet ./...`
 - **Go tests:** `go test ./...`

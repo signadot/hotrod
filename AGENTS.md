@@ -46,6 +46,9 @@ Then: `go run ./cmd/hotrod all`
 - The MariaDB database and seed data are auto-created on first query (no manual migration needed).
 - React frontend must be built before running the Go server: `make build-frontend-app` (uses `yarn` inside `services/frontend/react_app/`).
 
+### Signadot CLI
+Installed at `/usr/local/bin/signadot` (v1.5.0). Requires a `SIGNADOT_API_KEY` for authentication (`signadot auth login --with-api-key <key>`). Not needed for local-only dev, but required for sandbox workflows and smart tests.
+
 ### Lint / Test / Build
 - **Go vet:** `go vet ./...`
 - **Go tests:** `go test ./...`

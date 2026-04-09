@@ -41,7 +41,7 @@ type database struct {
 	db     *sqlx.DB
 }
 
-const tableSchema = `
+const locationsTableSchema = `
 CREATE TABLE IF NOT EXISTS locations
 (
     id bigint unsigned NOT NULL AUTO_INCREMENT,
@@ -50,6 +50,23 @@ CREATE TABLE IF NOT EXISTS locations
 
     PRIMARY KEY (id),
 	UNIQUE KEY name (name)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+`
+
+const rideHistoryTableSchema = `
+CREATE TABLE IF NOT EXISTS ride_history
+(
+    id bigint unsigned NOT NULL AUTO_INCREMENT,
+    session_id bigint unsigned NOT NULL,
+    request_id bigint unsigned NOT NULL,
+    pickup_location varchar(255) NOT NULL,
+    dropoff_location varchar(255) NOT NULL,
+    requested_at datetime(6) NOT NULL,
+    driver_plate varchar(255) NOT NULL DEFAULT '',
+
+    PRIMARY KEY (id),
+    UNIQUE KEY uniq_session_request (session_id, request_id),
+    KEY idx_requested_at (requested_at)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 `
 
@@ -258,6 +275,101 @@ func (d *database) Delete(ctx context.Context, locationID int) error {
 	return err
 }
 
+func (d *database) ListRideHistory(ctx context.Context, sessionID uint) ([]RideHistoryEntry, error) {
+	d.logger.For(ctx).Info("Loading ride history", zap.Uint("session_id", sessionID))
+
+	query := `SELECT session_id, request_id, pickup_location, dropoff_location, requested_at, driver_plate
+		FROM ride_history WHERE session_id = ? ORDER BY requested_at DESC`
+	rows, err := d.db.Query(query, sessionID)
+	if err != nil {
+		if !d.shouldRetry(err) {
+			return nil, err
+		}
+		rows, err = d.db.Query(query, sessionID)
+		if err != nil {
+			return nil, err
+		}
+	}
+	defer rows.Close()
+
+	entries := make([]RideHistoryEntry, 0)
+	for rows.Next() {
+		entry := RideHistoryEntry{}
+		var sessionIDDB uint64
+		var requestIDDB uint64
+		if err := rows.Scan(
+			&sessionIDDB,
+			&requestIDDB,
+			&entry.PickupLocation,
+			&entry.DropoffLocation,
+			&entry.RequestedAt,
+			&entry.DriverPlate,
+		); err != nil {
+			return nil, err
+		}
+		entry.SessionID = uint(sessionIDDB)
+		entry.RequestID = uint(requestIDDB)
+		entries = append(entries, entry)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return entries, nil
+}
+
+func (d *database) CreateRideHistory(ctx context.Context, entry *RideHistoryEntry) error {
+	d.logger.For(ctx).Info("Creating ride history entry",
+		zap.Uint("session_id", entry.SessionID),
+		zap.Uint("request_id", entry.RequestID))
+
+	query := `INSERT INTO ride_history
+		(session_id, request_id, pickup_location, dropoff_location, requested_at, driver_plate)
+		VALUES (?, ?, ?, ?, ?, ?)
+		ON DUPLICATE KEY UPDATE
+			pickup_location = VALUES(pickup_location),
+			dropoff_location = VALUES(dropoff_location),
+			requested_at = VALUES(requested_at)`
+	_, err := d.db.Exec(query,
+		entry.SessionID,
+		entry.RequestID,
+		entry.PickupLocation,
+		entry.DropoffLocation,
+		entry.RequestedAt,
+		entry.DriverPlate,
+	)
+	if err != nil {
+		if !d.shouldRetry(err) {
+			return err
+		}
+		_, err = d.db.Exec(query,
+			entry.SessionID,
+			entry.RequestID,
+			entry.PickupLocation,
+			entry.DropoffLocation,
+			entry.RequestedAt,
+			entry.DriverPlate,
+		)
+	}
+	return err
+}
+
+func (d *database) UpdateRideHistoryDriver(ctx context.Context, sessionID, requestID uint, driverPlate string) error {
+	d.logger.For(ctx).Info("Updating ride history driver",
+		zap.Uint("session_id", sessionID),
+		zap.Uint("request_id", requestID),
+		zap.String("driver_plate", driverPlate))
+
+	query := "UPDATE ride_history SET driver_plate = ? WHERE session_id = ? AND request_id = ?"
+	_, err := d.db.Exec(query, driverPlate, sessionID, requestID)
+	if err != nil {
+		if !d.shouldRetry(err) {
+			return err
+		}
+		_, err = d.db.Exec(query, driverPlate, sessionID, requestID)
+	}
+	return err
+}
+
 func (d *database) shouldRetry(err error) bool {
 	if mysqlErr, ok := err.(*mysql.MySQLError); ok {
 		switch mysqlErr.Number {
@@ -271,15 +383,20 @@ func (d *database) shouldRetry(err error) bool {
 }
 
 func (d *database) setupDB() {
-	// Create the table
 	fmt.Println("creating locations table")
-	_, err := d.db.Exec(tableSchema)
+	_, err := d.db.Exec(locationsTableSchema)
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("creating ride history table")
+	_, err = d.db.Exec(rideHistoryTableSchema)
 	if err != nil {
 		panic(err)
 	}
 
 	fmt.Println("seeding database")
-	stmt, err := d.db.Prepare("INSERT INTO locations (id, name, coordinates) VALUES (?, ?, ?)")
+	stmt, err := d.db.Prepare("INSERT IGNORE INTO locations (id, name, coordinates) VALUES (?, ?, ?)")
 	if err != nil {
 		panic(err)
 	}

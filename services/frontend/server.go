@@ -16,6 +16,7 @@
 package frontend
 
 import (
+	"context"
 	"embed"
 	"encoding/json"
 	"expvar"
@@ -24,6 +25,7 @@ import (
 	"net/http"
 	"os"
 	"path"
+	"regexp"
 	"strconv"
 	"time"
 
@@ -54,6 +56,13 @@ type Server struct {
 	location     location.Interface
 	notification notifications.Interface
 	dispatcher   *dispatcher
+}
+
+var driverPlateRegex = regexp.MustCompile(`Driver\s+(.*?)\s+arriving`)
+
+type rideHistoryResponse struct {
+	TotalCount int                         `json:"totalCount"`
+	Entries    []location.RideHistoryEntry `json:"entries"`
 }
 
 // NewServer creates a new frontend.Server
@@ -99,6 +108,7 @@ func (s *Server) createServeMux() http.Handler {
 	p := path.Join("/", s.basepath)
 	mux.Handle(path.Join(p, "/dispatch"), http.HandlerFunc(s.dispatch))
 	mux.Handle(path.Join(p, "/notifications"), http.HandlerFunc(s.notifications))
+	mux.Handle(path.Join(p, "/ride-history"), http.HandlerFunc(s.rideHistory))
 	mux.Handle(path.Join(p, "/debug/vars"), expvar.Handler())       // expvar
 	mux.Handle(path.Join(p, "/metrics"), promhttp.Handler())        // Prometheus
 	mux.Handle(path.Join(p, "/splash"), http.HandlerFunc(s.splash)) // Prometheus
@@ -190,6 +200,19 @@ func (s *Server) dispatch(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	// persist a ride history entry for this request.
+	err = s.location.CreateRideHistory(ctx, &location.RideHistoryEntry{
+		SessionID:       dispatchReq.SessionID,
+		RequestID:       dispatchReq.RequestID,
+		PickupLocation:  pickupLoc.Name,
+		DropoffLocation: dropoffLoc.Name,
+		RequestedAt:     time.Now().UTC(),
+	})
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("couldn't persist ride history", zap.Error(err))
+		return
+	}
+
 	// dispatch a driver request
 	err = s.dispatcher.DispatchDriver(ctx, &dispatchReq, pickupLoc, dropoffLoc)
 	if httperr.HandleError(w, err, http.StatusInternalServerError) {
@@ -234,8 +257,63 @@ func (s *Server) notifications(w http.ResponseWriter, r *http.Request) {
 		s.logger.For(ctx).Error("request failed", zap.Error(err))
 		return
 	}
+	s.updateRideHistoryWithDriverNotifications(ctx, data)
 
 	s.writeResponse(data, w, r)
+}
+
+func (s *Server) rideHistory(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
+	if err := r.ParseForm(); httperr.HandleError(w, err, http.StatusBadRequest) {
+		s.logger.For(ctx).Error("bad request", zap.Error(err))
+		return
+	}
+
+	sessionIDStr := r.Form.Get("sessionID")
+	if sessionIDStr == "" {
+		http.Error(w, "Missing required 'sessionID' parameter", http.StatusBadRequest)
+		return
+	}
+	sessionID, err := strconv.Atoi(sessionIDStr)
+	if err != nil || sessionID <= 0 {
+		http.Error(w, "Parameter 'sessionID' is not a positive integer", http.StatusBadRequest)
+		return
+	}
+
+	entries, err := s.location.ListRideHistory(ctx, uint(sessionID))
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("request failed", zap.Error(err))
+		return
+	}
+
+	s.writeResponse(rideHistoryResponse{
+		TotalCount: len(entries),
+		Entries:    entries,
+	}, w, r)
+}
+
+func (s *Server) updateRideHistoryWithDriverNotifications(ctx context.Context, data *notifications.NotificationList) {
+	for _, notification := range data.Notifications {
+		if notification.Context == nil || notification.Context.Request == nil {
+			continue
+		}
+
+		match := driverPlateRegex.FindStringSubmatch(notification.Body)
+		if len(match) < 2 {
+			continue
+		}
+		driverPlate := match[1]
+		reqCtx := notification.Context.Request
+		if err := s.location.UpdateRideHistoryDriver(ctx, reqCtx.SessionID, reqCtx.ID, driverPlate); err != nil {
+			s.logger.For(ctx).Error("couldn't update ride history driver plate",
+				zap.Error(err),
+				zap.Uint("session_id", reqCtx.SessionID),
+				zap.Uint("request_id", reqCtx.ID),
+				zap.String("driver_plate", driverPlate),
+			)
+		}
+	}
 }
 
 func (s *Server) writeResponse(response interface{}, w http.ResponseWriter, r *http.Request) {

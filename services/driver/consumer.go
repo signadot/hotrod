@@ -29,6 +29,7 @@ type Consumer struct {
 	routing      watched.BaselineWatched
 	driverStore  *driverStore
 	bestETA      *bestETA
+	rideHistory  *rideHistoryStore
 	notification notifications.Interface
 	ready        chan bool
 }
@@ -49,6 +50,7 @@ func newConsumer(ctx context.Context, tracerProvider trace.TracerProvider,
 		routing:      routing,
 		driverStore:  newDriverStore(tracer, logger),
 		bestETA:      newBestETA(tracerProvider, tracer, logger),
+		rideHistory:  newRideHistoryStore(),
 		notification: notifications.NewNotificationHandler(tracerProvider, logger),
 		ready:        make(chan bool),
 	}
@@ -166,4 +168,28 @@ func (consumer *Consumer) processDispatchRequest(msg *sarama.ConsumerMessage) {
 		Context:   notificationCtx,
 		Body:      fmt.Sprintf("Driver %s arriving in %s", bestDriver.DriverID, bestDriver.ETA.String()),
 	})
+
+	pickupLocation := "Unknown"
+	if dispatchReq.PickupLocation != nil {
+		pickupLocation = dispatchReq.PickupLocation.Name
+	}
+	dropoffLocation := "Unknown"
+	if dispatchReq.DropoffLocation != nil {
+		dropoffLocation = dispatchReq.DropoffLocation.Name
+	}
+	requestedAt := dispatchReq.RequestedAt
+	if requestedAt.IsZero() {
+		requestedAt = time.Now().UTC()
+	}
+
+	if err := consumer.rideHistory.Store(
+		ctx,
+		reqContext.ID,
+		pickupLocation,
+		dropoffLocation,
+		requestedAt,
+		bestDriver.DriverID,
+	); err != nil {
+		consumer.logger.For(ctx).Error("failed storing ride history", zap.Error(err))
+	}
 }

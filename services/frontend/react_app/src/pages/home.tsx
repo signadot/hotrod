@@ -26,6 +26,7 @@ import {useLogs} from "../hooks/useLogs.tsx";
 import {NotificationResponse} from "../types/notifications.ts";
 import {useGetRequestArrival} from "../hooks/useGetRequestArrival.tsx";
 import Countdown, {CountdownRenderProps} from "react-countdown";
+import {RideHistoryResponse} from "../types/rideHistory.ts";
 
 const countdownRenderer = ({minutes, seconds, driverName, driverPlate, props }: CountdownRenderProps & { driverName: string, driverPlate: string }) => {
     if (minutes === 0 && seconds === 0) {
@@ -39,6 +40,10 @@ export const HomePage = () => {
     const session = useSession();
     const notificationCursorRef = useRef(-1);
     const [locations, setLocations] = useState<Locations | undefined>();
+    const [rideHistory, setRideHistory] = useState<RideHistoryResponse>({
+        total: 0,
+        rides: [],
+    });
 
     const [selectedLocations, setSelectedLocations] = useState({pickupId: -1, dropoffId: -1});
     const {logs, addNewLog, addErrorEntry, addInformationEntry} = useLogs();
@@ -47,6 +52,11 @@ export const HomePage = () => {
     const logsModal = useDisclosure();
     const toast = useToast();
 
+    const fetchRideHistory = async () => {
+        const history = await apiGet<RideHistoryResponse>('/ride-history');
+        setRideHistory(history);
+    };
+
     useEffect(() => {
         const fetchLocations = async () => {
             const locations = await apiGet<Locations>('/splash');
@@ -54,6 +64,7 @@ export const HomePage = () => {
         }
 
         fetchLocations();
+        fetchRideHistory();
     }, []);
 
     useEffect(() => {
@@ -73,6 +84,7 @@ export const HomePage = () => {
                     sandboxName: notification.context.sandboxName,
                 })
             });
+            await fetchRideHistory();
         }
 
         const intervalID = setInterval(pollNotifications, 2000);
@@ -126,7 +138,7 @@ export const HomePage = () => {
         });
 
         try {
-            await apiPost<{}>('/dispatch', data, {"baggage": `session=${sessionID}, request=${requestID}`});
+            await apiPost<Record<string, never>>('/dispatch', data, {"baggage": `session=${sessionID}, request=${requestID}`});
         } catch (e) {
             addErrorEntry(requestID, {
                 status: 'Error requesting a ride to frontend API',
@@ -205,6 +217,33 @@ export const HomePage = () => {
                                 overtime={lastRequestedDrive.driverArrival < 0}
                             />
                         </HStack>}
+
+                    <Card border={12} maxW={600}>
+                        <CardHeader>
+                            <Heading size='md' textAlign='left'>Ride History</Heading>
+                            <Text mt={2} fontWeight='bold'>Total rides requested: {rideHistory.total}</Text>
+                        </CardHeader>
+                        <CardBody>
+                            <Stack as='ul' spacing={3} maxH='360px' overflowY='auto'>
+                                {rideHistory.rides.length === 0 && (
+                                    <Text>No rides requested yet.</Text>
+                                )}
+                                {rideHistory.rides.map((ride) => (
+                                    <Box
+                                        as='li'
+                                        key={`${ride.requestID}-${ride.requestedAt}`}
+                                        borderWidth='1px'
+                                        borderRadius='md'
+                                        p={3}
+                                    >
+                                        <Text><b>{ride.pickupLocation}</b> to <b>{ride.dropoffLocation}</b></Text>
+                                        <Text fontSize='sm'>Requested: {new Date(ride.requestedAt).toLocaleString()}</Text>
+                                        <Text fontSize='sm'>Driver plate: {ride.driverPlate}</Text>
+                                    </Box>
+                                ))}
+                            </Stack>
+                        </CardBody>
+                    </Card>
                 </Stack>
                 <Stack flexGrow={1} justifyContent='space-between' w='50%' h='100%' maxH={'900px'}>
                     <div className={`${styles.drawer} ${logsModal.isOpen ? styles.open : ''}`}>

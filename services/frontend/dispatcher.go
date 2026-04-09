@@ -85,7 +85,7 @@ func (d *dispatcher) ResolveLocations(ctx context.Context,
 }
 
 func (d *dispatcher) DispatchDriver(ctx context.Context, req *DispatchRequest,
-	pickupLoc, dropoffLoc *location.Location) error {
+	pickupLoc, dropoffLoc *location.Location, requestedAt time.Time) error {
 	ctx, span := d.tracer.Start(ctx, "DispatchDriver", trace.WithSpanKind(trace.SpanKindClient))
 	span.SetAttributes(
 		attribute.
@@ -97,6 +97,8 @@ func (d *dispatcher) DispatchDriver(ctx context.Context, req *DispatchRequest,
 	driverRequest := driver.DispatchRequest{
 		PickupLocation:  pickupLoc,
 		DropoffLocation: dropoffLoc,
+		RequestID:       req.RequestID,
+		RequestedAt:     requestedAt,
 	}
 	msgBody, err := json.Marshal(driverRequest)
 	if err != nil {

@@ -27,6 +27,14 @@ import {NotificationResponse} from "../types/notifications.ts";
 import {useGetRequestArrival} from "../hooks/useGetRequestArrival.tsx";
 import Countdown, {CountdownRenderProps} from "react-countdown";
 
+type RideHistoryEntry = {
+    requestID: number,
+    pickupLocation: string,
+    dropoffLocation: string,
+    requestedAt: Date,
+    driverPlate: string,
+}
+
 const countdownRenderer = ({minutes, seconds, driverName, driverPlate, props }: CountdownRenderProps & { driverName: string, driverPlate: string }) => {
     if (minutes === 0 && seconds === 0) {
         return <Text>{driverName} arrived</Text>;
@@ -39,6 +47,7 @@ export const HomePage = () => {
     const session = useSession();
     const notificationCursorRef = useRef(-1);
     const [locations, setLocations] = useState<Locations | undefined>();
+    const [rideHistory, setRideHistory] = useState<RideHistoryEntry[]>([]);
 
     const [selectedLocations, setSelectedLocations] = useState({pickupId: -1, dropoffId: -1});
     const {logs, addNewLog, addErrorEntry, addInformationEntry} = useLogs();
@@ -72,6 +81,19 @@ export const HomePage = () => {
                     status: notification.body,
                     sandboxName: notification.context.sandboxName,
                 })
+
+                if (notification.context.baselineWorkload === "driver") {
+                    const plateMatch = notification.body.match(/Driver\s+(.*?)\s+arriving/i);
+                    if (plateMatch && plateMatch[1]) {
+                        setRideHistory(prevHistory =>
+                            prevHistory.map(ride => ride.requestID === notification.context.request.id
+                                ? {
+                                    ...ride,
+                                    driverPlate: plateMatch[1],
+                                }
+                                : ride))
+                    }
+                }
             });
         }
 
@@ -105,6 +127,17 @@ export const HomePage = () => {
 
         const pickupLocation = locations?.Locations.find(l => l.id === pickupId);
         const dropoffLocation = locations?.Locations.find(l => l.id === dropoffId);
+        if (!pickupLocation || !dropoffLocation) {
+            return;
+        }
+
+        setRideHistory(prevHistory => [{
+            requestID: requestID,
+            pickupLocation: pickupLocation.name,
+            dropoffLocation: dropoffLocation.name,
+            requestedAt: new Date(),
+            driverPlate: "Pending",
+        }, ...prevHistory])
 
         toast({
             title: 'Hotrod::Ride requested.',
@@ -118,7 +151,7 @@ export const HomePage = () => {
         // Reset locations
         setSelectedLocations({pickupId: -1, dropoffId: -1});
 
-        addNewLog(pickupLocation!, dropoffLocation!, requestID, {
+        addNewLog(pickupLocation, dropoffLocation, requestID, {
             messageType: "info",
             service: 'browser',
             date: new Date(),
@@ -128,6 +161,7 @@ export const HomePage = () => {
         try {
             await apiPost<{}>('/dispatch', data, {"baggage": `session=${sessionID}, request=${requestID}`});
         } catch (e) {
+            setRideHistory(prevHistory => prevHistory.filter(historyEntry => historyEntry.requestID !== requestID));
             addErrorEntry(requestID, {
                 status: 'Error requesting a ride to frontend API',
                 service: 'api',
@@ -225,6 +259,27 @@ export const HomePage = () => {
                         <Map dropoffLocationID={selectedLocations.dropoffId}
                              pickupLocationID={selectedLocations.pickupId}/>
                     </Stack>
+                    <Card>
+                        <CardHeader pb={2}>
+                            <Heading size="md">Ride History</Heading>
+                            <Text fontSize="sm" mt={1}>Total requested rides: {rideHistory.length}</Text>
+                        </CardHeader>
+                        <CardBody pt={0}>
+                            {rideHistory.length === 0 ? (
+                                <Text color="gray.500" fontSize="sm">No rides requested yet.</Text>
+                            ) : (
+                                <Stack divider={<StackDivider/>} spacing={3} maxH="220px" overflowY="auto">
+                                    {rideHistory.map(ride => (
+                                        <Box key={ride.requestID}>
+                                            <Text as="b" fontSize="sm">{ride.pickupLocation} to {ride.dropoffLocation}</Text>
+                                            <Text fontSize="sm">Requested at: {ride.requestedAt.toLocaleString()}</Text>
+                                            <Text fontSize="sm">Driver plate: {ride.driverPlate}</Text>
+                                        </Box>
+                                    ))}
+                                </Stack>
+                            )}
+                        </CardBody>
+                    </Card>
                     <Button variant='outline' size="sm" onClick={logsModal.onToggle}>Show Logs</Button>
                 </Stack>
             </HStack>

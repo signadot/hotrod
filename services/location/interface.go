@@ -31,4 +31,7 @@ type Interface interface {
 	Get(ctx context.Context, locationID int) (*Location, error)
 	List(ctx context.Context) ([]Location, error)
 	Put(ctx context.Context, location *Location) error
+	ListRideHistory(ctx context.Context, sessionID uint) ([]RideHistoryEntry, error)
+	CreateRideHistory(ctx context.Context, entry *RideHistoryEntry) error
+	UpdateRideHistoryDriver(ctx context.Context, sessionID, requestID uint, driverPlate string) error
 }

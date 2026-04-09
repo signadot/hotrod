@@ -77,22 +77,67 @@ func (c *Client) Put(ctx context.Context, location *Location) error {
 	url := fmt.Sprintf("http://%s/location?locationID=%d", c.hostPort, location.ID)
 	fmt.Println(url)
 	var outLocation Location
-	if err := c.putJSON(ctx, url, location, outLocation); err != nil {
+	if err := c.putJSON(ctx, url, location, &outLocation); err != nil {
 		return err
 	}
 	return nil
 }
 
+func (c *Client) ListRideHistory(ctx context.Context, sessionID uint) ([]RideHistoryEntry, error) {
+	c.logger.For(ctx).Info("Getting ride history", zap.Uint("session_id", sessionID))
+
+	url := fmt.Sprintf("http://%s/ride-history?sessionID=%d", c.hostPort, sessionID)
+	var rides []RideHistoryEntry
+	if err := c.client.GetJSON(ctx, "/ride-history", url, &rides); err != nil {
+		return nil, err
+	}
+	return rides, nil
+}
+
+func (c *Client) CreateRideHistory(ctx context.Context, entry *RideHistoryEntry) error {
+	c.logger.For(ctx).Info("POST ride history",
+		zap.Uint("session_id", entry.SessionID),
+		zap.Uint("request_id", entry.RequestID))
+
+	url := fmt.Sprintf("http://%s/ride-history", c.hostPort)
+	var out RideHistoryEntry
+	return c.postJSON(ctx, url, entry, &out)
+}
+
+func (c *Client) UpdateRideHistoryDriver(ctx context.Context, sessionID, requestID uint, driverPlate string) error {
+	c.logger.For(ctx).Info("PUT ride history driver",
+		zap.Uint("session_id", sessionID),
+		zap.Uint("request_id", requestID),
+		zap.String("driver_plate", driverPlate))
+
+	url := fmt.Sprintf("http://%s/ride-history/driver", c.hostPort)
+	req := map[string]interface{}{
+		"sessionID":   sessionID,
+		"requestID":   requestID,
+		"driverPlate": driverPlate,
+	}
+	var out map[string]interface{}
+	return c.putJSON(ctx, url, req, &out)
+}
+
 func (c *Client) putJSON(ctx context.Context, url string, reqIn, respOut interface{}) error {
+	return c.sendJSON(ctx, http.MethodPut, url, reqIn, respOut)
+}
+
+func (c *Client) postJSON(ctx context.Context, url string, reqIn, respOut interface{}) error {
+	return c.sendJSON(ctx, http.MethodPost, url, reqIn, respOut)
+}
+
+func (c *Client) sendJSON(ctx context.Context, method, url string, reqIn, respOut interface{}) error {
 	d, err := json.Marshal(reqIn)
 	if err != nil {
 		return err
 	}
-	req, err := http.NewRequest("PUT", url, bytes.NewBuffer(d))
-	req.Header.Add("Content-type", "application/json")
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(d))
 	if err != nil {
 		return err
 	}
+	req.Header.Add("Content-type", "application/json")
 	req = req.WithContext(ctx)
 
 	res, err := c.client.Client.Do(req)
@@ -109,6 +154,10 @@ func (c *Client) putJSON(ctx context.Context, url string, reqIn, respOut interfa
 		}
 		return errors.New(string(body))
 	}
+	if respOut == nil {
+		return nil
+	}
+
 	decoder := json.NewDecoder(res.Body)
 	return decoder.Decode(respOut)
 }

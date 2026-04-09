@@ -1,5 +1,6 @@
 import {MainLayout} from "../components/layouts";
 import {
+    Badge,
     Box,
     Button,
     Card,
@@ -7,6 +8,8 @@ import {
     CardHeader,
     Heading,
     HStack,
+    List,
+    ListItem,
     Stack,
     StackDivider,
     Text,
@@ -18,7 +21,7 @@ import styles from "./home.module.css";
 import {Logs} from "../components/features/logs/logs.tsx";
 import {Map} from "../components/features/map/map.tsx";
 import {useSession} from "../context/sessionContext/context.tsx";
-import {useEffect, useRef, useState} from "react";
+import {useCallback, useEffect, useRef, useState} from "react";
 import {apiGet, apiPost} from "../services/http.ts";
 import {Locations} from "../types/location.ts";
 import {LocationSelect} from "../components/common/locationSelect/locationSelect.tsx";
@@ -26,6 +29,7 @@ import {useLogs} from "../hooks/useLogs.tsx";
 import {NotificationResponse} from "../types/notifications.ts";
 import {useGetRequestArrival} from "../hooks/useGetRequestArrival.tsx";
 import Countdown, {CountdownRenderProps} from "react-countdown";
+import {RideHistoryResponse} from "../types/rideHistory.ts";
 
 const countdownRenderer = ({minutes, seconds, driverName, driverPlate, props }: CountdownRenderProps & { driverName: string, driverPlate: string }) => {
     if (minutes === 0 && seconds === 0) {
@@ -39,6 +43,10 @@ export const HomePage = () => {
     const session = useSession();
     const notificationCursorRef = useRef(-1);
     const [locations, setLocations] = useState<Locations | undefined>();
+    const [rideHistory, setRideHistory] = useState<RideHistoryResponse>({
+        totalCount: 0,
+        entries: [],
+    });
 
     const [selectedLocations, setSelectedLocations] = useState({pickupId: -1, dropoffId: -1});
     const {logs, addNewLog, addErrorEntry, addInformationEntry} = useLogs();
@@ -47,6 +55,11 @@ export const HomePage = () => {
     const logsModal = useDisclosure();
     const toast = useToast();
 
+    const fetchRideHistory = useCallback(async () => {
+        const response = await apiGet<RideHistoryResponse>(`/ride-history?sessionID=${session.sessionID}`);
+        setRideHistory(response);
+    }, [session.sessionID]);
+
     useEffect(() => {
         const fetchLocations = async () => {
             const locations = await apiGet<Locations>('/splash');
@@ -54,7 +67,8 @@ export const HomePage = () => {
         }
 
         fetchLocations();
-    }, []);
+        fetchRideHistory();
+    }, [fetchRideHistory]);
 
     useEffect(() => {
         const pollNotifications = async () => {
@@ -73,6 +87,8 @@ export const HomePage = () => {
                     sandboxName: notification.context.sandboxName,
                 })
             });
+
+            await fetchRideHistory();
         }
 
         const intervalID = setInterval(pollNotifications, 2000);
@@ -81,7 +97,7 @@ export const HomePage = () => {
             clearInterval(intervalID);
         }
 
-    }, []);
+    }, [fetchRideHistory, session.sessionID]);
 
     if (!locations) {
         return (
@@ -127,6 +143,7 @@ export const HomePage = () => {
 
         try {
             await apiPost<{}>('/dispatch', data, {"baggage": `session=${sessionID}, request=${requestID}`});
+            await fetchRideHistory();
         } catch (e) {
             addErrorEntry(requestID, {
                 status: 'Error requesting a ride to frontend API',
@@ -205,6 +222,42 @@ export const HomePage = () => {
                                 overtime={lastRequestedDrive.driverArrival < 0}
                             />
                         </HStack>}
+                    <Card border={12} maxW={600}>
+                        <CardHeader>
+                            <HStack justifyContent='space-between' alignItems='center'>
+                                <Heading size='md' textAlign='left'>
+                                    Ride History
+                                </Heading>
+                                <Text fontWeight='bold'>Total rides: {rideHistory.totalCount}</Text>
+                            </HStack>
+                        </CardHeader>
+                        <CardBody>
+                            {rideHistory.entries.length === 0 && <Text>No rides requested yet.</Text>}
+                            {rideHistory.entries.length > 0 &&
+                                <List spacing={3}>
+                                    {rideHistory.entries.map(entry => (
+                                        <ListItem
+                                            key={`${entry.sessionID}-${entry.requestID}`}
+                                            borderWidth='1px'
+                                            borderRadius='md'
+                                            p={3}
+                                        >
+                                            <Stack spacing={1}>
+                                                <Text fontSize='sm' color='gray.600'>
+                                                    {new Date(entry.requestedAt).toLocaleString()}
+                                                </Text>
+                                                <Text><Text as='span' fontWeight='bold'>Pickup:</Text> {entry.pickupLocation}</Text>
+                                                <Text><Text as='span' fontWeight='bold'>Dropoff:</Text> {entry.dropoffLocation}</Text>
+                                                <HStack>
+                                                    <Text as='span' fontWeight='bold'>Driver plate:</Text>
+                                                    <Badge colorScheme='purple'>{entry.driverPlate || 'Pending assignment'}</Badge>
+                                                </HStack>
+                                            </Stack>
+                                        </ListItem>
+                                    ))}
+                                </List>}
+                        </CardBody>
+                    </Card>
                 </Stack>
                 <Stack flexGrow={1} justifyContent='space-between' w='50%' h='100%' maxH={'900px'}>
                     <div className={`${styles.drawer} ${logsModal.isOpen ? styles.open : ''}`}>

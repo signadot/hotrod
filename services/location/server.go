@@ -76,6 +76,9 @@ func (s *Server) createServeMux() http.Handler {
 	mux.Handle("GET /location", http.HandlerFunc(s.getLocation))
 	mux.Handle("POST /location", http.HandlerFunc(s.createLocation))
 	mux.Handle("DELETE /location", http.HandlerFunc(s.deleteLocation))
+	mux.Handle("GET /ride-history", http.HandlerFunc(s.listRideHistory))
+	mux.Handle("POST /ride-history", http.HandlerFunc(s.createRideHistory))
+	mux.Handle("PUT /ride-history/driver", http.HandlerFunc(s.updateRideHistoryDriver))
 	mux.Handle("GET /healthz", http.HandlerFunc(func(resp http.ResponseWriter, req *http.Request) {
 		s.logger.For(req.Context()).Info("/healthz")
 		resp.Write([]byte("ok"))
@@ -202,6 +205,99 @@ func (s *Server) deleteLocation(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("{}"))
 }
 
+func (s *Server) listRideHistory(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
+	if err := r.ParseForm(); httperr.HandleError(w, err, http.StatusBadRequest) {
+		s.logger.For(ctx).Error("bad request", zap.Error(err))
+		return
+	}
+
+	sessionID, err := parseSessionID(r)
+	if httperr.HandleError(w, err, http.StatusBadRequest) {
+		s.logger.For(ctx).Error("bad request", zap.Error(err))
+		return
+	}
+
+	response, err := s.database.ListRideHistory(ctx, sessionID)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("request failed", zap.Error(err))
+		return
+	}
+
+	data, err := json.Marshal(response)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("cannot marshal response", zap.Error(err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(data)
+}
+
+func (s *Server) createRideHistory(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
+
+	var req RideHistoryEntry
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if httperr.HandleError(w, err, http.StatusBadRequest) {
+		s.logger.For(ctx).Error("bad request", zap.Error(err))
+		return
+	}
+
+	if req.RequestedAt.IsZero() {
+		req.RequestedAt = time.Now().UTC()
+	}
+
+	err = s.database.CreateRideHistory(ctx, &req)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("request failed", zap.Error(err))
+		return
+	}
+
+	data, err := json.Marshal(req)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("cannot marshal response", zap.Error(err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write(data)
+}
+
+type rideHistoryDriverUpdateRequest struct {
+	SessionID   uint   `json:"sessionID"`
+	RequestID   uint   `json:"requestID"`
+	DriverPlate string `json:"driverPlate"`
+}
+
+func (s *Server) updateRideHistoryDriver(w http.ResponseWriter, r *http.Request) {
+	ctx := r.Context()
+	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
+
+	var req rideHistoryDriverUpdateRequest
+	err := json.NewDecoder(r.Body).Decode(&req)
+	if httperr.HandleError(w, err, http.StatusBadRequest) {
+		s.logger.For(ctx).Error("bad request", zap.Error(err))
+		return
+	}
+
+	if req.SessionID == 0 || req.RequestID == 0 || req.DriverPlate == "" {
+		http.Error(w, "sessionID, requestID and driverPlate are required", http.StatusBadRequest)
+		return
+	}
+
+	err = s.database.UpdateRideHistoryDriver(ctx, req.SessionID, req.RequestID, req.DriverPlate)
+	if httperr.HandleError(w, err, http.StatusInternalServerError) {
+		s.logger.For(ctx).Error("request failed", zap.Error(err))
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.Write([]byte("{}"))
+}
+
 func parseLocationID(r *http.Request) (int, error) {
 	locationIDStr := r.Form.Get("locationID")
 	if locationIDStr == "" {
@@ -212,4 +308,19 @@ func parseLocationID(r *http.Request) (int, error) {
 		return 0, errors.New("parameter 'locationID' is not an integer")
 	}
 	return locationID, nil
+}
+
+func parseSessionID(r *http.Request) (uint, error) {
+	sessionIDStr := r.Form.Get("sessionID")
+	if sessionIDStr == "" {
+		return 0, errors.New("missing required 'sessionID' parameter")
+	}
+	sessionID, err := strconv.Atoi(sessionIDStr)
+	if err != nil {
+		return 0, errors.New("parameter 'sessionID' is not an integer")
+	}
+	if sessionID <= 0 {
+		return 0, errors.New("parameter 'sessionID' must be a positive integer")
+	}
+	return uint(sessionID), nil
 }

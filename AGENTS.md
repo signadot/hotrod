@@ -47,7 +47,7 @@ Then: `go run ./cmd/hotrod all`
 - React frontend must be built before running the Go server: `make build-frontend-app` (uses `yarn` inside `services/frontend/react_app/`).
 
 ### Signadot CLI
-Installed at `/usr/local/bin/signadot` (v1.5.0). Requires a `SIGNADOT_API_KEY` for authentication (`signadot auth login --with-api-key <key>`). Not needed for local-only dev, but required for sandbox workflows and smart tests.
+Installed at `/usr/local/bin/signadot` (v1.5.0). This project uses the **staging** environment. The CLI config at `~/.signadot/config.yaml` must point `api_url` and `proxy_url` to the staging subdomains (i.e. `api.staging.*` and `proxy.staging.*`). Authentication requires `SIGNADOT_API_KEY` and `SIGNADOT_ORG` env vars (injected as secrets). Use `--insecure-storage` flag because the headless VM has no keyring daemon. The update script handles this automatically.
 
 ### Lint / Test / Build
 - **Go vet:** `go vet ./...`

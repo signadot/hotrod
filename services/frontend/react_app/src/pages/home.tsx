@@ -26,8 +26,11 @@ import { NotificationResponse } from "../types/notifications.ts";
 import { useGetRequestArrival } from "../hooks/useGetRequestArrival.tsx";
 import Countdown, { CountdownRenderProps } from "react-countdown";
 
-const countdownRenderer = ({ minutes, seconds, props }: CountdownRenderProps) => {
-    if (minutes === 0 && seconds === 0) return <span style={{ color: '#48BB78' }}>Arrived</span>;
+const countdownRenderer = ({ minutes, seconds, completed, props }: CountdownRenderProps) => {
+    if (completed || (minutes === 0 && seconds === 0)) {
+        // Render nothing here — the parent renders "Arrived" with proper styling
+        return <></>;
+    }
     return <span>{props.overtime ? "-" : ""}{minutes.toString().padStart(2, "0")}:{seconds.toString().padStart(2, "0")}</span>;
 };
 
@@ -73,6 +76,7 @@ export const HomePage = () => {
     const [isRequesting, setIsRequesting] = useState(false);
     const [statusMessage, setStatusMessage] = useState('');
     const [, setStatusIdx] = useState(0);
+    const [arrived, setArrived] = useState(false);
     const requestStartRef = useRef<number>(0);
     const etaTargetRef = useRef<Date | null>(null);
     const lastEtaArrivalRef = useRef<number | undefined>(undefined);
@@ -157,6 +161,7 @@ export const HomePage = () => {
         setIsRequesting(true);
         setStatusIdx(0);
         setStatusMessage(STATUS_MESSAGES[0]);
+        setArrived(false);
         requestStartRef.current = Date.now();
 
         addNewLog(pickupLocation!, dropoffLocation!, requestID, {
@@ -271,12 +276,20 @@ export const HomePage = () => {
                                         <Box color={hasResult ? 'cyan.300' : 'whiteAlpha.300'}><ClockIcon /></Box>
                                         <Text fontSize="md" fontWeight={700} color={hasResult ? 'whiteAlpha.700' : 'whiteAlpha.500'} letterSpacing="0.5px">ETA</Text>
                                     </HStack>
-                                    <Text fontSize="5xl" fontWeight={800} fontFamily="mono" color={hasResult ? 'cyan.300' : 'whiteAlpha.200'} lineHeight={1}>
-                                        {hasResult ? (
-                                            <Countdown date={etaTarget!}
-                                                renderer={countdownRenderer} overtime={lastRequestedDrive.driverArrival! < 0} />
-                                        ) : '--:--'}
-                                    </Text>
+                                    {arrived ? (
+                                        <Text fontSize="2xl" fontWeight={700} color="green.300" lineHeight={1}>
+                                            Arrived
+                                        </Text>
+                                    ) : (
+                                        <Text fontSize="5xl" fontWeight={800} fontFamily="mono" color={hasResult ? 'cyan.300' : 'whiteAlpha.200'} lineHeight={1}>
+                                            {hasResult ? (
+                                                <Countdown date={etaTarget!}
+                                                    renderer={countdownRenderer}
+                                                    overtime={lastRequestedDrive.driverArrival! < 0}
+                                                    onComplete={() => setArrived(true)} />
+                                            ) : '--:--'}
+                                        </Text>
+                                    )}
                                 </Box>
                                 <Box textAlign="center">
                                     <HStack spacing={3} justifyContent="center" mb={3}>

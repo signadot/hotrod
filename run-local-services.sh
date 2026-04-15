@@ -91,69 +91,64 @@ echo ""
 for SVC in $SERVICES; do
   LOCAL_NAME=$(resolve_local_name "$SANDBOX_NAME" "$SVC")
 
-  # Resolve sandbox env vars
-  SIGNADOT_VARS=""
+  # Clear any leftover Signadot env vars from previous iteration
+  unset SIGNADOT_SANDBOX_NAME SIGNADOT_SANDBOX_ROUTING_KEY SIGNADOT_BASELINE_NAME SIGNADOT_BASELINE_KIND SIGNADOT_BASELINE_NAMESPACE 2>/dev/null || true
+
   if [ -z "$LOCAL_NAME" ]; then
     echo "[$SVC] No local mapping found → starting as BASELINE"
+    # Set baseline name so notifications identify this service correctly
+    export SIGNADOT_BASELINE_NAME="$SVC"
   else
     echo "[$SVC] Local mapping: $LOCAL_NAME → starting as SANDBOX"
-    SIGNADOT_VARS=$(signadot sandbox get-env "$SANDBOX_NAME" -l "$LOCAL_NAME" 2>/dev/null | sed 's/#.*//')
+    eval "$(signadot sandbox get-env "$SANDBOX_NAME" -l "$LOCAL_NAME" 2>/dev/null | sed 's/#.*//')"
   fi
 
   case $SVC in
     route)
-      echo "  REDIS_ADDR=$REDIS_ADDR"
-      echo "  OTEL_EXPORTER_OTLP_ENDPOINT=$OTEL_ENDPOINT"
-      [ -n "$SIGNADOT_VARS" ] && eval "$SIGNADOT_VARS"
-      echo "  SIGNADOT_SANDBOX_NAME=${SIGNADOT_SANDBOX_NAME:-<not set>}"
-      echo "  SIGNADOT_BASELINE_NAME=${SIGNADOT_BASELINE_NAME:-<not set>}"
       export REDIS_ADDR="$REDIS_ADDR"
       export OTEL_EXPORTER_OTLP_ENDPOINT="$OTEL_ENDPOINT"
+      echo "  REDIS_ADDR=$REDIS_ADDR"
+      echo "  SIGNADOT_BASELINE_NAME=${SIGNADOT_BASELINE_NAME:-<not set>}"
+      echo "  SIGNADOT_SANDBOX_NAME=${SIGNADOT_SANDBOX_NAME:-<not set>}"
       go run cmd/hotrod/main.go route > route.log 2>&1 &
       echo "  → PID $! | route.log | port 8083"
       ;;
     driver)
-      echo "  KAFKA_BROKER_ADDR=$KAFKA_BROKER"
-      echo "  REDIS_ADDR=$REDIS_ADDR"
-      echo "  ROUTE_ADDR=$ROUTE_ADDR"
-      echo "  OTEL_EXPORTER_OTLP_ENDPOINT=$OTEL_ENDPOINT"
-      [ -n "$SIGNADOT_VARS" ] && eval "$SIGNADOT_VARS"
-      echo "  SIGNADOT_SANDBOX_NAME=${SIGNADOT_SANDBOX_NAME:-<not set>}"
-      echo "  SIGNADOT_BASELINE_NAME=${SIGNADOT_BASELINE_NAME:-<not set>}"
       export KAFKA_BROKER_ADDR="$KAFKA_BROKER"
       export REDIS_ADDR="$REDIS_ADDR"
       export ROUTE_ADDR="$ROUTE_ADDR"
       export OTEL_EXPORTER_OTLP_ENDPOINT="$OTEL_ENDPOINT"
+      echo "  KAFKA_BROKER_ADDR=$KAFKA_BROKER"
+      echo "  REDIS_ADDR=$REDIS_ADDR"
+      echo "  ROUTE_ADDR=$ROUTE_ADDR"
+      echo "  SIGNADOT_BASELINE_NAME=${SIGNADOT_BASELINE_NAME:-<not set>}"
+      echo "  SIGNADOT_SANDBOX_NAME=${SIGNADOT_SANDBOX_NAME:-<not set>}"
       go run cmd/hotrod/main.go driver > driver.log 2>&1 &
       echo "  → PID $! | driver.log | port 8082"
       ;;
     location)
-      echo "  MYSQL_ADDR=$MYSQL_ADDR"
-      echo "  REDIS_ADDR=$REDIS_ADDR"
-      echo "  OTEL_EXPORTER_OTLP_ENDPOINT=$OTEL_ENDPOINT"
-      [ -n "$SIGNADOT_VARS" ] && eval "$SIGNADOT_VARS"
-      echo "  SIGNADOT_SANDBOX_NAME=${SIGNADOT_SANDBOX_NAME:-<not set>}"
-      echo "  SIGNADOT_BASELINE_NAME=${SIGNADOT_BASELINE_NAME:-<not set>}"
       export MYSQL_ADDR="$MYSQL_ADDR"
       export REDIS_ADDR="$REDIS_ADDR"
       export OTEL_EXPORTER_OTLP_ENDPOINT="$OTEL_ENDPOINT"
+      echo "  MYSQL_ADDR=$MYSQL_ADDR"
+      echo "  REDIS_ADDR=$REDIS_ADDR"
+      echo "  SIGNADOT_BASELINE_NAME=${SIGNADOT_BASELINE_NAME:-<not set>}"
+      echo "  SIGNADOT_SANDBOX_NAME=${SIGNADOT_SANDBOX_NAME:-<not set>}"
       go run cmd/hotrod/main.go location > location.log 2>&1 &
       echo "  → PID $! | location.log | port 8081"
       ;;
     frontend)
-      echo "  KAFKA_BROKER_ADDR=$KAFKA_BROKER"
-      echo "  REDIS_ADDR=$REDIS_ADDR"
-      echo "  LOCATION_ADDR=$LOCATION_ADDR"
-      echo "  ROUTE_ADDR=$ROUTE_ADDR"
-      echo "  OTEL_EXPORTER_OTLP_ENDPOINT=$OTEL_ENDPOINT"
-      [ -n "$SIGNADOT_VARS" ] && eval "$SIGNADOT_VARS"
-      echo "  SIGNADOT_SANDBOX_NAME=${SIGNADOT_SANDBOX_NAME:-<not set>}"
-      echo "  SIGNADOT_BASELINE_NAME=${SIGNADOT_BASELINE_NAME:-<not set>}"
       export KAFKA_BROKER_ADDR="$KAFKA_BROKER"
       export REDIS_ADDR="$REDIS_ADDR"
       export OTEL_EXPORTER_OTLP_ENDPOINT="$OTEL_ENDPOINT"
       export LOCATION_ADDR="$LOCATION_ADDR"
       export ROUTE_ADDR="$ROUTE_ADDR"
+      echo "  KAFKA_BROKER_ADDR=$KAFKA_BROKER"
+      echo "  REDIS_ADDR=$REDIS_ADDR"
+      echo "  LOCATION_ADDR=$LOCATION_ADDR"
+      echo "  ROUTE_ADDR=$ROUTE_ADDR"
+      echo "  SIGNADOT_BASELINE_NAME=${SIGNADOT_BASELINE_NAME:-<not set>}"
+      echo "  SIGNADOT_SANDBOX_NAME=${SIGNADOT_SANDBOX_NAME:-<not set>}"
       go run cmd/hotrod/main.go frontend > frontend.log 2>&1 &
       echo "  → PID $! | frontend.log | port 8080"
       ;;

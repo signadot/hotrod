@@ -29,19 +29,19 @@ export const RequestFlowDiagram = ({ currentLog, showArchitecture }: RequestFlow
         >
             {/* Header */}
             <Flex
-                px={5}
-                py={3}
+                px={6}
+                py={4}
                 borderBottom="1px solid"
                 borderColor="gray.700"
                 alignItems="center"
                 justifyContent="space-between"
-                minH="40px"
+                minH="52px"
             >
-                <Text fontSize="sm" fontWeight={600} color="whiteAlpha.700" letterSpacing="0.5px">
+                <Text fontSize="md" fontWeight={700} color="whiteAlpha.800" letterSpacing="1px">
                     {currentLog ? 'REQUEST FLOW' : 'ARCHITECTURE'}
                 </Text>
                 {flowState.requestId && (
-                    <Text fontSize="xs" color="whiteAlpha.500" fontFamily="mono">
+                    <Text fontSize="sm" color="whiteAlpha.600" fontFamily="mono">
                         Request #{flowState.requestId}
                         {flowState.isComplete && ' — completed'}
                     </Text>

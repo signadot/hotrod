@@ -85,19 +85,19 @@ export const ServiceNode = ({ serviceId, variant, state, x, y, label, visible }:
                     }}
                 >
                     <div style={{
-                        fontSize: '13px',
-                        fontWeight: 600,
+                        fontSize: '22px',
+                        fontWeight: 700,
                         color: labelColor,
                         lineHeight: 1.2,
                     }}>
                         {label}
                     </div>
                     <div style={{
-                        fontSize: '10px',
+                        fontSize: '14px',
                         fontWeight: 500,
                         color: sublabelColor,
-                        marginTop: '2px',
-                        maxWidth: '125px',
+                        marginTop: '5px',
+                        maxWidth: '200px',
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
@@ -110,9 +110,10 @@ export const ServiceNode = ({ serviceId, variant, state, x, y, label, visible }:
                             animate={{ scale: 1 }}
                             style={{
                                 position: 'absolute',
-                                top: 4,
-                                right: 6,
-                                fontSize: '10px',
+                                top: 8,
+                                right: 12,
+                                fontSize: '16px',
+                                fontWeight: 700,
                                 color: isSandbox ? SANDBOX_COLOR : serviceColor,
                             }}
                         >

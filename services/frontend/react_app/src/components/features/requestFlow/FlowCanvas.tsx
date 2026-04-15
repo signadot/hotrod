@@ -12,55 +12,57 @@ import {
 type FlowCanvasProps = { flowState: RequestFlowState; showTopology: boolean };
 type EdgeDef = { id: string; pathD: string; labelX: number; labelY: number; protocol: string; variant: NodeVariant; isTopology?: boolean };
 
-const GAP = 10;
+const GAP = 14;
 
 // === EDGE PATH BUILDERS ===
 // Horizontal: right→left
 function hPath(fId: NodeId, fV: NodeVariant|undefined, tId: NodeId, tV: NodeVariant|undefined) {
     const f = getNodeEdgePoint(fId, fV, 'right'), t = getNodeEdgePoint(tId, tV, 'left');
-    return { pathD: `M ${f.x} ${f.y} L ${t.x-GAP} ${t.y}`, labelX: (f.x+t.x)/2, labelY: Math.min(f.y,t.y)-8 };
+    return { pathD: `M ${f.x} ${f.y} L ${t.x-GAP} ${t.y}`, labelX: (f.x+t.x)/2, labelY: Math.min(f.y,t.y)-12 };
 }
 
-// Frontend → Location: right side of Frontend, then up-right to Location (L-shape)
+// Frontend → Location: L-shape going up. Label placed on the LONG horizontal
+// segment near Location (far from Frontend) for clear visibility.
 function frontendToLocation(fV: NodeVariant, tV: NodeVariant) {
     const f = getNodeEdgePoint('frontend', fV, 'right');
     const t = getNodeEdgePoint('location', tV, 'left');
-    // Go right from frontend, then up to location row, then right to location
-    const midX = f.x + 30;
+    const midX = f.x + 40;
     return {
         pathD: `M ${f.x} ${f.y} L ${midX} ${f.y} L ${midX} ${t.y} L ${t.x-GAP} ${t.y}`,
-        labelX: midX + 30, labelY: (f.y + t.y) / 2 - 4,
+        // Place label on the horizontal top segment, centered between bend and target
+        labelX: (midX + t.x) / 2,
+        labelY: t.y - 12,
     };
 }
 
-// Frontend → Kafka: right side of Frontend, stays on same row to Kafka
+// Frontend → Kafka: L-shape going down. Label on LONG horizontal segment near Kafka.
 function frontendToKafka(fV: NodeVariant) {
     const f = getNodeEdgePoint('frontend', fV, 'right');
     const t = getNodeEdgePoint('kafka', undefined, 'left');
     if (Math.abs(f.y - t.y) < 10) {
-        // Same row — straight horizontal
-        return { pathD: `M ${f.x} ${f.y} L ${t.x-GAP} ${t.y}`, labelX: (f.x+t.x)/2, labelY: f.y - 8 };
+        return { pathD: `M ${f.x} ${f.y} L ${t.x-GAP} ${t.y}`, labelX: (f.x+t.x)/2, labelY: f.y - 10 };
     }
-    // Different row (sandbox frontend below) — L-shape up to Kafka
-    const midX = f.x + 30;
+    const midX = f.x + 40;
     return {
         pathD: `M ${f.x} ${f.y} L ${midX} ${f.y} L ${midX} ${t.y} L ${t.x-GAP} ${t.y}`,
-        labelX: midX - 25, labelY: (f.y + t.y) / 2,
+        // Place label on the horizontal bottom segment near Kafka
+        labelX: (midX + t.x) / 2,
+        labelY: t.y - 12,
     };
 }
 
-// Kafka → Driver: horizontal on bottom branch
+// Kafka → Driver: horizontal on same row, or L-shape if cross-lane
 function kafkaToDriver(tV: NodeVariant) {
     const f = getNodeEdgePoint('kafka', undefined, 'right');
     const t = getNodeEdgePoint('driver', tV, 'left');
     if (Math.abs(f.y - t.y) < 10) {
-        return { pathD: `M ${f.x} ${f.y} L ${t.x-GAP} ${t.y}`, labelX: (f.x+t.x)/2, labelY: f.y - 8 };
+        return { pathD: `M ${f.x} ${f.y} L ${t.x-GAP} ${t.y}`, labelX: (f.x+t.x)/2, labelY: f.y - 10 };
     }
-    // Sandbox driver below — L-shape
     const midX = (f.x + t.x) / 2;
     return {
         pathD: `M ${f.x} ${f.y} L ${midX} ${f.y} L ${midX} ${t.y} L ${t.x-GAP} ${t.y}`,
-        labelX: midX + 14, labelY: (f.y + t.y) / 2,
+        labelX: (midX + t.x) / 2,
+        labelY: t.y - 12,
     };
 }
 
@@ -122,26 +124,26 @@ function buildActiveEdges(flowState: RequestFlowState): EdgeDef[] {
 
 // === NODE SHAPES ===
 function DatabaseNode({ x, y }: { x:number; y:number; color:string; isIdle:boolean }) {
-    const w=DB_WIDTH, h=DB_HEIGHT, ry=7;
+    const w=DB_WIDTH, h=DB_HEIGHT, ry=10;
     const cx=x+w/2, topY=y+ry, bodyH=h-ry*2, bottomY=y+h-ry;
     return (
         <g>
-            <rect x={x} y={topY} width={w} height={bodyH} fill="#1A202C" stroke={IDLE_COLOR} strokeWidth={1.5}/>
-            <ellipse cx={cx} cy={bottomY} rx={w/2} ry={ry} fill="#1A202C" stroke={IDLE_COLOR} strokeWidth={1.5}/>
-            <ellipse cx={cx} cy={topY} rx={w/2} ry={ry} fill="#1A202C" stroke={IDLE_COLOR} strokeWidth={1.5}/>
-            <text x={cx} y={topY+bodyH/2+4} textAnchor="middle" fontSize={10} fontWeight={700} fill="#A0AEC0" fontFamily="system-ui, sans-serif">MySQL</text>
+            <rect x={x} y={topY} width={w} height={bodyH} fill="#1A202C" stroke={IDLE_COLOR} strokeWidth={2}/>
+            <ellipse cx={cx} cy={bottomY} rx={w/2} ry={ry} fill="#1A202C" stroke={IDLE_COLOR} strokeWidth={2}/>
+            <ellipse cx={cx} cy={topY} rx={w/2} ry={ry} fill="#1A202C" stroke={IDLE_COLOR} strokeWidth={2}/>
+            <text x={cx} y={topY+bodyH/2+6} textAnchor="middle" fontSize={18} fontWeight={700} fill="#A0AEC0" fontFamily="system-ui, sans-serif">MySQL</text>
         </g>
     );
 }
 
 function KafkaNode({ x, y }: { x:number; y:number; color:string; isIdle:boolean }) {
-    const w=INFRA_WIDTH, h=INFRA_HEIGHT, indent=12;
+    const w=INFRA_WIDTH, h=INFRA_HEIGHT, indent=16;
     const pts = `${x+indent},${y} ${x+w-indent},${y} ${x+w},${y+h/2} ${x+w-indent},${y+h} ${x+indent},${y+h} ${x},${y+h/2}`;
     return (
         <g>
-            <polygon points={pts} fill="#1A202C" stroke={IDLE_COLOR} strokeWidth={1.5} strokeLinejoin="round"/>
-            <text x={x+w/2} y={y+h/2-2} textAnchor="middle" fontSize={11} fontWeight={700} fill="#A0AEC0" fontFamily="system-ui, sans-serif">Kafka</text>
-            <text x={x+w/2} y={y+h/2+10} textAnchor="middle" fontSize={8} fill="#718096" fontFamily="system-ui, sans-serif">message bus</text>
+            <polygon points={pts} fill="#1A202C" stroke={IDLE_COLOR} strokeWidth={2} strokeLinejoin="round"/>
+            <text x={x+w/2} y={y+h/2-3} textAnchor="middle" fontSize={20} fontWeight={700} fill="#A0AEC0" fontFamily="system-ui, sans-serif">Kafka</text>
+            <text x={x+w/2} y={y+h/2+18} textAnchor="middle" fontSize={13} fill="#718096" fontFamily="system-ui, sans-serif">message bus</text>
         </g>
     );
 }
@@ -164,18 +166,18 @@ export const FlowCanvas = ({ flowState, showTopology }: FlowCanvasProps) => {
         <svg viewBox={`0 0 ${VIEWBOX_WIDTH} ${VIEWBOX_HEIGHT}`} preserveAspectRatio="xMidYMid meet" width="100%" height="100%">
             <defs>
                 {/* Topology arrows — visible gray */}
-                <marker id="arrow-topo" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto" markerUnits="userSpaceOnUse">
-                    <path d="M 0 0.5 L 7 3 L 0 5.5" fill="none" stroke="#718096" strokeWidth={1.2} strokeLinejoin="round"/>
+                <marker id="arrow-topo" markerWidth="12" markerHeight="10" refX="10" refY="5" orient="auto" markerUnits="userSpaceOnUse">
+                    <path d="M 0 1 L 11 5 L 0 9" fill="none" stroke="#718096" strokeWidth={1.8} strokeLinejoin="round" strokeLinecap="round"/>
                 </marker>
                 {/* Active flow arrows — cyan */}
-                <marker id="arrow-active" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto" markerUnits="userSpaceOnUse">
-                    <path d="M 0 1 L 9 4 L 0 7" fill="none" stroke="#00B5D8" strokeWidth={1.5} strokeLinejoin="round"/>
+                <marker id="arrow-active" markerWidth="14" markerHeight="11" refX="12" refY="5.5" orient="auto" markerUnits="userSpaceOnUse">
+                    <path d="M 0 1 L 13 5.5 L 0 10" fill="none" stroke="#00B5D8" strokeWidth={2.2} strokeLinejoin="round" strokeLinecap="round"/>
                 </marker>
             </defs>
 
             {/* Separator line when sandbox nodes are present */}
             {sbxServices.length > 0 && (
-                <line x1={0} y1={240} x2={VIEWBOX_WIDTH} y2={240} stroke="#2D3748" strokeWidth={1} strokeDasharray="4 6" opacity={0.25}/>
+                <line x1={0} y1={300} x2={VIEWBOX_WIDTH} y2={300} stroke="#2D3748" strokeWidth={2} strokeDasharray="8 10" opacity={0.25}/>
             )}
 
             {/* Edges */}

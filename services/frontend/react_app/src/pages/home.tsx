@@ -33,19 +33,19 @@ const countdownRenderer = ({ minutes, seconds, props }: CountdownRenderProps) =>
 
 // Gradient SVG icons
 const ClockIcon = () => (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <defs><linearGradient id="gc" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#00B5D8"/><stop offset="100%" stopColor="#76E4F7"/></linearGradient></defs>
         <circle cx="12" cy="12" r="10" stroke="url(#gc)" strokeWidth="2"/><polyline points="12 6 12 12 16 14" stroke="url(#gc)" strokeWidth="2"/>
     </svg>
 );
 const UserIcon = () => (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <defs><linearGradient id="gu" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#9F7AEA"/><stop offset="100%" stopColor="#D6BCFA"/></linearGradient></defs>
         <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" stroke="url(#gu)" strokeWidth="2"/><circle cx="12" cy="7" r="4" stroke="url(#gu)" strokeWidth="2"/>
     </svg>
 );
 const CarIcon = () => (
-    <svg width="28" height="28" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
+    <svg width="36" height="36" viewBox="0 0 24 24" fill="none" strokeLinecap="round" strokeLinejoin="round">
         <defs><linearGradient id="gcar" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stopColor="#F6AD55"/><stop offset="100%" stopColor="#ECC94B"/></linearGradient></defs>
         <path d="M5 17h14M5 17a2 2 0 01-2-2V9a2 2 0 012-2h1l2-3h8l2 3h1a2 2 0 012 2v6a2 2 0 01-2 2M5 17a2 2 0 100 4 2 2 0 000-4zm14 0a2 2 0 100 4 2 2 0 000-4z" stroke="url(#gcar)" strokeWidth="1.8"/>
     </svg>
@@ -197,15 +197,15 @@ export const HomePage = () => {
             <div className={styles.pageGrid}>
                 {/* Left Panel */}
                 <div className={styles.leftPanel}>
-                    <Stack spacing={4}>
-                        <Heading size="sm" color="whiteAlpha.800" textAlign="left">Request a Ride</Heading>
+                    <Stack spacing={5}>
+                        <Heading size="lg" color="whiteAlpha.900" textAlign="left" fontWeight={700}>Request a Ride</Heading>
                         <LocationSelect placeholder='Pickup location' locations={locations.Locations}
                             onSelect={id => setSelectedLocations(prev => ({ ...prev, pickupId: id }))}
                             selectedLocationID={selectedLocations.pickupId} />
                         <LocationSelect placeholder='Dropoff location' locations={locations.Locations}
                             onSelect={id => setSelectedLocations(prev => ({ ...prev, dropoffId: id }))}
                             selectedLocationID={selectedLocations.dropoffId} />
-                        <Button variant='solid' colorScheme='cyan' size="md" w="100%"
+                        <Button variant='solid' colorScheme='cyan' size="lg" w="100%" fontSize="md" fontWeight={600} h="52px"
                             onClick={handleRequestDrive}
                             isLoading={isRequesting}
                             loadingText="Finding driver..."
@@ -217,12 +217,12 @@ export const HomePage = () => {
                         </Button>
                     </Stack>
 
-                    <Button variant='outline' size="sm" colorScheme="gray" w="100%"
+                    <Button variant='outline' size="md" colorScheme="gray" w="100%" fontSize="sm" fontWeight={600} h="44px"
                         onClick={() => setShowArchitecture(prev => !prev)}>
                         {showArchitecture ? 'Hide Architecture' : 'Show Architecture'}
                     </Button>
 
-                    <Box borderRadius="md" overflow="hidden" h="220px" flexShrink={0} border="1px solid" borderColor="gray.700">
+                    <Box borderRadius="md" overflow="hidden" h="260px" flexShrink={0} border="1px solid" borderColor="gray.700">
                         <Map dropoffLocationID={selectedLocations.dropoffId} pickupLocationID={selectedLocations.pickupId} />
                     </Box>
                 </div>
@@ -230,17 +230,17 @@ export const HomePage = () => {
                 {/* Center Panel */}
                 <div className={styles.centerPanel}>
                     {/* Result Card */}
-                    <Box bg="gray.800" borderRadius="lg" border="1px solid" borderColor="gray.700" py={8} px={8} mb={4} flexShrink={0}>
+                    <Box bg="gray.800" borderRadius="xl" border="1px solid" borderColor="gray.700" py={6} px={10} mb={4} flexShrink={0}>
                         {isRequesting && !hasResult ? (
-                            <Flex direction="column" alignItems="center" gap={4} py={3}>
-                                {/* Pulsing ring spinner */}
-                                <Box position="relative" w="48px" h="48px">
+                            <Flex direction="column" alignItems="center" gap={5} py={4}>
+                                {/* Pulsing ring spinner — larger for demo */}
+                                <Box position="relative" w="72px" h="72px">
                                     <motion.div
                                         animate={{ rotate: 360 }}
                                         transition={{ duration: 1.5, repeat: Infinity, ease: 'linear' }}
                                         style={{
-                                            width: '48px', height: '48px', borderRadius: '50%',
-                                            border: '3px solid transparent',
+                                            width: '72px', height: '72px', borderRadius: '50%',
+                                            border: '4px solid transparent',
                                             borderTopColor: '#00B5D8', borderRightColor: '#9F7AEA',
                                             position: 'absolute',
                                         }}
@@ -249,8 +249,8 @@ export const HomePage = () => {
                                         animate={{ scale: [1, 1.3, 1], opacity: [0.4, 0.1, 0.4] }}
                                         transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
                                         style={{
-                                            width: '48px', height: '48px', borderRadius: '50%',
-                                            border: '1px solid #00B5D840',
+                                            width: '72px', height: '72px', borderRadius: '50%',
+                                            border: '2px solid #00B5D840',
                                             position: 'absolute',
                                         }}
                                     />
@@ -261,17 +261,17 @@ export const HomePage = () => {
                                     animate={{ opacity: 1, y: 0 }}
                                     transition={{ duration: 0.3 }}
                                 >
-                                    <Text color="cyan.300" fontSize="md" fontWeight={500} textAlign="center">{statusMessage}</Text>
+                                    <Text color="cyan.300" fontSize="xl" fontWeight={600} textAlign="center">{statusMessage}</Text>
                                 </motion.div>
                             </Flex>
                         ) : (
-                            <HStack spacing={12} justifyContent="center">
+                            <HStack spacing={16} justifyContent="center">
                                 <Box textAlign="center">
-                                    <HStack spacing={2} justifyContent="center" mb={2}>
+                                    <HStack spacing={3} justifyContent="center" mb={3}>
                                         <Box color={hasResult ? 'cyan.300' : 'whiteAlpha.300'}><ClockIcon /></Box>
-                                        <Text fontSize="sm" fontWeight={600} color={hasResult ? 'whiteAlpha.600' : 'whiteAlpha.400'}>ETA</Text>
+                                        <Text fontSize="md" fontWeight={700} color={hasResult ? 'whiteAlpha.700' : 'whiteAlpha.500'} letterSpacing="0.5px">ETA</Text>
                                     </HStack>
-                                    <Text fontSize="3xl" fontWeight={700} fontFamily="mono" color={hasResult ? 'cyan.300' : 'whiteAlpha.200'} lineHeight={1}>
+                                    <Text fontSize="5xl" fontWeight={800} fontFamily="mono" color={hasResult ? 'cyan.300' : 'whiteAlpha.200'} lineHeight={1}>
                                         {hasResult ? (
                                             <Countdown date={etaTarget!}
                                                 renderer={countdownRenderer} overtime={lastRequestedDrive.driverArrival! < 0} />
@@ -279,27 +279,27 @@ export const HomePage = () => {
                                     </Text>
                                 </Box>
                                 <Box textAlign="center">
-                                    <HStack spacing={2} justifyContent="center" mb={2}>
+                                    <HStack spacing={3} justifyContent="center" mb={3}>
                                         <Box color={hasResult ? 'purple.300' : 'whiteAlpha.300'}><UserIcon /></Box>
-                                        <Text fontSize="sm" fontWeight={600} color={hasResult ? 'whiteAlpha.600' : 'whiteAlpha.400'}>Driver</Text>
+                                        <Text fontSize="md" fontWeight={700} color={hasResult ? 'whiteAlpha.700' : 'whiteAlpha.500'} letterSpacing="0.5px">Driver</Text>
                                     </HStack>
-                                    <Text fontSize="xl" fontWeight={600} color={hasResult ? 'whiteAlpha.900' : 'whiteAlpha.200'} lineHeight={1}>
+                                    <Text fontSize="2xl" fontWeight={700} color={hasResult ? 'whiteAlpha.900' : 'whiteAlpha.200'} lineHeight={1}>
                                         {hasResult ? lastRequestedDrive.driverDetails.name : '--'}
                                     </Text>
                                 </Box>
                                 <Box textAlign="center">
-                                    <HStack spacing={2} justifyContent="center" mb={2}>
+                                    <HStack spacing={3} justifyContent="center" mb={3}>
                                         <Box color={hasResult ? 'orange.300' : 'whiteAlpha.300'}><CarIcon /></Box>
-                                        <Text fontSize="sm" fontWeight={600} color={hasResult ? 'whiteAlpha.600' : 'whiteAlpha.400'}>License #</Text>
+                                        <Text fontSize="md" fontWeight={700} color={hasResult ? 'whiteAlpha.700' : 'whiteAlpha.500'} letterSpacing="0.5px">License #</Text>
                                     </HStack>
-                                    <Text fontSize="xl" fontWeight={600} fontFamily="mono" color={hasResult ? 'whiteAlpha.900' : 'whiteAlpha.200'} lineHeight={1}>
+                                    <Text fontSize="2xl" fontWeight={700} fontFamily="mono" color={hasResult ? 'whiteAlpha.900' : 'whiteAlpha.200'} lineHeight={1}>
                                         {hasResult ? lastRequestedDrive.driverDetails.plate : '--'}
                                     </Text>
                                 </Box>
                                 {lastRequestedDrive.driverDistance != null && (
                                     <Box textAlign="center">
-                                        <Text fontSize="sm" fontWeight={600} color="whiteAlpha.600" mb={2}>Distance</Text>
-                                        <Text fontSize="xl" fontWeight={600} color="whiteAlpha.900" lineHeight={1}>
+                                        <Text fontSize="md" fontWeight={700} color="whiteAlpha.700" mb={3} letterSpacing="0.5px">Distance</Text>
+                                        <Text fontSize="2xl" fontWeight={700} color="whiteAlpha.900" lineHeight={1}>
                                             {lastRequestedDrive.driverDistance} mi
                                         </Text>
                                     </Box>
@@ -318,14 +318,14 @@ export const HomePage = () => {
                     <div className={`${styles.bottomPanel} ${logsPanel.isOpen ? styles.bottomPanelExpanded : styles.bottomPanelCollapsed}`}>
                         <div className={styles.bottomPanelHeader} onClick={logsPanel.onToggle}>
                             <HStack spacing={3}>
-                                <Text fontSize="sm" fontWeight={600} color="whiteAlpha.700">Request Logs</Text>
+                                <Text fontSize="md" fontWeight={700} color="whiteAlpha.800">Request Logs</Text>
                                 {logs.length > 0 && (
-                                    <Badge variant="subtle" colorScheme="gray" fontSize="10px">
+                                    <Badge variant="subtle" colorScheme="gray" fontSize="12px" px={2} py={1}>
                                         {logs.reduce((a, l) => a + l.entries.length, 0)} entries
                                     </Badge>
                                 )}
                             </HStack>
-                            <Text fontSize="sm" color="whiteAlpha.500" transform={logsPanel.isOpen ? 'rotate(180deg)' : 'none'} transition="transform 0.2s">&#9660;</Text>
+                            <Text fontSize="md" color="whiteAlpha.500" transform={logsPanel.isOpen ? 'rotate(180deg)' : 'none'} transition="transform 0.2s">&#9660;</Text>
                         </div>
                         {logsPanel.isOpen && (
                             <div className={styles.bottomPanelBody}>

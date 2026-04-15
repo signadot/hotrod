@@ -30,15 +30,15 @@ export const KAFKA_COLOR = '#F6AD55';
 export const MYSQL_COLOR = '#63B3ED';
 export const IDLE_COLOR = '#4A5568';
 
-export const NODE_WIDTH = 130;
-export const NODE_HEIGHT = 52;
-export const INFRA_WIDTH = 110;
-export const INFRA_HEIGHT = 44;
-export const DB_WIDTH = 70;
-export const DB_HEIGHT = 50;
+export const NODE_WIDTH = 220;
+export const NODE_HEIGHT = 90;
+export const INFRA_WIDTH = 180;
+export const INFRA_HEIGHT = 76;
+export const DB_WIDTH = 120;
+export const DB_HEIGHT = 90;
 
-export const VIEWBOX_WIDTH = 780;
-export const VIEWBOX_HEIGHT = 380;
+export const VIEWBOX_WIDTH = 1400;
+export const VIEWBOX_HEIGHT = 440;
 
 // === HORIZONTAL BRANCHING LAYOUT ===
 //
@@ -47,16 +47,15 @@ export const VIEWBOX_HEIGHT = 380;
 //                   └─── Kafka ─── Driver ─── Route  (bottom branch)
 //
 // ALL sandbox nodes on a single row below the entire baseline topology.
-// This prevents any overlap between sandbox nodes and baseline infra.
 
-const TOP_Y = 30;       // top branch (Location, MySQL)
-const CENTER_Y = 130;   // Frontend + bottom branch (Kafka, Driver, Route)
-const SANDBOX_ROW_Y = 260; // single row for ALL sandbox nodes, well below baseline bottom
+const TOP_Y = 20;       // top branch (Location, MySQL)
+const CENTER_Y = 170;   // Frontend + bottom branch (Kafka, Driver, Route)
+const SANDBOX_ROW_Y = 330; // single row for ALL sandbox nodes
 
-const COL0_X = 20;      // Frontend
-const COL1_X = 200;     // Location / Kafka
-const COL2_X = 380;     // MySQL / Driver
-const COL3_X = 560;     // Route
+const COL0_X = 40;      // Frontend
+const COL1_X = 350;     // Location / Kafka
+const COL2_X = 660;     // MySQL / Driver
+const COL3_X = 1000;    // Route
 
 export const BASELINE_NODES: NodeConfig[] = [
     { id: 'frontend', label: 'Frontend', x: COL0_X, y: CENTER_Y - NODE_HEIGHT / 2, color: SERVICE_COLORS.frontend },

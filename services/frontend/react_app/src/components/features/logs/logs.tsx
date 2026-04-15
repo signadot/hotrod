@@ -60,8 +60,8 @@ const BaseLog = ({ log }: BaseLogProps) => {
                 const serviceColor = e.service.length > 0 ? servicesColor[e.service] : "black";
 
                 return (
-                    <HStack fontWeight='bold'>
-                        <Text >{getTime(e.date)}</Text>
+                    <HStack fontWeight='bold' fontSize='md' spacing={3} py={1}>
+                        <Text color='whiteAlpha.600' fontFamily='mono'>{getTime(e.date)}</Text>
                         <Text color={serviceColor}>{e.service}</Text>
                         <Text color={serviceColor}>({e.sandboxName && e.sandboxName.length > 0 ? e.sandboxName : 'baseline'})</Text>
                         <Text color='green.300'>{e.status}</Text>
@@ -74,15 +74,15 @@ const BaseLog = ({ log }: BaseLogProps) => {
     return (
         <AccordionItem key={requestID}>
             <h2>
-                <AccordionButton>
-                    <Box as="span" flex='1' textAlign='left'>
+                <AccordionButton py={3}>
+                    <Box as="span" flex='1' textAlign='left' fontSize='md' fontWeight={600}>
                         Request ID: #{requestID} from <LocationHighlight value={pickupLocation.name} type='pickup'/> to <LocationHighlight value={dropoffLocation.name} type='dropoff'/>
                     </Box>
                     <AccordionIcon />
                 </AccordionButton>
             </h2>
             <AccordionPanel pb={4}>
-                <Stack>
+                <Stack spacing={1}>
                     { entriesMemo }
                 </Stack>
             </AccordionPanel>

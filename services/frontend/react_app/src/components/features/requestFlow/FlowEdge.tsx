@@ -19,14 +19,14 @@ export const FlowEdge = ({ pathD, protocol, state, labelX, labelY }: FlowEdgePro
     const isIdle = state.status === 'idle';
 
     if (isIdle) {
-        // Topology/architecture view: visible, static, with arrows, NOT grayed out
+        // Topology/architecture view: visible, static, with arrows
         return (
             <g>
-                <path d={pathD} fill="none" stroke={TOPO_COLOR} strokeWidth={1.5}
-                    strokeDasharray="6 4" strokeLinecap="round" strokeLinejoin="round"
+                <path d={pathD} fill="none" stroke={TOPO_COLOR} strokeWidth={2}
+                    strokeDasharray="8 5" strokeLinecap="round" strokeLinejoin="round"
                     markerEnd="url(#arrow-topo)" opacity={0.6} />
-                <text x={labelX} y={labelY} textAnchor="middle" fontSize={9} fontWeight={600}
-                    fontFamily="system-ui, sans-serif" fill={TOPO_COLOR} opacity={0.6}>
+                <text x={labelX} y={labelY} textAnchor="middle" fontSize={16} fontWeight={600}
+                    fontFamily="system-ui, sans-serif" fill={TOPO_COLOR} opacity={0.65}>
                     {protocol}
                 </text>
             </g>
@@ -36,13 +36,13 @@ export const FlowEdge = ({ pathD, protocol, state, labelX, labelY }: FlowEdgePro
     // Active request flow: all lines same cyan color, animated dashes
     return (
         <g>
-            <path d={pathD} fill="none" stroke={ACTIVE_COLOR} strokeWidth={2.5}
-                strokeDasharray="10 6" strokeLinecap="round" strokeLinejoin="round"
+            <path d={pathD} fill="none" stroke={ACTIVE_COLOR} strokeWidth={3.5}
+                strokeDasharray="14 8" strokeLinecap="round" strokeLinejoin="round"
                 markerEnd="url(#arrow-active)" opacity={0.9}>
-                <animate attributeName="stroke-dashoffset" from="32" to="0" dur="1.2s" repeatCount="indefinite" />
+                <animate attributeName="stroke-dashoffset" from="44" to="0" dur="1.2s" repeatCount="indefinite" />
             </path>
-            <text x={labelX} y={labelY} textAnchor="middle" fontSize={9} fontWeight={600}
-                fontFamily="system-ui, sans-serif" fill={ACTIVE_COLOR} opacity={0.75}>
+            <text x={labelX} y={labelY} textAnchor="middle" fontSize={16} fontWeight={700}
+                fontFamily="system-ui, sans-serif" fill={ACTIVE_COLOR} opacity={0.85}>
                 {protocol}
             </text>
         </g>

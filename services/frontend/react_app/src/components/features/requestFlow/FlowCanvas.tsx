@@ -175,7 +175,7 @@ export const FlowCanvas = ({ flowState, showTopology }: FlowCanvasProps) => {
 
             {/* Separator line when sandbox nodes are present */}
             {sbxServices.length > 0 && (
-                <line x1={0} y1={208} x2={VIEWBOX_WIDTH} y2={208} stroke="#2D3748" strokeWidth={1} strokeDasharray="4 6" opacity={0.25}/>
+                <line x1={0} y1={240} x2={VIEWBOX_WIDTH} y2={240} stroke="#2D3748" strokeWidth={1} strokeDasharray="4 6" opacity={0.25}/>
             )}
 
             {/* Edges */}

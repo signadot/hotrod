@@ -38,25 +38,20 @@ export const DB_WIDTH = 70;
 export const DB_HEIGHT = 50;
 
 export const VIEWBOX_WIDTH = 780;
-export const VIEWBOX_HEIGHT = 340;
+export const VIEWBOX_HEIGHT = 380;
 
 // === HORIZONTAL BRANCHING LAYOUT ===
-// Inspired by the reference diagram (rotated horizontal):
 //
 //                   ┌─── Location ─── MySQL        (top branch)
 //   Frontend ───────┤
 //                   └─── Kafka ─── Driver ─── Route  (bottom branch)
 //
-// Frontend is on the left. It branches into two horizontal paths:
-//   - Top path: Location → MySQL (HTTP + database)
-//   - Bottom path: Kafka → Driver → Route (messaging + gRPC)
-//
-// Sandbox versions appear BELOW their baseline counterpart, offset down.
+// ALL sandbox nodes on a single row below the entire baseline topology.
+// This prevents any overlap between sandbox nodes and baseline infra.
 
 const TOP_Y = 30;       // top branch (Location, MySQL)
-const CENTER_Y = 130;   // Frontend sits between the two branches
-const BOTTOM_Y = 130;   // bottom branch (Kafka, Driver, Route) — same as center
-const SANDBOX_OFFSET = 120; // sandbox nodes appear this far below baseline
+const CENTER_Y = 130;   // Frontend + bottom branch (Kafka, Driver, Route)
+const SANDBOX_ROW_Y = 260; // single row for ALL sandbox nodes, well below baseline bottom
 
 const COL0_X = 20;      // Frontend
 const COL1_X = 200;     // Location / Kafka
@@ -66,19 +61,19 @@ const COL3_X = 560;     // Route
 export const BASELINE_NODES: NodeConfig[] = [
     { id: 'frontend', label: 'Frontend', x: COL0_X, y: CENTER_Y - NODE_HEIGHT / 2, color: SERVICE_COLORS.frontend },
     { id: 'location', label: 'Location', x: COL1_X, y: TOP_Y, color: SERVICE_COLORS.location },
-    { id: 'driver',   label: 'Driver',   x: COL2_X, y: BOTTOM_Y, color: SERVICE_COLORS.driver },
-    { id: 'route',    label: 'Route',    x: COL3_X, y: BOTTOM_Y, color: SERVICE_COLORS.route },
+    { id: 'driver',   label: 'Driver',   x: COL2_X, y: CENTER_Y, color: SERVICE_COLORS.driver },
+    { id: 'route',    label: 'Route',    x: COL3_X, y: CENTER_Y, color: SERVICE_COLORS.route },
 ];
 
 export const SANDBOX_NODES: NodeConfig[] = [
-    { id: 'frontend', label: 'Frontend', x: COL0_X, y: CENTER_Y - NODE_HEIGHT / 2 + SANDBOX_OFFSET, color: SERVICE_COLORS.frontend },
-    { id: 'location', label: 'Location', x: COL1_X, y: TOP_Y + SANDBOX_OFFSET, color: SERVICE_COLORS.location },
-    { id: 'driver',   label: 'Driver',   x: COL2_X, y: BOTTOM_Y + SANDBOX_OFFSET, color: SERVICE_COLORS.driver },
-    { id: 'route',    label: 'Route',    x: COL3_X, y: BOTTOM_Y + SANDBOX_OFFSET, color: SERVICE_COLORS.route },
+    { id: 'frontend', label: 'Frontend', x: COL0_X, y: SANDBOX_ROW_Y, color: SERVICE_COLORS.frontend },
+    { id: 'location', label: 'Location', x: COL1_X, y: SANDBOX_ROW_Y, color: SERVICE_COLORS.location },
+    { id: 'driver',   label: 'Driver',   x: COL2_X, y: SANDBOX_ROW_Y, color: SERVICE_COLORS.driver },
+    { id: 'route',    label: 'Route',    x: COL3_X, y: SANDBOX_ROW_Y, color: SERVICE_COLORS.route },
 ];
 
 // Infrastructure: Kafka on the bottom branch at col1, MySQL on top branch at col2
-export const KAFKA_NODE = { x: COL1_X + 10, y: BOTTOM_Y + 4 };
+export const KAFKA_NODE = { x: COL1_X + 10, y: CENTER_Y + 4 };
 export const MYSQL_NODE = { x: COL2_X + 25, y: TOP_Y - 2 };
 
 export const STAGE_MATCHERS: StageConfig[] = [

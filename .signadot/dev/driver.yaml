@@ -1,0 +1,15 @@
+name: dev-driver
+spec:
+  description: dev sandbox for driver service
+  cluster: demo
+  connection:
+    devboxId: "@{devbox-id}"
+  local:
+    - name: driver
+      from:
+        kind: Deployment
+        namespace: hotrod-istio
+        name: driver
+      mappings:
+        - port: 8082
+          toLocal: "localhost:8082"

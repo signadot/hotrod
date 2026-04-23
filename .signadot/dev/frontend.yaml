@@ -1,0 +1,15 @@
+name: dev-frontend
+spec:
+  description: dev sandbox for frontend service
+  cluster: demo
+  connection:
+    devboxId: "@{devbox-id}"
+  local:
+    - name: frontend
+      from:
+        kind: Deployment
+        namespace: hotrod-istio
+        name: frontend
+      mappings:
+        - port: 8080
+          toLocal: "localhost:8080"

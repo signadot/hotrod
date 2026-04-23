@@ -1,0 +1,15 @@
+name: dev-route
+spec:
+  description: dev sandbox for route service
+  cluster: demo
+  connection:
+    devboxId: "@{devbox-id}"
+  local:
+    - name: route
+      from:
+        kind: Deployment
+        namespace: hotrod-istio
+        name: route
+      mappings:
+        - port: 8083
+          toLocal: "localhost:8083"

@@ -1,0 +1,15 @@
+name: dev-location
+spec:
+  description: dev sandbox for location service
+  cluster: demo
+  connection:
+    devboxId: "@{devbox-id}"
+  local:
+    - name: location
+      from:
+        kind: Deployment
+        namespace: hotrod-istio
+        name: location
+      mappings:
+        - port: 8081
+          toLocal: "localhost:8081"

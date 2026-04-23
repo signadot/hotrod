@@ -127,6 +127,57 @@ Test run summary:
 ```
 
 
+## Running Services Locally
+
+You can run the services directly on your workstation by passing the required
+environment variables inline. This is useful for quick iteration without setting
+up a full Signadot sandbox.
+
+### Frontend
+
+```bash
+make build-frontend-app && \
+REDIS_ADDR=redis.hotrod-istio.svc:6379 \
+KAFKA_BROKER_ADDR=kafka-headless.hotrod-istio.svc:9092 \
+go run cmd/hotrod/main.go frontend
+```
+
+Starts on `http://0.0.0.0:8080`.
+
+### Location
+
+```bash
+REDIS_ADDR=redis.hotrod-istio.svc:6379 \
+MYSQL_ADDR=mysql.hotrod-istio.svc:3306 \
+MYSQL_PASS=abc \
+go run cmd/hotrod/main.go location
+```
+
+Starts on `http://0.0.0.0:8081`.
+
+### Driver
+
+```bash
+SIGNADOT_BASELINE_KIND=Deployment \
+SIGNADOT_BASELINE_NAME=driver \
+SIGNADOT_BASELINE_NAMESPACE=hotrod-istio \
+KAFKA_BROKER_ADDR=kafka-headless.hotrod-istio.svc:9092 \
+REDIS_ADDR=redis.hotrod-istio.svc:6379 \
+go run ./cmd/hotrod/main.go driver
+```
+
+Connects to Kafka as a consumer.
+
+### Route
+
+```bash
+REDIS_ADDR=redis.hotrod-istio.svc:6379 \
+go run cmd/hotrod/main.go route
+```
+
+Starts a gRPC server on port 8083.
+
+
 ## Deployment
 
 ### Release 

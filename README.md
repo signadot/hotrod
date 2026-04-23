@@ -99,6 +99,9 @@ Alternatively, you can manually build and run the frontend using the `make` and
 `go run` commands:
 
 ```bash
+# Always use make, not npm/yarn directly. The Makefile runs scripts/build.sh
+# which rewrites asset paths in index.html after the Vite build. Skipping
+# this step produces a binary that silently serves 404s for its own JS/CSS.
 make build-frontend-app
 go run ./cmd/hotrod frontend
 ```

@@ -139,6 +139,7 @@ up a full Signadot sandbox.
 make build-frontend-app && \
 REDIS_ADDR=redis.hotrod-istio.svc:6379 \
 KAFKA_BROKER_ADDR=kafka-headless.hotrod-istio.svc:9092 \
+LOCATION_ADDR=location.hotrod-istio.svc:8081 \
 go run cmd/hotrod/main.go frontend
 ```
 

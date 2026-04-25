@@ -19,6 +19,9 @@ export const LocationSelect = ({ placeholder, locations, selectedLocationID, onS
         <Select
             placeholder={placeholder}
             variant='filled'
+            size='lg'
+            fontSize='md'
+            fontWeight={500}
             value={selectedLocationID}
             onChange={handleSelect}
         >

@@ -78,7 +78,7 @@ jobs:
             ${{ runner.os }}-go-${{ env.GO_VERSION }}-build-
 
       - name: Setup qemu
-        uses: docker/setup-qemu-action@c7c53464625b32c7a7e944ae62b3e17d2b600130 # v3
+        uses: docker/setup-qemu-action@06116385d9baf250c9f4dcb4858b16962ea869c3 # v4.1.0
 
       - name: Docker Login
         uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3

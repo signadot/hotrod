@@ -1,0 +1,11 @@
+# Ambient (Gateway API routing). No sidecar injection — pods are captured by
+# ztunnel via the namespace's istio.io/dataplane-mode=ambient label (set by the
+# e2e app-config install), and L7 header-based sandbox routing goes through a
+# waypoint (namespace istio.io/use-waypoint=waypoint) with the HTTPRoute/GRPCRoute
+# from get-gatewayapi-routes attached to the Services.
+resources:
+- ../../../base
+- waypoint.yaml
+
+components:
+  - ../../../components/get-gatewayapi-routes

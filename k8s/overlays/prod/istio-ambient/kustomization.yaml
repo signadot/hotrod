@@ -1,0 +1,9 @@
+# Ambient (VirtualService routing). No sidecar injection — pods are captured by
+# ztunnel via the namespace's istio.io/dataplane-mode=ambient label (set by the
+# e2e app-config install), and L7 header-based sandbox routing goes through a
+# waypoint (namespace istio.io/use-waypoint=waypoint) enforcing the operator's
+# generated VirtualServices. virtual-service.yaml holds the baseline app routes.
+resources:
+- ../../../base
+- virtual-service.yaml
+- waypoint.yaml

@@ -1,3 +1,8 @@
+# Strategic-merge patch adding the RPC match Linkerd needs (linkerd2#14047).
+# kustomize replaces the whole spec.rules list atomically, so this rule must also
+# carry the baseline backendRefs — otherwise the merged GRPCRoute has matches but
+# no backend: it routes nowhere, and the Signadot operator (which matches
+# baselines by backendRef) can't derive a sandbox route from it.
 apiVersion: gateway.networking.k8s.io/v1
 kind: GRPCRoute
 metadata:
@@ -9,3 +14,6 @@ spec:
             method: FindRoute
             service: route.RoutesService
             type: Exact
+      backendRefs:
+        - name: route
+          port: 8083

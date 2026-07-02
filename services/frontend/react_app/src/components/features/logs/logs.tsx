@@ -30,8 +30,10 @@ const LocationHighlight = ({ type, value }: LocationHighlightProps) => {
             styles={{
                 px: '1',
                 py: '1',
-                bg: type === 'pickup' ? 'orange.100' : 'teal.100',
-                mx: '2'
+                bg: type === 'pickup' ? 'orange.900' : 'teal.900',
+                color: type === 'pickup' ? 'orange.200' : 'teal.200',
+                mx: '2',
+                borderRadius: '2px',
         }}>
             {value}
         </Highlight>
@@ -46,11 +48,11 @@ const BaseLog = ({ log }: BaseLogProps) => {
     const { requestID, dropoffLocation, pickupLocation, entries} = log;
 
     const servicesColor: Record<string, string> = {
-        'route': '#eeaf27',
-        'driver': '#4faaf9',
-        'location': '#51b831',
-        'frontend': '#e2a0a0',
-        'browser': '#c86ddc',
+        'route': '#ECC94B',
+        'driver': '#4299E1',
+        'location': '#48BB78',
+        'frontend': '#76E4F7',
+        'browser': '#B794F4',
     };
 
     const entriesMemo = useMemo(() => {
@@ -58,11 +60,11 @@ const BaseLog = ({ log }: BaseLogProps) => {
                 const serviceColor = e.service.length > 0 ? servicesColor[e.service] : "black";
 
                 return (
-                    <HStack fontWeight='bold'>
-                        <Text >{getTime(e.date)}</Text>
+                    <HStack fontWeight='bold' fontSize='md' spacing={3} py={1}>
+                        <Text color='whiteAlpha.600' fontFamily='mono'>{getTime(e.date)}</Text>
                         <Text color={serviceColor}>{e.service}</Text>
                         <Text color={serviceColor}>({e.sandboxName && e.sandboxName.length > 0 ? e.sandboxName : 'baseline'})</Text>
-                        <Text color='green'>{e.status}</Text>
+                        <Text color='green.300'>{e.status}</Text>
                     </HStack>
                 )
             })
@@ -72,15 +74,15 @@ const BaseLog = ({ log }: BaseLogProps) => {
     return (
         <AccordionItem key={requestID}>
             <h2>
-                <AccordionButton>
-                    <Box as="span" flex='1' textAlign='left'>
+                <AccordionButton py={3}>
+                    <Box as="span" flex='1' textAlign='left' fontSize='md' fontWeight={600}>
                         Request ID: #{requestID} from <LocationHighlight value={pickupLocation.name} type='pickup'/> to <LocationHighlight value={dropoffLocation.name} type='dropoff'/>
                     </Box>
                     <AccordionIcon />
                 </AccordionButton>
             </h2>
             <AccordionPanel pb={4}>
-                <Stack>
+                <Stack spacing={1}>
                     { entriesMemo }
                 </Stack>
             </AccordionPanel>
@@ -101,7 +103,7 @@ export const Logs = ({ logs }: LogsProps) => {
     }, [logs])
 
     return (
-        <Accordion allowMultiple defaultIndex={[0]}>
+        <Accordion allowMultiple defaultIndex={[0]} pb={8} mb={8}>
             {logsMemo}
         </Accordion>
     )

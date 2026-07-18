@@ -13,5 +13,5 @@ func InitOtelExporter() {
 	if addr == "" {
 		return
 	}
-	os.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", ExpandNamespace(addr))
+	os.Setenv("OTEL_EXPORTER_OTLP_ENDPOINT", addr)
 }

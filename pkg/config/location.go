@@ -5,5 +5,5 @@ func GetLocationBindPort() string {
 }
 
 func GetLocationAddr() string {
-	return ExpandNamespace(EnvDefault("LOCATION_ADDR", "location:8081"))
+	return EnvDefault("LOCATION_ADDR", "location:8081")
 }

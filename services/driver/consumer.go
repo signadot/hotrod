@@ -11,6 +11,7 @@ import (
 	"github.com/signadot/hotrod/pkg/config"
 	"github.com/signadot/hotrod/pkg/log"
 	"github.com/signadot/hotrod/pkg/notifications"
+	"github.com/signadot/routesapi/go-routesapi"
 	"github.com/signadot/routesapi/go-routesapi/watched"
 	"go.opentelemetry.io/otel"
 	"go.opentelemetry.io/otel/attribute"
@@ -37,7 +38,13 @@ func newConsumer(ctx context.Context, tracerProvider trace.TracerProvider,
 	logger log.Factory) *Consumer {
 	// create a routesapi baseline watched instance
 	// TODO: remove this in case we're not running with Signadot
-	routing, err := watched.BaselineWatchedFromEnv()
+	//
+	// Virtual workloads are excluded: shouldProcess treats "no routing rule"
+	// as "the baseline handles it", which is exactly what a virtual workload
+	// means.
+	routing, err := watched.BaselineWatchedFromEnv(&routesapi.ClientInfo{
+		EnableVirtualWorkloads: false,
+	})
 	if err != nil {
 		panic(err)
 	}

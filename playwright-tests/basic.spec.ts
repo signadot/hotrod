@@ -24,6 +24,6 @@ test.describe("Request a ride", () => {
 
 		await expect(
 			page.locator("//div[p[2][contains(text(), 'driver')]]/p[4]").last(),
-		).toHaveText(/.*T7\d{5}C.*/);
+		).toHaveText(/.*sd-driver-T7\d{5}C.*/);
 	});
 });

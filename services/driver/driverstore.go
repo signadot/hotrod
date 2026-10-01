@@ -38,6 +38,13 @@ type driverStore struct {
 	logger log.Factory
 }
 
+const driverPlatePrefix = "sd-driver"
+
+func formatDriverID(driverNumber int) string {
+	return fmt.Sprintf("%s%s-T7%05dC%s",
+		config.GetDriverIDPrefix(), driverPlatePrefix, driverNumber, config.GetDriverIDSuffix())
+}
+
 func newDriverStore(tracer trace.Tracer, logger log.Factory) *driverStore {
 	return &driverStore{
 		tracer: tracer,
@@ -59,8 +66,7 @@ func (s *driverStore) FindDriverIDs(ctx context.Context) []string {
 	drivers := make([]string, 10)
 	for i := range drivers {
 		// #nosec
-		drivers[i] = fmt.Sprintf("%sT7%05dC%s",
-			config.GetDriverIDPrefix(), rand.Int()%100000, config.GetDriverIDSuffix())
+		drivers[i] = formatDriverID(rand.Int() % 100000)
 	}
 	s.logger.For(ctx).Info("Found drivers", zap.Strings("drivers", drivers))
 	return drivers

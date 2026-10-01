@@ -1,6 +1,36 @@
 version: 2
 updates:
+
+  # Version updates are off (open-pull-requests-limit: 0). Security updates
+  # still run, and each security group puts every fix for that ecosystem into
+  # one PR across the directories listed.
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0
+    groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directories:
+      - /
+      - /services/frontend/react_app
+    schedule:
+      interval: daily
+    open-pull-requests-limit: 0
+    groups:
+      security:
+        applies-to: security-updates
+        patterns: ["*"]
+
+  # Actions keep their weekly version updates, now as one grouped PR.
   - package-ecosystem: github-actions
     directory: /
     schedule:
       interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

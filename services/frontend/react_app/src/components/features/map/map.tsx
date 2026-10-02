@@ -43,8 +43,8 @@ const RoutingControl = ({ start, end, center }: RouteMapProps) => {
                         iconUrl: i === 0
                             ? "https://cdn-icons-png.flaticon.com/512/2991/2991122.png" // Start marker
                             : "https://cdn-icons-png.flaticon.com/512/190/190411.png", // End marker
-                        iconSize: [25, 41],
-                        iconAnchor: [12, 41],
+                        iconSize: [18, 30],
+                        iconAnchor: [9, 30],
                     }),
                 });
             }, // Prevent default markers
@@ -54,13 +54,18 @@ const RoutingControl = ({ start, end, center }: RouteMapProps) => {
             waypoints: [L.latLng(start[0], start[1]), L.latLng(end[0], end[1])],
             routeWhileDragging: true,
             addWaypoints: false,
+            show: false,
             lineOptions: {
-                styles: [{ color: "blue", weight: 6 }], // Wider path
-                extendToWaypoints: true, // Default is true, ensures lines extend to waypoints
-                missingRouteTolerance: 10, // Default is 10 (meters)
+                styles: [{ color: "#00B5D8", weight: 4, opacity: 0.8 }],
+                extendToWaypoints: true,
+                missingRouteTolerance: 10,
             },
-            plan:customPlan,
+            plan: customPlan,
         }).addTo(map);
+
+        // Hide the directions container
+        const container = routingControl.getContainer();
+        if (container) container.style.display = 'none';
 
         return () => {
             map.removeControl(routingControl);
@@ -82,8 +87,8 @@ const RouteMap: React.FC<Omit<RouteMapProps, "center">> = ({start, end}) => {
             style={{height: "100%", width: "100%"}}
         >
             <TileLayer
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/">CARTO</a>'
             />
             <RoutingControl start={start} end={end} center={center}/>
         </MapContainer>

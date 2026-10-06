@@ -59,7 +59,7 @@ func (s *driverStore) FindDriverIDs(ctx context.Context) []string {
 	drivers := make([]string, 10)
 	for i := range drivers {
 		// #nosec
-		drivers[i] = fmt.Sprintf("%sT7%05dC%s",
+		drivers[i] = fmt.Sprintf("%sSD-T7%05dC%s",
 			config.GetDriverIDPrefix(), rand.Int()%100000, config.GetDriverIDSuffix())
 	}
 	s.logger.For(ctx).Info("Found drivers", zap.Strings("drivers", drivers))

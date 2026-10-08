@@ -110,10 +110,6 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Set up Signadot CLI
-        run: |
-          curl -sSLf https://raw.githubusercontent.com/signadot/cli/main/scripts/install.sh | sh
-
       - name: Define Namespace
         run: |
           echo "Checking for labels..."
@@ -129,18 +125,17 @@ jobs:
           echo "Using namespace=${NAMESPACE}"
           echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
 
+      # Also installs the signadot CLI and puts it on PATH for the steps below.
       - name: Create Sandbox
-        run: |
-          echo "Creating sandbox ${SANDBOX_NAME}..."
-          signadot sandbox apply \
-            --set name=${SANDBOX_NAME} \
-            --set github-pr=${{ github.event.number }} \
-            --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
-            --set branch=${{ github.head_ref }} \
-            --set service=route \
-            --set namespace=${NAMESPACE} \
-            -f - \
-            < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
+        uses: signadot/sandbox-action@cba4fa3da6f658cf1f77878c03dc06f3663548d7 # v0.1.0
+        with:
+          api-key: ${{ secrets.SIGNADOT_API_KEY }}
+          org: ${{ env.SIGNADOT_ORG }}
+          cluster: demo
+          name: ${{ env.SANDBOX_NAME }}
+          description: sandbox for "route" service
+          fork: kind=Deployment,namespace=${{ env.NAMESPACE }},name=route,image=signadot/hotrod:${{ env.SANDBOX_IMAGE_TAG }}
+          labels: branch=${{ github.head_ref }}
 
       - name: Run Smart Tests
         run: |
@@ -189,10 +184,6 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Set up Signadot CLI
-        run: |
-          curl -sSLf https://raw.githubusercontent.com/signadot/cli/main/scripts/install.sh | sh
-
       - name: Define Namespace
         run: |
           echo "Checking for labels..."
@@ -208,18 +199,17 @@ jobs:
           echo "Using namespace=${NAMESPACE}"
           echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
 
+      # Also installs the signadot CLI and puts it on PATH for the steps below.
       - name: Create Sandbox
-        run: |
-          echo "Creating sandbox ${SANDBOX_NAME}..."
-          signadot sandbox apply \
-            --set name=${SANDBOX_NAME} \
-            --set github-pr=${{ github.event.number }} \
-            --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
-            --set branch=${{ github.head_ref }} \
-            --set service=frontend \
-            --set namespace=${NAMESPACE} \
-            -f - \
-            < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
+        uses: signadot/sandbox-action@cba4fa3da6f658cf1f77878c03dc06f3663548d7 # v0.1.0
+        with:
+          api-key: ${{ secrets.SIGNADOT_API_KEY }}
+          org: ${{ env.SIGNADOT_ORG }}
+          cluster: demo
+          name: ${{ env.SANDBOX_NAME }}
+          description: sandbox for "frontend" service
+          fork: kind=Deployment,namespace=${{ env.NAMESPACE }},name=frontend,image=signadot/hotrod:${{ env.SANDBOX_IMAGE_TAG }}
+          labels: branch=${{ github.head_ref }}
 
       - name: Run Smart Tests
         run: |
@@ -242,10 +232,6 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Set up Signadot CLI
-        run: |
-          curl -sSLf https://raw.githubusercontent.com/signadot/cli/main/scripts/install.sh | sh
-
       - name: Define Namespace
         run: |
           echo "Checking for labels..."
@@ -261,18 +247,17 @@ jobs:
           echo "Using namespace=${NAMESPACE}"
           echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
 
+      # Also installs the signadot CLI and puts it on PATH for the steps below.
       - name: Create Sandbox
-        run: |
-          echo "Creating sandbox ${SANDBOX_NAME}..."
-          signadot sandbox apply \
-            --set name=${SANDBOX_NAME} \
-            --set github-pr=${{ github.event.number }} \
-            --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
-            --set branch=${{ github.head_ref }} \
-            --set service=location \
-            --set namespace=${NAMESPACE} \
-            -f - \
-            < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
+        uses: signadot/sandbox-action@cba4fa3da6f658cf1f77878c03dc06f3663548d7 # v0.1.0
+        with:
+          api-key: ${{ secrets.SIGNADOT_API_KEY }}
+          org: ${{ env.SIGNADOT_ORG }}
+          cluster: demo
+          name: ${{ env.SANDBOX_NAME }}
+          description: sandbox for "location" service
+          fork: kind=Deployment,namespace=${{ env.NAMESPACE }},name=location,image=signadot/hotrod:${{ env.SANDBOX_IMAGE_TAG }}
+          labels: branch=${{ github.head_ref }}
 
 
       - name: Run Smart Tests
@@ -296,10 +281,6 @@ jobs:
         with:
           go-version: ${{ env.GO_VERSION }}
 
-      - name: Set up Signadot CLI
-        run: |
-          curl -sSLf https://raw.githubusercontent.com/signadot/cli/main/scripts/install.sh | sh
-
       - name: Define Namespace
         run: |
           echo "Checking for labels..."
@@ -315,18 +296,17 @@ jobs:
           echo "Using namespace=${NAMESPACE}"
           echo "NAMESPACE=${NAMESPACE}" >> "$GITHUB_ENV"
 
+      # Also installs the signadot CLI and puts it on PATH for the steps below.
       - name: Create Sandbox
-        run: |
-          echo "Creating sandbox ${SANDBOX_NAME}..."
-          signadot sandbox apply \
-            --set name=${SANDBOX_NAME} \
-            --set github-pr=${{ github.event.number }} \
-            --set image=signadot/hotrod:${SANDBOX_IMAGE_TAG} \
-            --set branch=${{ github.head_ref }} \
-            --set service=driver \
-            --set namespace=${NAMESPACE} \
-            -f - \
-            < ${GITHUB_WORKSPACE}/.signadot/sbx-gh-template.yaml
+        uses: signadot/sandbox-action@cba4fa3da6f658cf1f77878c03dc06f3663548d7 # v0.1.0
+        with:
+          api-key: ${{ secrets.SIGNADOT_API_KEY }}
+          org: ${{ env.SIGNADOT_ORG }}
+          cluster: demo
+          name: ${{ env.SANDBOX_NAME }}
+          description: sandbox for "driver" service
+          fork: kind=Deployment,namespace=${{ env.NAMESPACE }},name=driver,image=signadot/hotrod:${{ env.SANDBOX_IMAGE_TAG }}
+          labels: branch=${{ github.head_ref }}
 
       - name: Run Smart Tests
         run: |

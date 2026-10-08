@@ -103,3 +103,5 @@ func (s *Server) FindRoute(ctx context.Context, req *FindRouteRequest) (*FindRou
 		EtaSeconds: int32(time.Duration(eta) / time.Second),
 	}, nil
 }
+
+// sandbox-action e2e test, do not merge.

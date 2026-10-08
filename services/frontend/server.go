@@ -248,3 +248,5 @@ func (s *Server) writeResponse(response interface{}, w http.ResponseWriter, r *h
 	w.Header().Set("Content-Type", "application/json")
 	w.Write(data)
 }
+
+// sandbox-action e2e test, do not merge.

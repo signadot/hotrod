@@ -127,7 +127,7 @@ jobs:
 
       # Also installs the signadot CLI and puts it on PATH for the steps below.
       - name: Create Sandbox
-        uses: signadot/sandbox-action@cba4fa3da6f658cf1f77878c03dc06f3663548d7 # v0.1.0
+        uses: signadot/sandbox-action@v0.1.0
         with:
           api-key: ${{ secrets.SIGNADOT_API_KEY }}
           org: ${{ env.SIGNADOT_ORG }}
@@ -201,7 +201,7 @@ jobs:
 
       # Also installs the signadot CLI and puts it on PATH for the steps below.
       - name: Create Sandbox
-        uses: signadot/sandbox-action@cba4fa3da6f658cf1f77878c03dc06f3663548d7 # v0.1.0
+        uses: signadot/sandbox-action@v0.1.0
         with:
           api-key: ${{ secrets.SIGNADOT_API_KEY }}
           org: ${{ env.SIGNADOT_ORG }}
@@ -249,7 +249,7 @@ jobs:
 
       # Also installs the signadot CLI and puts it on PATH for the steps below.
       - name: Create Sandbox
-        uses: signadot/sandbox-action@cba4fa3da6f658cf1f77878c03dc06f3663548d7 # v0.1.0
+        uses: signadot/sandbox-action@v0.1.0
         with:
           api-key: ${{ secrets.SIGNADOT_API_KEY }}
           org: ${{ env.SIGNADOT_ORG }}
@@ -298,7 +298,7 @@ jobs:
 
       # Also installs the signadot CLI and puts it on PATH for the steps below.
       - name: Create Sandbox
-        uses: signadot/sandbox-action@cba4fa3da6f658cf1f77878c03dc06f3663548d7 # v0.1.0
+        uses: signadot/sandbox-action@v0.1.0
         with:
           api-key: ${{ secrets.SIGNADOT_API_KEY }}
           org: ${{ env.SIGNADOT_ORG }}

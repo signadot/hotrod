@@ -3,7 +3,6 @@ package route
 import (
 	"context"
 	"fmt"
-	"math/rand"
 	"net"
 	"os"
 	"time"
@@ -13,6 +12,7 @@ import (
 	"github.com/signadot/hotrod/pkg/delay"
 	"github.com/signadot/hotrod/pkg/notifications"
 	"github.com/signadot/hotrod/pkg/tracing"
+	"github.com/signadot/hotrod/services/route/trafficeta"
 	"go.opentelemetry.io/contrib/instrumentation/google.golang.org/grpc/otelgrpc"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -75,13 +75,12 @@ func (s *Server) FindRoute(ctx context.Context, req *FindRouteRequest) (*FindRou
 	// Simulate expensive calculation
 	delay.Sleep(config.GetRouteCalcDelay(), config.GetRouteCalcStdDev())
 
-	// Generate a random number between 3 and 45 with decimals
-	eta := time.Duration((rand.Float64()*(45-3) + 3) * float64(time.Minute))
+	// Estimate the ETA from the trip's endpoints using the trafficeta helper,
+	// instead of returning a random number.
+	eta := trafficeta.Estimate(req.From, req.To)
 	if os.Getenv("FAST_ROUTE") != "" {
 		eta = time.Second
 	}
-	// Round to the second
-	eta = eta.Round(time.Second)
 
 	// extract the request context
 	reqContext, err := baggageutils.ExtractRequestContext(ctx)

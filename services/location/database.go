@@ -141,15 +141,17 @@ func (d *database) List(ctx context.Context, name string) ([]Location, error) {
 	defer span.End()
 
 	query := "SELECT id, name, coordinates FROM locations"
+	var args []any
 	if name != "" {
-		query += fmt.Sprintf(" WHERE name LIKE '%%%s%%'", name)
+		query += " WHERE name LIKE ?"
+		args = append(args, "%"+name+"%")
 	}
-	rows, err := d.db.Query(query)
+	rows, err := d.db.Query(query, args...)
 	if err != nil {
 		if !d.shouldRetry(err) {
 			return nil, err
 		}
-		rows, err = d.db.Query(query)
+		rows, err = d.db.Query(query, args...)
 		if err != nil {
 			return nil, err
 		}

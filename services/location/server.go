@@ -86,7 +86,8 @@ func (s *Server) createServeMux() http.Handler {
 func (s *Server) listLocations(w http.ResponseWriter, r *http.Request) {
 	ctx := r.Context()
 	s.logger.For(ctx).Info("HTTP request received", zap.String("method", r.Method), zap.Stringer("url", r.URL))
-	locations, err := s.database.List(ctx)
+	// Optional filter: GET /locations?name=coffee
+	locations, err := s.database.List(ctx, r.URL.Query().Get("name"))
 	if httperr.HandleError(w, err, http.StatusInternalServerError) {
 		s.logger.For(ctx).Error("cannot get locations", zap.Error(err))
 		return

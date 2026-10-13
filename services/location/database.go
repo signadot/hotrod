@@ -126,8 +126,9 @@ func driverConfig() *mysql.Config {
 	return dc
 }
 
-func (d *database) List(ctx context.Context) ([]Location, error) {
-	d.logger.For(ctx).Info("Loading locations", zap.String("location-id", "*"))
+// List returns all locations, or only those whose name contains name.
+func (d *database) List(ctx context.Context, name string) ([]Location, error) {
+	d.logger.For(ctx).Info("Loading locations", zap.String("location-id", "*"), zap.String("name", name))
 	// simulate opentracing instrumentation of an SQL query
 
 	_, span := d.tracer.Start(ctx, "SQL SELECT", trace.WithSpanKind(trace.SpanKindClient))
@@ -140,6 +141,9 @@ func (d *database) List(ctx context.Context) ([]Location, error) {
 	defer span.End()
 
 	query := "SELECT id, name, coordinates FROM locations"
+	if name != "" {
+		query += fmt.Sprintf(" WHERE name LIKE '%%%s%%'", name)
+	}
 	rows, err := d.db.Query(query)
 	if err != nil {
 		if !d.shouldRetry(err) {

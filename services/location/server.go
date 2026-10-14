@@ -72,7 +72,6 @@ func (s *Server) Run() error {
 
 func (s *Server) createServeMux() http.Handler {
 	mux := tracing.NewServeMux(false, s.tracerProvider, s.logger)
-	mux.Handle("GET /locations", http.HandlerFunc(s.listLocations))
 	mux.Handle("GET /location", http.HandlerFunc(s.getLocation))
 	mux.Handle("POST /location", http.HandlerFunc(s.createLocation))
 	mux.Handle("DELETE /location", http.HandlerFunc(s.deleteLocation))

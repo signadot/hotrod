@@ -1,0 +1,42 @@
+# Build the image for every commit on a pull request labeled "preview".
+# Argo CD's preview waits for ghcr.io/<owner>/hotrod:<head sha> to exist.
+name: Preview image
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, labeled]
+
+jobs:
+  build:
+    if: contains(github.event.pull_request.labels.*.name, 'preview')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Build HotROD for amd64 and arm64
+        run: |
+          for arch in amd64 arm64; do
+            CGO_ENABLED=0 GOOS=linux GOARCH=$arch go build -o dist/linux/$arch/bin/hotrod ./cmd/hotrod
+          done
+
+      - uses: docker/setup-buildx-action@v3
+
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push ghcr.io/<owner>/hotrod:<head sha>
+        run: |
+          IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/hotrod:${{ github.event.pull_request.head.sha }}
+          docker buildx build --platform linux/amd64,linux/arm64 --provenance=false --push -t "$IMAGE" .

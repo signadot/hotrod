@@ -1,0 +1,14 @@
+{
+  "mcpServers": {
+    "argocd": {
+      "command": "npx",
+      "args": ["-y", "argocd-mcp@0.9.0", "stdio"],
+      "env": {
+        "ARGOCD_BASE_URL": "${ARGOCD_BASE_URL:-https://argocd-server.argocd.svc}",
+        "ARGOCD_API_TOKEN": "${ARGOCD_API_TOKEN}",
+        "MCP_READ_ONLY": "true",
+        "NODE_TLS_REJECT_UNAUTHORIZED": "0"
+      }
+    }
+  }
+}

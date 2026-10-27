@@ -95,7 +95,7 @@ func (s *Server) FindRoute(ctx context.Context, req *FindRouteRequest) (*FindRou
 			ID:        fmt.Sprintf("req-%d-route-resolve", reqContext.ID),
 			Timestamp: time.Now(),
 			Context:   s.notification.NotificationContext(reqContext, baggageutils.GetRoutingKey(ctx)),
-			Body:      "Resolving routes",
+			Body:      fmt.Sprintf("Resolving routes (ETA %s)", eta),
 		})
 	}
 

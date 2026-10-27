@@ -11,7 +11,7 @@ test.describe("Request a ride", () => {
 
 		await expect(
 			page.locator("//div[p[2][contains(text(), 'route')]]/p[4]"),
-		).toHaveText("Resolving routes")
+		).toHaveText(/^Resolving routes \(ETA (\d+h)?(\d+m)?\d+s\)$/);
 	});
 
 	test("check driver series", async ({ page }) => {

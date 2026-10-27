@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(kubectl:*)",
+      "Bash(argocd:*)",
+      "Bash(signadot:*)"
+    ]
+  }
+}

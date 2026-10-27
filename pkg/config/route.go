@@ -15,7 +15,7 @@ func GetRouteBindPort() string {
 
 // how long a route calculation takes
 func GetRouteCalcDelay() time.Duration {
-	defaultDuration := 50 * time.Millisecond
+	defaultDuration := 1500 * time.Millisecond
 
 	e := os.Getenv("ROUTE_CALC_DELAY")
 	if e == "" {

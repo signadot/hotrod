@@ -72,7 +72,7 @@ func (s *Server) Run() error {
 func (s *Server) FindRoute(ctx context.Context, req *FindRouteRequest) (*FindRouteResponse, error) {
 	s.logger.For(ctx).Info("Finding route", zap.String("from", req.From), zap.String("to", req.To))
 
-	// Simulate expensive calculation
+	// Simulate an expensive calculation
 	delay.Sleep(config.GetRouteCalcDelay(), config.GetRouteCalcStdDev())
 
 	// Generate a random number between 3 and 45 with decimals

@@ -4,11 +4,14 @@ name: Preview image
 
 on:
   pull_request:
-    types: [opened, synchronize, reopened, labeled]
+    # A PR opened with the label also gets a "labeled" event, so "opened" isn't needed.
+    types: [labeled, synchronize, reopened]
 
 jobs:
   build:
-    if: contains(github.event.pull_request.labels.*.name, 'preview')
+    if: >-
+      github.event.action == 'labeled' && github.event.label.name == 'preview' ||
+      github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'preview')
     runs-on: ubuntu-latest
     permissions:
       contents: read

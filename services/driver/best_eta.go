@@ -2,12 +2,13 @@ package driver
 
 import (
 	"context"
-	"errors"
+	"fmt"
 	"math"
 	"sync"
 	"time"
 
 	"github.com/signadot/hotrod/services/location"
+	"go.opentelemetry.io/otel/attribute"
 	"go.opentelemetry.io/otel/codes"
 	"go.opentelemetry.io/otel/trace"
 	"go.uber.org/zap"
@@ -49,20 +50,37 @@ func (eta *bestETA) Get(ctx context.Context, dispatchReq *DispatchRequest,
 	results := eta.getRoutes(ctx, dispatchReq.PickupLocation, drivers)
 	eta.logger.For(ctx).Info("Found routes", zap.Any("routes", results))
 
-	// search the one with the best ETA
+	// search the one with the best ETA, skipping drivers whose route failed
 	resp := &Response{ETA: math.MaxInt64}
+	skipped := 0
+	var lastErr error
 	for _, result := range results {
 		if result.err != nil {
-			span.SetStatus(codes.Error, result.err.Error())
-			return nil, result.err
+			eta.logger.For(ctx).Error("route failed, driver skipped",
+				zap.String("driver_id", result.driverID), zap.Error(result.err))
+			skipped++
+			lastErr = result.err
+			continue
 		}
 		if result.route.ETA < resp.ETA {
 			resp.ETA = result.route.ETA
 			resp.DriverID = result.driverID
 		}
 	}
+	asked := len(drivers)
+	answered := len(results) - skipped
+	span.SetAttributes(
+		attribute.Int("drivers.asked", asked),
+		attribute.Int("drivers.answered", answered),
+		attribute.Int("drivers.skipped", skipped),
+	)
 	if resp.DriverID == "" {
-		err := errors.New("no routes found")
+		var err error
+		if lastErr != nil {
+			err = fmt.Errorf("no routes found: %d of %d drivers answered: %w", answered, asked, lastErr)
+		} else {
+			err = fmt.Errorf("no routes found: %d of %d drivers answered", answered, asked)
+		}
 		span.SetStatus(codes.Error, err.Error())
 		return nil, err
 	}
